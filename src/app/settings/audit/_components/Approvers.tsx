@@ -206,7 +206,7 @@ export default function Approvers() {
                   <div>
                     <Button
                       variant="ghost"
-                      className="aspect-square p-3 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-rose-500 sm:p-2.5 dark:text-gray-400 hover:dark:border-gray-800 hover:dark:bg-gray-900 hover:dark:text-rose-500"
+                      className="aspect-square p-3 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-rose-500 sm:p-2.5 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-rose-500"
                       aria-label={`Remove ${item.name}`}
                     >
                       <Trash2 className="size-4 shrink-0" aria-hidden="true" />

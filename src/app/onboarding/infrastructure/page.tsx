@@ -426,7 +426,7 @@ export default function PricingCalculator() {
                 step={1}
                 aria-valuetext={`${activeHours[0]} hours`}
               />
-              <div className="flex h-8 w-12 items-center justify-center rounded border border-gray-300 bg-white text-sm font-medium text-gray-900 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50">
+              <div className="flex h-8 w-12 items-center justify-center rounded-sm border border-gray-300 bg-white text-sm font-medium text-gray-900 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50">
                 <span aria-hidden="true">{activeHours}h</span>
               </div>
             </div>

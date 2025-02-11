@@ -76,14 +76,14 @@ const CategoryItem = ({
       asChild
       className={cx(
         "cursor-pointer border-gray-300 p-5 transition-all active:scale-[99%] dark:border-gray-800",
-        "has-[:checked]:border-blue-500",
-        "duration-500 has-[:checked]:dark:border-blue-500",
+        "has-checked:border-blue-500",
+        "duration-500 dark:has-checked:border-blue-500",
         // base
         "focus-within:ring-2",
         // ring color
-        "focus-within:ring-blue-200 focus-within:dark:ring-blue-700/30",
+        "focus-within:ring-blue-200 dark:focus-within:ring-blue-700/30",
         // border color
-        "focus-within:border-blue-500 focus-within:dark:border-blue-700",
+        "focus-within:border-blue-500 dark:focus-within:border-blue-700",
       )}
     >
       <Label className="block" htmlFor={category.id}>

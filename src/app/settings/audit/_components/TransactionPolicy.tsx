@@ -127,7 +127,7 @@ export default function TransactionPolicy() {
             {blacklist.map((item) => (
               <li key={item.category} className="flex items-start gap-2.5">
                 <span
-                  className={cx(item.color, "mt-[2px] size-2.5 rounded-sm")}
+                  className={cx(item.color, "mt-[2px] size-2.5 rounded-xs")}
                   aria-hidden="true"
                 />
                 <div>
@@ -188,7 +188,7 @@ export default function TransactionPolicy() {
                       item.category === "block"
                         ? "bg-rose-500 dark:bg-rose-500"
                         : "bg-orange-500 dark:bg-orange-500",
-                      "size-2 rounded-sm",
+                      "size-2 rounded-xs",
                     )}
                     aria-hidden="true"
                   />
@@ -204,7 +204,7 @@ export default function TransactionPolicy() {
                   />
                   <Button
                     variant="ghost"
-                    className="p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-rose-500 dark:text-gray-400 hover:dark:border-gray-800 hover:dark:bg-gray-900 hover:dark:text-rose-500"
+                    className="p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-rose-500 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-rose-500"
                     aria-label={`Remove ${item.label}`}
                   >
                     <Trash2 className="size-4 shrink-0" aria-hidden="true" />
@@ -242,7 +242,7 @@ export default function TransactionPolicy() {
                         <div className="flex items-center gap-2">
                           <div
                             className={cx(
-                              "size-3 shrink-0 rounded",
+                              "size-3 shrink-0 rounded-sm",
                               getStateColor(value),
                             )}
                             aria-hidden="true"
@@ -257,7 +257,7 @@ export default function TransactionPolicy() {
                           <div className="flex items-center gap-2">
                             <div
                               className={cx(
-                                "size-3 shrink-0 rounded",
+                                "size-3 shrink-0 rounded-sm",
                                 item.color,
                               )}
                               aria-hidden="true"

@@ -365,7 +365,7 @@ export default function AuditRules() {
                         <Card className="relative mt-4 overflow-hidden border-gray-300 p-0 dark:border-gray-800">
                           <Button
                             variant="ghost"
-                            className="absolute right-4 top-4 p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-red-500 dark:text-gray-400 hover:dark:border-gray-800 hover:dark:bg-gray-900 hover:dark:text-red-500"
+                            className="absolute right-4 top-4 p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-red-500 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-red-500"
                             aria-label="Remove event"
                           >
                             <Trash2
@@ -425,7 +425,7 @@ export default function AuditRules() {
                         <Card className="relative overflow-hidden border-gray-300 p-0 dark:border-gray-800">
                           <Button
                             variant="ghost"
-                            className="absolute right-4 top-4 p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-red-500 dark:text-gray-400 hover:dark:border-gray-800 hover:dark:bg-gray-900 hover:dark:text-red-500"
+                            className="absolute right-4 top-4 p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-red-500 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-red-500"
                             aria-label="Remove function"
                           >
                             <Trash2
@@ -496,7 +496,7 @@ export default function AuditRules() {
                         <Card className="relative overflow-hidden border-gray-300 p-0 dark:border-gray-800">
                           <Button
                             variant="ghost"
-                            className="absolute right-4 top-4 p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-red-500 dark:text-gray-400 hover:dark:border-gray-800 hover:dark:bg-gray-900 hover:dark:text-red-500"
+                            className="absolute right-4 top-4 p-2.5 text-gray-600 hover:border hover:border-gray-300 hover:bg-gray-50 hover:text-red-500 dark:text-gray-400 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:hover:text-red-500"
                             aria-label="Remove action"
                           >
                             <Trash2
@@ -579,7 +579,7 @@ export default function AuditRules() {
                     <div className="h-8 w-px bg-gray-300 dark:bg-gray-800" />
                     <div className="inline-flex items-center gap-1 rounded-lg bg-gray-900 p-1 shadow-md dark:border dark:border-gray-800 dark:bg-[#090E1A]">
                       <button
-                        className="flex items-center gap-2 rounded-[calc(theme(borderRadius.lg)-4px)] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 hover:dark:bg-gray-900"
+                        className="flex items-center gap-2 rounded-[calc(var(--radius-lg)-4px)] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:hover:bg-gray-900"
                         aria-label="Add Event"
                       >
                         <ArrowDownToDot
@@ -589,7 +589,7 @@ export default function AuditRules() {
                         Event
                       </button>
                       <button
-                        className="flex items-center gap-2 rounded-[calc(theme(borderRadius.lg)-4px)] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 hover:dark:bg-gray-900"
+                        className="flex items-center gap-2 rounded-[calc(var(--radius-lg)-4px)] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:hover:bg-gray-900"
                         aria-label="Add Function"
                       >
                         <SquareFunction
@@ -599,7 +599,7 @@ export default function AuditRules() {
                         Function
                       </button>
                       <button
-                        className="flex items-center gap-2 rounded-[calc(theme(borderRadius.lg)-4px)] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 hover:dark:bg-gray-900"
+                        className="flex items-center gap-2 rounded-[calc(var(--radius-lg)-4px)] px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:hover:bg-gray-900"
                         aria-label="Add Action"
                       >
                         <CircleArrowOutUpRight
@@ -609,7 +609,7 @@ export default function AuditRules() {
                         Action
                       </button>
                       <Button
-                        className="rounded-[calc(theme(borderRadius.lg)-4px)] border-none px-3 py-1.5 dark:border-none"
+                        className="rounded-[calc(var(--radius-lg)-4px)] border-none px-3 py-1.5 dark:border-none"
                         aria-label="Save and Apply Rule"
                       >
                         Save

@@ -38,7 +38,7 @@ export default function Login() {
           <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">
             Don&rsquo;t have an account?{" "}
             <a
-              className="text-blue-500 hover:text-blue-600 dark:text-blue-500 hover:dark:text-blue-400"
+              className="text-blue-500 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-400"
               href="#"
             >
               Sign up
@@ -103,7 +103,7 @@ export default function Login() {
         <p className="text-sm text-gray-700 dark:text-gray-300">
           Forgot your password?{" "}
           <a
-            className="text-blue-500 hover:text-blue-600 dark:text-blue-500 hover:dark:text-blue-400"
+            className="text-blue-500 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-400"
             href="#"
           >
             Reset password
