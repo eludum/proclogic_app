@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const PublicationOutSchema = z.object({
+    workspace_id: z.string(),
     title: z.string(), // corrected typo
     dispatch_date: z.date(),
     publication_date: z.date(),
