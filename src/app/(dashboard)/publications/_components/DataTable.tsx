@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@/components/Table"
 import { cx } from "@/lib/utils"
-import { useRouter } from "next/router"
 import * as React from "react"
 
 import {
@@ -37,7 +36,6 @@ export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: Dat
   const pageSize = 20
   const [rowSelection, setRowSelection] = React.useState({})
   const [selectedPublication, setSelectedPublication] = React.useState<TData | null>(null)
-  const router = useRouter()
 
   const table = useReactTable({
     data,
@@ -62,7 +60,6 @@ export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: Dat
   const handleRowClick = (row: Row<TData>) => {
     setSelectedPublication(row.original)
     onRowClick?.(row)
-    router.push(`/publications/${row.original.workspace_id}`)
   }
 
   const handleEditClick = (row: Row<TData>, event: React.MouseEvent) => {
