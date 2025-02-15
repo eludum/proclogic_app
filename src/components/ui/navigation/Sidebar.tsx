@@ -18,7 +18,7 @@ import { UserProfileDesktop, UserProfileMobile } from "./UserProfile"
 const navigation = [
   {
     name: "Publicaties",
-    href: siteConfig.baseLinks.publicaties,
+    href: siteConfig.baseLinks.publications,
     icon: Table2,
   },
   { name: "Reports", href: siteConfig.baseLinks.reports, icon: BarChartBig },

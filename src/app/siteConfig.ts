@@ -5,7 +5,7 @@ export const siteConfig = {
   description: "ProcLogic: het meest geavanceerde publieke sector aanbiedingen platform.",
   baseLinks: {
     reports: "/reports",
-    publicaties: "/publicaties",
+    publications: "/publications",
     settings: {
       audit: "/settings/audit",
       users: "/settings/users",
