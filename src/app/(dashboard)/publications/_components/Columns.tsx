@@ -15,7 +15,7 @@ const columnHelper = createColumnHelper<Publication>()
 export const getColumns = ({
   onEditClick,
 }: {
-  onEditClick: (row: Row<Publication>) => void
+  onEditClick: (row: Row<Publication>, event: React.MouseEvent) => void
 }) =>
   [
     columnHelper.display({
@@ -138,7 +138,7 @@ export const getColumns = ({
         return (
           <Button
             variant="ghost"
-            onClick={() => onEditClick?.(row)}
+            onClick={(event) => onEditClick?.(row, event)}
             className="group aspect-square p-1.5 hover:border hover:border-gray-300 data-[state=open]:border-gray-300 data-[state=open]:bg-gray-50 hover:dark:border-gray-700 data-[state=open]:dark:border-gray-700 data-[state=open]:dark:bg-gray-900"
           >
             <Ellipsis

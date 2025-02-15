@@ -11,10 +11,6 @@ import {
 import { cx } from "@/lib/utils"
 import * as React from "react"
 
-import { DataTablePagination } from "./DataTablePagination"
-
-import { DataTableBulkEditor } from "./TableBulkEditor"
-
 import {
   ColumnDef,
   Row,
@@ -25,16 +21,22 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+import { DataTablePagination } from "./DataTablePagination"
+import PublicationDetails from "./PublicationDetails"
+import { DataTableBulkEditor } from "./TableBulkEditor"
 
 interface DataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
   onRowClick?: (row: Row<TData>) => void
+  onEditClick?: (row: Row<TData>, event: React.MouseEvent) => void
 }
 
-export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
+export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: DataTableProps<TData>) {
   const pageSize = 20
   const [rowSelection, setRowSelection] = React.useState({})
+  const [selectedPublication, setSelectedPublication] = React.useState<TData | null>(null)
+
   const table = useReactTable({
     data,
     columns,
@@ -55,79 +57,98 @@ export function DataTable<TData>({ columns, data }: DataTableProps<TData>) {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const handleRowClick = (row: Row<TData>) => {
+    setSelectedPublication(row.original)
+    onRowClick?.(row)
+  }
+
+  const handleEditClick = (row: Row<TData>, event: React.MouseEvent) => {
+    event.stopPropagation() // Prevent the row click handler from being triggered
+    onEditClick?.(row, event)
+  }
+
+  const handleBack = () => {
+    setSelectedPublication(null)
+  }
+
   return (
     <>
-      <div className="space-y-3">
-        <div className="relative overflow-hidden overflow-x-auto">
-          <Table>
-            <TableHead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow
-                  key={headerGroup.id}
-                  className="border-y border-gray-200 dark:border-gray-800"
-                >
-                  {headerGroup.headers.map((header) => (
-                    <TableHeaderCell
-                      key={header.id}
-                      className={cx(
-                        "whitespace-nowrap py-1",
-                        header.column.columnDef.meta?.className,
-                      )}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                    </TableHeaderCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHead>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
+      {selectedPublication ? (
+        <PublicationDetails publication={selectedPublication as Publication} onBack={handleBack} />
+      ) : (
+        <div className="space-y-3">
+          <div className="relative overflow-hidden overflow-x-auto">
+            <Table>
+              <TableHead>
+                {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow
-                    key={row.id}
-                    className="group select-none hover:bg-gray-50 dark:hover:bg-gray-900"
+                    key={headerGroup.id}
+                    className="border-y border-gray-200 dark:border-gray-800"
                   >
-                    {row.getVisibleCells().map((cell, index) => (
-                      <TableCell
-                        key={cell.id}
+                    {headerGroup.headers.map((header) => (
+                      <TableHeaderCell
+                        key={header.id}
                         className={cx(
-                          row.getIsSelected()
-                            ? "bg-gray-50 dark:bg-gray-900"
-                            : "",
-                          "relative whitespace-nowrap py-2 text-gray-700 first:w-10 dark:text-gray-300",
-                          cell.column.columnDef.meta?.className,
+                          "whitespace-nowrap py-1",
+                          header.column.columnDef.meta?.className,
                         )}
                       >
-                        {index === 0 && row.getIsSelected() && (
-                          <div className="absolute inset-y-0 left-0 w-0.5 bg-blue-500 dark:bg-blue-500" />
-                        )}
                         {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
+                          header.column.columnDef.header,
+                          header.getContext(),
                         )}
-                      </TableCell>
+                      </TableHeaderCell>
                     ))}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <DataTableBulkEditor table={table} rowSelection={rowSelection} />
+                ))}
+              </TableHead>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className="group select-none hover:bg-gray-50 dark:hover:bg-gray-900"
+                      onClick={() => handleRowClick(row)}
+                    >
+                      {row.getVisibleCells().map((cell, index) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cx(
+                            row.getIsSelected()
+                              ? "bg-gray-50 dark:bg-gray-900"
+                              : "",
+                            "relative whitespace-nowrap py-2 text-gray-700 first:w-10 dark:text-gray-300",
+                            cell.column.columnDef.meta?.className,
+                          )}
+                        >
+                          {index === 0 && row.getIsSelected() && (
+                            <div className="absolute inset-y-0 left-0 w-0.5 bg-blue-500 dark:bg-blue-500" />
+                          )}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+            <DataTableBulkEditor table={table} rowSelection={rowSelection} />
+          </div>
+          <DataTablePagination table={table} pageSize={pageSize} />
         </div>
-        <DataTablePagination table={table} pageSize={pageSize} />
-      </div>
+      )}
     </>
   )
 }

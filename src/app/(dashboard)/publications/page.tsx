@@ -7,7 +7,7 @@ import { Publication } from "@/data/publicationSchema"
 import { Row } from "@tanstack/react-table"
 import { useEffect, useState } from 'react'
 
-export default function Publicaties() {
+export default function Publications() {
   const API_BASE_URL = siteConfig.api_base_url;
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -23,8 +23,6 @@ export default function Publicaties() {
           throw new Error('Network response was not ok');
         }
         const data: Publication[] = await response.json();
-        console.log(data)
-        console.log(data[0].publicationDate)
         setPublications(data);
       } catch (error) {
         setError(error.message);
@@ -36,12 +34,20 @@ export default function Publicaties() {
     fetchPublications();
   }, []);
 
+  const handleRowClick = (row: Row<Publication>) => {
+    setRow(row);
+    setIsOpen(false); // Ensure the drawer does not open on row click
+  };
+
+  const handleEditClick = (row: Row<Publication>, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent the row click handler from being triggered
+    setRow(row);
+    setIsOpen(true);
+  };
+
   const datas = row?.original;
   const columns = getColumns({
-    onEditClick: (row) => {
-      setRow(row);
-      setIsOpen(true);
-    },
+    onEditClick: handleEditClick,
   });
 
   if (loading) {
@@ -61,10 +67,8 @@ export default function Publicaties() {
         <DataTable
           data={publications || []}
           columns={columns}
-          onRowClick={(row) => {
-            setRow(row);
-            setIsOpen(true);
-          }}
+          onRowClick={handleRowClick}
+          onEditClick={handleEditClick}
         />
         <DataTableDrawer open={isOpen} onOpenChange={setIsOpen} datas={datas} />
       </div>

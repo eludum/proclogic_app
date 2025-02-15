@@ -99,6 +99,7 @@ const TableRow = React.forwardRef<
   React.HTMLAttributes<HTMLTableRowElement>
 >(({ className, ...props }, forwardedRef) => (
   <tr
+    {...props} onClick={() => console.log(props)}
     ref={forwardedRef}
     className={cx(
       "[&_td:last-child]:pr-4 [&_th:last-child]:pr-4",
