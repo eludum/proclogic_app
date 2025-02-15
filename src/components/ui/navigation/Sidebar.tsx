@@ -16,12 +16,12 @@ import MobileSidebar from "./MobileSidebar"
 import { UserProfileDesktop, UserProfileMobile } from "./UserProfile"
 
 const navigation = [
-  { name: "Reports", href: siteConfig.baseLinks.reports, icon: BarChartBig },
   {
-    name: "Transactions",
-    href: siteConfig.baseLinks.transactions,
+    name: "Publicaties",
+    href: siteConfig.baseLinks.publicaties,
     icon: Table2,
   },
+  { name: "Reports", href: siteConfig.baseLinks.reports, icon: BarChartBig },
   {
     name: "Settings",
     href: siteConfig.baseLinks.settings.audit,
@@ -78,7 +78,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
                 )}
               >
                 <a aria-label="Home Link" href="/">
-                  Acme Corp.
+                  ProcLogic
                 </a>
               </span>
             </div>
@@ -215,7 +215,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
           )}
         >
           <a aria-label="Home Link" href="/">
-            Acme Corp.
+            ProcLogic.
           </a>
         </span>
         <div className="flex items-center gap-1 sm:gap-2">

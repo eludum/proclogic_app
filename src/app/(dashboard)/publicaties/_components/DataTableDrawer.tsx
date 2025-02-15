@@ -1,5 +1,5 @@
 "use client"
-import { DataTableDrawerFeed } from "@/app/(dashboard)/transactions/_components/DataTableDrawerFeed"
+import { DataTableDrawerFeed } from "@/app/(dashboard)/publicaties/_components/DataTableDrawerFeed"
 import { Button } from "@/components/Button"
 import {
   Drawer,
@@ -20,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/Select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs"
-import { Transaction, expense_statuses } from "@/data/schema"
 import { Download, File, Trash2 } from "lucide-react"
 import React from "react"
 import { useDropzone } from "react-dropzone"
@@ -28,10 +27,11 @@ import { useDropzone } from "react-dropzone"
 interface DataTableDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  datas: Transaction | undefined
+  datas: Publication | undefined
 }
 
 import { Badge, BadgeProps } from "@/components/Badge"
+import { Publication } from "@/data/publicationSchema"
 import { categories } from "@/data/schema"
 import { formatters } from "@/lib/utils"
 import { format } from "date-fns"
@@ -46,19 +46,17 @@ export function DataTableDrawer({
     onDrop: (acceptedFiles: File[]) => setFiles(acceptedFiles as File[]),
   })
 
-  const status = expense_statuses.find(
-    (item) => item.value === datas?.expense_status,
-  )
+  const status = datas?.is_recommended ? { label: "Aanbevolen", variant: "success" } : { label: "Niet aanbevolen", variant: "neutral" }
 
   const filesList = files.map((file) => (
     <li
       key={file.name}
-      className="relative rounded-lg border border-gray-300 bg-white p-4 shadow-xs dark:border-gray-800 dark:bg-[#090E1A]"
+      className="relative rounded-lg border border-gray-300 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-[#090E1A]"
     >
       <div className="absolute right-4 top-1/2 -translate-y-1/2">
         <button
           type="button"
-          className="rounded-md p-2 text-gray-400 transition-all hover:text-rose-500 dark:text-gray-600 dark:hover:text-rose-500"
+          className="rounded-md p-2 text-gray-400 transition-all hover:text-rose-500 dark:text-gray-600 hover:dark:text-rose-500"
           aria-label="Remove file"
           onClick={() =>
             setFiles((prevFiles) =>
@@ -70,7 +68,7 @@ export function DataTableDrawer({
         </button>
         <button
           type="button"
-          className="rounded-md p-2 text-gray-400 transition-all hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-500"
+          className="rounded-md p-2 text-gray-400 transition-all hover:text-gray-500 dark:text-gray-600 hover:dark:text-gray-500"
           aria-label="Download file"
         >
           <Download className="size-5 shrink-0" aria-hidden="true" />
@@ -101,13 +99,13 @@ export function DataTableDrawer({
         <DrawerContent className="overflow-x-hidden sm:max-w-lg dark:bg-gray-925">
           <DrawerHeader className="-px-6 w-full">
             <DrawerTitle className="flex w-full items-center justify-between">
-              <span>{datas.merchant}</span>
-              <span>{formatters.currency({ number: datas.amount })}</span>
+              <span>{datas.organisation}</span>
+              <span>{formatters.currency({ number: datas.publication_value })}</span>
             </DrawerTitle>
             <div className="mt-1 flex items-center justify-between">
               <span className="text-left text-sm text-gray-500 dark:text-gray-500">
                 {format(
-                  new Date(datas.transaction_date),
+                  new Date(datas.publication_date),
                   "MMM dd, yyyy 'at' hh:mm",
                 )}
               </span>
@@ -180,7 +178,7 @@ export function DataTableDrawer({
                   <Label className="font-medium" htmlFor="category">
                     Accounting Categorization
                   </Label>
-                  <Select defaultValue={datas.category}>
+                  <Select defaultValue={datas.cpv_code}>
                     <SelectTrigger id="category" className="mt-2">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>

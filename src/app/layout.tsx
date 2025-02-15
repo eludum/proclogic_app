@@ -1,3 +1,4 @@
+import { UserProvider } from '@auth0/nextjs-auth0/client'
 import { GeistSans } from "geist/font/sans"
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
@@ -6,21 +7,22 @@ import React from "react"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
 
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://yoururl.com"),
+  metadataBase: new URL("https://proc.koselogic.be"),
   title: siteConfig.name,
   description: siteConfig.description,
   keywords: [],
   authors: [
     {
-      name: "yourname",
-      url: "",
+      name: "Mehmet Köse",
+      url: "koselogic.be",
     },
   ],
-  creator: "yourname",
+  creator: "Mehmet Köse",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "nl_BE",
     url: siteConfig.url,
     title: siteConfig.name,
     description: siteConfig.description,
@@ -38,19 +40,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${GeistSans.className} overflow-x-hidden overflow-y-scroll scroll-auto bg-gray-50 antialiased selection:bg-blue-100 selection:text-blue-700 dark:bg-gray-950`}
-      >
-        <ThemeProvider
-          defaultTheme="system"
-          disableTransitionOnChange
-          attribute="class"
+      <UserProvider>
+        <body
+          className={`${GeistSans.className} overflow-x-hidden overflow-y-scroll scroll-auto bg-gray-50 antialiased selection:bg-blue-100 selection:text-blue-700 dark:bg-gray-950`}
         >
-          <NuqsAdapter>
-            <div>{children}</div>
-          </NuqsAdapter>
-        </ThemeProvider>
-      </body>
+          <ThemeProvider
+            defaultTheme="light"
+            disableTransitionOnChange
+            attribute="class"
+          >
+            <NuqsAdapter>
+              <div>{children}</div>
+            </NuqsAdapter>
+          </ThemeProvider>
+        </body>
+      </UserProvider>
+
     </html>
   )
 }

@@ -3,19 +3,19 @@
 import { Badge, BadgeProps } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Checkbox } from "@/components/Checkbox"
-import { expense_statuses, Transaction } from "@/data/schema"
+import { Publication } from "@/data/publicationSchema"
 import { formatters } from "@/lib/utils"
 import { ColumnDef, createColumnHelper, Row } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { Ellipsis } from "lucide-react"
 import { DataTableColumnHeader } from "./DataTableColumnHeader"
 
-const columnHelper = createColumnHelper<Transaction>()
+const columnHelper = createColumnHelper<Publication>()
 
 export const getColumns = ({
   onEditClick,
 }: {
-  onEditClick: (row: Row<Transaction>) => void
+  onEditClick: (row: Row<Publication>) => void
 }) =>
   [
     columnHelper.display({
@@ -49,9 +49,10 @@ export const getColumns = ({
         displayName: "Select",
       },
     }),
-    columnHelper.accessor("transaction_date", {
+
+    columnHelper.accessor("dispatch_date", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Purchased on" />
+        <DataTableColumnHeader column={column} title="Dispatch Date" />
       ),
       cell: ({ getValue }) => {
         const date = getValue()
@@ -61,23 +62,21 @@ export const getColumns = ({
       enableHiding: false,
       meta: {
         className: "tabular-nums",
-        displayName: "Purchased",
+        displayName: "Dispatch Date",
       },
     }),
-    columnHelper.accessor("expense_status", {
+    columnHelper.accessor("is_recommended", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Status" />
+        <DataTableColumnHeader column={column} title="Aanbevolen" />
       ),
       enableSorting: true,
       meta: {
         className: "text-left",
-        displayName: "Status",
+        displayName: "Aanbevolen",
       },
       cell: ({ row }) => {
-        const statusValue = row.getValue("expense_status")
-        const status = expense_statuses.find(
-          (item) => item.value === statusValue,
-        )
+        const statusValue = row.getValue("is_recommended")
+        const status = statusValue ? { label: "Aanbevolen", variant: "success" } : { label: "Niet aanbevolen", variant: "neutral" }
         if (!status) {
           return statusValue // Fallback to displaying the raw status
         }
@@ -88,35 +87,35 @@ export const getColumns = ({
         )
       },
     }),
-    columnHelper.accessor("merchant", {
+    columnHelper.accessor("organisation", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Merchant" />
+        <DataTableColumnHeader column={column} title="Organisatie" />
       ),
       enableSorting: false,
       meta: {
         className: "text-left",
-        displayName: "Merchant",
+        displayName: "Organisatie",
       },
       filterFn: "arrIncludesSome",
     }),
-    columnHelper.accessor("category", {
+    columnHelper.accessor("cpv_code", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Category" />
+        <DataTableColumnHeader column={column} title="CPV Code" />
       ),
       enableSorting: false,
       meta: {
         className: "text-left",
-        displayName: "Category",
+        displayName: "CPV Code",
       },
     }),
-    columnHelper.accessor("amount", {
+    columnHelper.accessor("publication_value", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Amount" />
+        <DataTableColumnHeader column={column} title="Bedrag" />
       ),
       enableSorting: true,
       meta: {
         className: "text-right",
-        displayName: "Amount",
+        displayName: "Bedrag",
       },
       cell: ({ getValue }) => {
         return (
@@ -140,14 +139,14 @@ export const getColumns = ({
           <Button
             variant="ghost"
             onClick={() => onEditClick?.(row)}
-            className="group aspect-square p-1.5 hover:border hover:border-gray-300 data-[state=open]:border-gray-300 data-[state=open]:bg-gray-50 dark:hover:border-gray-700 dark:data-[state=open]:border-gray-700 dark:data-[state=open]:bg-gray-900"
+            className="group aspect-square p-1.5 hover:border hover:border-gray-300 data-[state=open]:border-gray-300 data-[state=open]:bg-gray-50 hover:dark:border-gray-700 data-[state=open]:dark:border-gray-700 data-[state=open]:dark:bg-gray-900"
           >
             <Ellipsis
-              className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700 group-data-[state=open]:text-gray-700 dark:group-hover:text-gray-300 dark:group-data-[state=open]:text-gray-300"
+              className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700 group-data-[state=open]:text-gray-700 group-hover:dark:text-gray-300 group-data-[state=open]:dark:text-gray-300"
               aria-hidden="true"
             />
           </Button>
         )
       },
     }),
-  ] as ColumnDef<Transaction>[]
+  ] as ColumnDef<Publication>[]

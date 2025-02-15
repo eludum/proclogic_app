@@ -111,7 +111,7 @@ export function DropdownUserProfile({
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem>
-              <a href={siteConfig.baseLinks.login} className="w-full">
+              <a href={siteConfig.baseLinks.logout} className="w-full">
                 Sign out
               </a>
             </DropdownMenuItem>

@@ -16,12 +16,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const navigation = [
-  { name: "Reports", href: siteConfig.baseLinks.reports, icon: BarChartBig },
   {
-    name: "Transactions",
-    href: siteConfig.baseLinks.transactions,
+    name: "Publicaties",
+    href: siteConfig.baseLinks.publicaties,
     icon: Table2,
   },
+  { name: "Reports", href: siteConfig.baseLinks.reports, icon: BarChartBig },
   {
     name: "Settings",
     href: siteConfig.baseLinks.settings.audit,
@@ -51,7 +51,7 @@ export default function MobileSidebar() {
         </DrawerTrigger>
         <DrawerContent className="sm:max-w-lg">
           <DrawerHeader>
-            <DrawerTitle>Acme Corp.</DrawerTitle>
+            <DrawerTitle>ProcLogic.</DrawerTitle>
           </DrawerHeader>
           <DrawerBody>
             <nav

@@ -1,16 +1,18 @@
 export const siteConfig = {
-  name: "Insights",
-  url: "https://insights.tremor.so",
-  description: "The only reporting and audit dashboard you will ever need.",
+  name: "ProcLogic",
+  url: "https://proc.koselogic.be",
+  api_base_url: "http://localhost:8000",
+  description: "ProcLogic: het meest geavanceerde publieke sector aanbiedingen platform.",
   baseLinks: {
     reports: "/reports",
-    transactions: "/transactions",
+    publicaties: "/publicaties",
     settings: {
       audit: "/settings/audit",
       users: "/settings/users",
       billing: "/settings/billing",
     },
-    login: "/login",
+    login: "/api/auth/login",
+    logout: "/api/auth/logout",
     onboarding: "/onboarding/products",
   },
 }

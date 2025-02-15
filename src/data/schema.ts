@@ -1,5 +1,89 @@
 import { z } from "zod"
 
+export const DescriptionSchema = z.object({
+  language: z.string(),
+  text: z.string(),
+});
+
+export const CPVCodeSchema = z.object({
+  code: z.string(),
+  descriptions: z.array(DescriptionSchema),
+});
+
+export const CompanySchema = z.object({
+  vat_number: z.string(),
+  name: z.string(),
+  email: z.string(),
+  interested_cpv_codes: z.array(CPVCodeSchema),
+  summary_activities: z.string(),
+  accreditations: z.record(z.unknown()).optional(),
+  max_publication_value: z.number(),
+});
+
+export const EnterpriseCategorySchema = z.object({
+  categoryCode: z.string(),
+  levels: z.array(z.number()),
+});
+
+export const DossierSchema = z.object({
+  accreditations: z.record(z.unknown()).optional(),
+  descriptions: z.array(DescriptionSchema),
+  enterpriseCategories: z.array(EnterpriseCategorySchema),
+  legalBasis: z.string(),
+  number: z.string(),
+  procurementProcedureType: z.string().optional(),
+  referenceNumber: z.string(),
+  specialPurchasingTechnique: z.string().optional(),
+  titles: z.array(DescriptionSchema),
+});
+
+export const LotSchema = z.object({
+  descriptions: z.array(DescriptionSchema),
+  reservedExecution: z.array(z.string()),
+  reservedParticipation: z.array(z.string()),
+  titles: z.array(DescriptionSchema),
+});
+
+export const OrganisationNameSchema = z.object({
+  language: z.string(),
+  text: z.string(),
+});
+
+export const OrganisationSchema = z.object({
+  organisationId: z.number(),
+  organisationNames: z.array(OrganisationNameSchema),
+  tree: z.string(),
+});
+
+export const PublicationSchema = z.object({
+  cpvAdditionalCodes: z.array(CPVCodeSchema),
+  cpvMainCode: CPVCodeSchema,
+  dispatchDate: z.date(),
+  dossier: DossierSchema,
+  insertionDate: z.date(),
+  lots: z.array(LotSchema),
+  natures: z.array(z.string()),
+  noticeIds: z.array(z.string()),
+  noticeSubType: z.string(),
+  nutsCodes: z.array(z.string()),
+  organisation: OrganisationSchema,
+  procedureId: z.string(),
+  publicationDate: z.date(),
+  publicationLanguages: z.array(z.string()),
+  publicationReferenceNumbersBDA: z.array(z.string()),
+  publicationReferenceNumbersTED: z.array(z.string()),
+  publicationType: z.string(),
+  publicationWorkspaceId: z.string(),
+  publishedAt: z.array(z.date()),
+  referenceNumber: z.string(),
+  sentAt: z.array(z.date()),
+  tedPublished: z.boolean(),
+  vaultSubmissionDeadline: z.date().optional(),
+  recommended: z.array(CompanySchema).optional(),
+  ai_summary: z.string().optional(),
+});
+
+
 export const transactionSchema = z.object({
   transaction_id: z.string(),
   transaction_date: z.string(),

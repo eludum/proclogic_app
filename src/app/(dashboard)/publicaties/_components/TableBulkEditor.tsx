@@ -48,7 +48,7 @@ function DataTableBulkEditor<TData>({
             table.resetRowSelection()
           }}
           shortcut={{ shortcut: "Escape", label: "esc" }}
-          // don't disable this command
+        // don't disable this command
         />
       </CommandBarBar>
     </CommandBar>
