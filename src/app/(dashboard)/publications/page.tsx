@@ -18,7 +18,7 @@ export default function Publications() {
   useEffect(() => {
     const fetchPublications = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/publication/BE0893620715/`);
+        const response = await fetch(`${API_BASE_URL}/publications/BE0893620715/`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

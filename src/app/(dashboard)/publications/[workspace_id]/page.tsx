@@ -1,11 +1,11 @@
+"use client"
 import { siteConfig } from '@/app/siteConfig'
 import { Publication } from '@/data/publicationSchema'
-import { useRouter } from 'next/router'
+import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 const PublicationPage = () => {
-    const router = useRouter()
-    const { workspace_id } = router.query
+    const { workspace_id } = useParams()
     const [publication, setPublication] = useState<Publication | null>(null)
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
@@ -21,7 +21,11 @@ const PublicationPage = () => {
                     const data: Publication = await response.json()
                     setPublication(data)
                 } catch (error) {
-                    setError(error.message)
+                    if (error instanceof Error) {
+                        setError(error.message)
+                    } else {
+                        setError('An unknown error occurred')
+                    }
                 } finally {
                     setLoading(false)
                 }

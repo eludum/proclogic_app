@@ -62,7 +62,7 @@ export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: Dat
   const handleRowClick = (row: Row<TData>) => {
     setSelectedPublication(row.original)
     onRowClick?.(row)
-    router.push(`/publications/${row.original.workspace_id}`)
+    // router.push(`/publications/${row.original.workspace_id}`)
   }
 
   const handleEditClick = (row: Row<TData>, event: React.MouseEvent) => {
