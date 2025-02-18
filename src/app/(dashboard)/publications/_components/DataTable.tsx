@@ -9,7 +9,6 @@ import {
   TableRow,
 } from "@/components/Table"
 import { cx } from "@/lib/utils"
-import { useRouter } from "next/navigation"
 import * as React from "react"
 
 import {
@@ -25,6 +24,7 @@ import {
 import { DataTablePagination } from "./DataTablePagination"
 import PublicationDetails from "./PublicationDetails"
 import { DataTableBulkEditor } from "./TableBulkEditor"
+import { Publication } from "@/data/publicationSchema"
 
 interface DataTableProps<TData> {
   columns: ColumnDef<TData>[]
@@ -33,11 +33,11 @@ interface DataTableProps<TData> {
   onEditClick?: (row: Row<TData>, event: React.MouseEvent) => void
 }
 
-export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: DataTableProps<TData>) {
+export function DataTable<TData>({ columns, data, onRowClick }: DataTableProps<TData>) {
   const pageSize = 20
   const [rowSelection, setRowSelection] = React.useState({})
   const [selectedPublication, setSelectedPublication] = React.useState<TData | null>(null)
-  const router = useRouter()
+  // const router = useRouter()
 
   const table = useReactTable({
     data,
@@ -65,11 +65,6 @@ export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: Dat
     // router.push(`/publications/${row.original.workspace_id}`)
   }
 
-  const handleEditClick = (row: Row<TData>, event: React.MouseEvent) => {
-    event.stopPropagation() // Prevent the row click handler from being triggered
-    onEditClick?.(row, event)
-  }
-
   const handleBack = () => {
     setSelectedPublication(null)
   }
@@ -77,7 +72,7 @@ export function DataTable<TData>({ columns, data, onRowClick, onEditClick }: Dat
   return (
     <>
       {selectedPublication ? (
-        <PublicationDetails publication={selectedPublication as Publication} onBack={handleBack} />
+        <PublicationDetails publication={selectedPublication as unknown as Publication} onBack={handleBack} />
       ) : (
         <div className="space-y-3">
           <div className="relative overflow-hidden overflow-x-auto">

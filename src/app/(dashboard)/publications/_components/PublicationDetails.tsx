@@ -1,5 +1,7 @@
-import { Publication } from "@/data/publicationSchema"
-import React from "react"
+import { Button } from "@/components/Button";
+import { Card } from "@/components/Card";
+import { Publication } from "@/data/publicationSchema";
+import React from "react";
 
 interface PublicationDetailsProps {
   publication: Publication
@@ -8,25 +10,39 @@ interface PublicationDetailsProps {
 
 const PublicationDetails: React.FC<PublicationDetailsProps> = ({ publication, onBack }) => {
   return (
-    <div className="p-4">
-      <button onClick={onBack} className="mb-4 text-blue-500">Back to Table</button>
-      <h2 className="text-xl font-bold">{publication.title}</h2>
-      <p><strong>Dispatch Date:</strong> {publication.dispatch_date.toString()}</p>
-      <p><strong>Publication Date:</strong> {publication.publication_date.toString()}</p>
-      <p><strong>Submission Deadline:</strong> {publication.submission_deadline?.toString() || "N/A"}</p>
-      <p><strong>Is Active:</strong> {publication.is_active?.toString() || "N/A"}</p>
-      <p><strong>Original Description:</strong> {publication.original_description}</p>
-      <p><strong>AI Summary:</strong> {publication.ai_summary}</p>
-      <p><strong>Organisation:</strong> {publication.organisation}</p>
-      <p><strong>CPV Code:</strong> {publication.cpv_code}</p>
-      <p><strong>Time Remaining:</strong> {publication.time_remaining || "N/A"}</p>
-      <p><strong>Accreditations:</strong> {JSON.stringify(publication.accreditations) || "N/A"}</p>
-      <p><strong>Publication Value:</strong> {publication.publication_value || "N/A"}</p>
-      <p><strong>Documents:</strong> {publication.documents?.join(", ") || "N/A"}</p>
-      <p><strong>Publication in Your Sector:</strong> {publication.publication_in_your_sector?.toString() || "N/A"}</p>
-      <p><strong>Is Recommended:</strong> {publication.is_recommended?.toString() || "N/A"}</p>
+    <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <Button variant="primary" onClick={onBack} className="mb-4">
+        ← Terug naar overzicht
+      </Button>
+
+      <p className="text-2xl font-bold mb-4">{publication.title}</p>
+      <Card className="space-y-4">
+        <InfoRow label="Dispatch Date" value={publication.dispatch_date?.toString()} />
+        <InfoRow label="Publication Date" value={publication.publication_date?.toString()} />
+        <InfoRow label="Submission Deadline" value={publication.submission_deadline?.toString() || "N/A"} />
+        <InfoRow label="Is Active" value={publication.is_active?.toString() || "N/A"} />
+        <InfoRow label="Original Description" value={publication.original_description} />
+        <InfoRow label="AI Summary" value={publication.ai_summary} />
+        <InfoRow label="Organisation" value={publication.organisation} />
+        <InfoRow label="CPV Code" value={publication.cpv_code} />
+        <InfoRow label="Time Remaining" value={publication.time_remaining || "N/A"} />
+        <InfoRow label="Accreditations" value={JSON.stringify(publication.accreditations) || "N/A"} />
+        <InfoRow label="Publication Value" value={publication.publication_value || "N/A"} />
+        <InfoRow label="Documents" value={publication.documents?.join(", ") || "N/A"} />
+        <InfoRow label="Publication in Your Sector" value={publication.publication_in_your_sector?.toString() || "N/A"} />
+        <InfoRow label="Is Recommended" value={publication.is_recommended?.toString() || "N/A"} />
+      </Card>
     </div>
   )
 }
 
 export default PublicationDetails
+
+function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div>
+      <p className="font-medium">{label}:</p>
+      <p className="text-gray-600">{value}</p>
+    </div>
+  );
+}

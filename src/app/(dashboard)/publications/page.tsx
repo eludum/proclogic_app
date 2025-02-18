@@ -25,7 +25,11 @@ export default function Publications() {
         const data: Publication[] = await response.json();
         setPublications(data);
       } catch (error) {
-        setError(error.message);
+        if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError(String(error));
+        }
       } finally {
         setLoading(false);
       }

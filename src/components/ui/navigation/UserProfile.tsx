@@ -45,7 +45,7 @@ export const UserProfileDesktop = ({
                 )}
                 aria-hidden="true"
               >
-                {user.name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase()}
+                {user.name?.match(/(\b\S)?/g)?.join("")?.match(/(^\S|\S$)?/g)?.join("")?.toUpperCase() ?? ""}
               </span>
               <span className={cx(isCollapsed ? "hidden" : "block")}>
                 {user.name}
@@ -81,7 +81,7 @@ export const UserProfileMobile = () => {
           className="flex size-8 sm:size-7 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white text-xs text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300"
           aria-hidden="true"
         >
-          {user.name.match(/(\b\S)?/g).join("").match(/(^\S|\S$)?/g).join("").toUpperCase()}
+          {user.name?.match(/(\b\S)?/g)?.join("")?.match(/(^\S|\S$)?/g)?.join("")?.toUpperCase() ?? ""}
         </span>
       </Button>
     </DropdownUserProfile>
