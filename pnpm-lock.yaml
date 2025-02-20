@@ -72,7 +72,7 @@ importers:
         specifier: ^8.21.2
         version: 8.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@typescript-eslint/parser':
-        specifier: ^8.24.0
+        specifier: ^8.24.1
         version: 8.24.1(eslint@8.57.1)(typescript@5.7.3)
       clsx:
         specifier: ^2.1.1
@@ -93,7 +93,7 @@ importers:
         specifier: ^0.4.4
         version: 0.4.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       nuqs:
-        specifier: ^2.3.2
+        specifier: ^2.4.0
         version: 2.4.0(next@14.2.24(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
@@ -117,7 +117,7 @@ importers:
         specifier: ^0.3.1
         version: 0.3.1(tailwindcss@3.4.17)
       tsx:
-        specifier: ^4.19.2
+        specifier: ^4.19.3
         version: 4.19.3
       zod:
         specifier: ^3.24.2
@@ -142,7 +142,7 @@ importers:
         specifier: 14.2.23
         version: 14.2.23(eslint@8.57.1)(typescript@5.7.3)
       postcss:
-        specifier: ^8.5.2
+        specifier: ^8.5.3
         version: 8.5.3
       prettier:
         specifier: ^3.5.1
