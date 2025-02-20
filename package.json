@@ -1,13 +1,12 @@
 {
-  "name": "proclogic_frontend",
+  "name": "proclogic_app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "generate:transactions": "tsx --tsconfig ./tsconfig.scripts.json ./src/data/generateData.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3.6.0",
