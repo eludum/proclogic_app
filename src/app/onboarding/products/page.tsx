@@ -8,101 +8,97 @@ import { cx } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import React from "react"
 
-interface Category {
+interface Sector {
   id: string
   title: string
   subcategories: string[]
 }
 
 interface CheckedItems {
-  [categoryId: string]: boolean
+  [sectorId: string]: boolean
 }
 
-interface CategoryItemProps {
-  category: Category
+interface SectorItemProps {
+  sector: Sector
   checked: boolean
-  onCheckedChange: (categoryId: string, checked: boolean) => void
+  onCheckedChange: (sectorId: string, checked: boolean) => void
 }
 
-const categories: Category[] = [
+const sectors: Sector[] = [
   {
-    id: "1",
-    title: "User Analytics",
+    id: "agriculture",
+    title: "Landbouw en Voedselindustrie",
     subcategories: [
-      "User Segmentation",
-      "Cohort Analysis",
-      "Retention Analysis",
+      "Landbouwproducten",
+      "Voedingsmiddelen en dranken",
+      "Landbouwmachines",
     ],
   },
   {
-    id: "2",
-    title: "Event Tracking",
-    subcategories: ["Custom Events", "Automated Events", "Event Funnels"],
+    id: "energy",
+    title: "Energie en Grondstoffen",
+    subcategories: ["Brandstoffen", "Elektriciteit", "Mijnbouwproducten"],
   },
   {
-    id: "3",
-    title: "A/B Testing",
-    subcategories: ["Experiment Setup", "Variant Analysis", "Reporting"],
+    id: "manufacturing",
+    title: "Industrie en Productie",
+    subcategories: [
+      "Chemische producten",
+      "Metaalbewerking",
+      "Textiel en Leder",
+      "Meubelen en inrichting",
+    ],
   },
   {
-    id: "4",
-    title: "User Journeys",
-    subcategories: ["Journey Mapping", "Conversion Paths", "Drop-off Analysis"],
+    id: "technology",
+    title: "Technologie en IT",
+    subcategories: ["Software", "IT-diensten", "Elektronische apparatuur"],
   },
   {
-    id: "5",
-    title: "Engagement Tracking",
-    subcategories: ["Email Campaigns", "Push Notifications", "In-app Messages"],
+    id: "construction",
+    title: "Bouw en Infrastructuur",
+    subcategories: ["Bouwwerkzaamheden", "Bouwmaterialen", "Waterbeheer"],
   },
   {
-    id: "6",
-    title: "Data Management",
-    subcategories: ["Data Import", "Data Export", "Integrations"],
+    id: "healthcare",
+    title: "Gezondheid en Onderwijs",
+    subcategories: ["Gezondheidszorg", "Onderwijsdiensten", "Farmaceutische producten"],
   },
   {
-    id: "7",
-    title: "Security & Compliance",
-    subcategories: ["Data Encryption", "User Permissions", "GDPR Compliance"],
+    id: "services",
+    title: "Diensten en Overheid",
+    subcategories: [
+      "Financiële diensten",
+      "Vastgoeddiensten",
+      "Consulting en zakelijke diensten",
+    ],
+  },
+  {
+    id: "transport",
+    title: "Transport en Logistiek",
+    subcategories: ["Vervoersmaterieel", "Transportdiensten", "Post- en telecommunicatiediensten"],
   },
 ]
 
-const CategoryItem = ({
-  category,
-  checked,
-  onCheckedChange,
-}: CategoryItemProps) => {
+const SectorItem = ({ sector, checked, onCheckedChange }: SectorItemProps) => {
   return (
-    <Card
-      asChild
-      className={cx(
-        "cursor-pointer border-gray-300 p-5 transition-all active:scale-[99%] dark:border-gray-800",
-        "has-checked:border-blue-500",
-        "duration-500 dark:has-checked:border-blue-500",
-        // base
-        "focus-within:ring-2",
-        // ring color
-        "focus-within:ring-blue-200 dark:focus-within:ring-blue-700/30",
-        // border color
-        "focus-within:border-blue-500 dark:focus-within:border-blue-700",
-      )}
+    <Card asChild className={cx("cursor-pointer border-gray-300 p-5 transition-all active:scale-[99%] dark:border-gray-800")}
     >
-      <Label className="block" htmlFor={category.id}>
+      <Label className="block" htmlFor={sector.id}>
         <div className="mb-2 flex items-center gap-2.5">
           <Checkbox
-            id={category.id}
-            name={category.title}
+            id={sector.id}
+            name={sector.title}
             checked={checked}
             onCheckedChange={(isChecked) =>
-              onCheckedChange(category.id, isChecked === true)
+              onCheckedChange(sector.id, isChecked === true)
             }
           />
-          <span className="text-base font-medium sm:text-sm">
-            {category.title}
-          </span>
+          <span className="text-base font-medium sm:text-sm">{sector.title}</span>
         </div>
-        {category.subcategories.length > 0 && (
+        {sector.subcategories.length > 0 && (
           <ul className="ml-6 mt-2 flex flex-wrap gap-1.5">
-            {category.subcategories.map((subcategory) => (
+            {sector.subcategories.map((subcategory) => (
               <li
                 className={badgeVariants({ variant: "neutral" })}
                 key={subcategory}
@@ -117,15 +113,15 @@ const CategoryItem = ({
   )
 }
 
-export default function Products() {
+export default function Sectors() {
   const [checkedItems, setCheckedItems] = React.useState<CheckedItems>({})
   const [loading, setLoading] = React.useState(false)
   const router = useRouter()
 
-  const handleCheckedChange = (categoryId: string, isChecked: boolean) => {
+  const handleCheckedChange = (sectorId: string, isChecked: boolean) => {
     setCheckedItems((prevCheckedItems) => ({
       ...prevCheckedItems,
-      [categoryId]: isChecked,
+      [sectorId]: isChecked,
     }))
   }
 
@@ -142,37 +138,21 @@ export default function Products() {
 
   return (
     <main className="mx-auto p-4">
-      <div
-        style={{ animationDuration: "500ms" }}
-        className="motion-safe:animate-revealBottom"
-      >
-        <h1 className="text-2xl font-semibold text-gray-900 sm:text-xl dark:text-gray-50">
-          Which products are you interested in?
-        </h1>
-        <p className="mt-6 text-gray-700 sm:text-sm dark:text-gray-300">
-          You can choose multiple. This will help us customize the experience.
-        </p>
-      </div>
+      <h1 className="text-2xl font-semibold text-gray-900 sm:text-xl dark:text-gray-50">
+        In welke sectoren bent u actief?
+      </h1>
+      <p className="mt-6 text-gray-700 sm:text-sm dark:text-gray-300">
+        U kunt meerdere sectoren selecteren. Dit helpt ons om de ervaring aan te passen.
+      </p>
       <form onSubmit={handleSubmit} className="mt-4">
         <fieldset>
-          <legend className="sr-only">
-            Select products you are interested in
-          </legend>
+          <legend className="sr-only">Selecteer uw sectoren</legend>
           <div className="space-y-2">
-            {categories.map((category, index) => (
-              <div
-                className="motion-safe:animate-revealBottom"
-                key={category.id}
-                style={{
-                  animationDuration: "600ms",
-                  animationDelay: `${100 + index * 50}ms`,
-                  animationFillMode: "backwards",
-                }}
-              >
-                <CategoryItem
-                  key={category.id}
-                  category={category}
-                  checked={checkedItems[category.id] || false}
+            {sectors.map((sector, index) => (
+              <div key={sector.id}>
+                <SectorItem
+                  sector={sector}
+                  checked={checkedItems[sector.id] || false}
                   onCheckedChange={handleCheckedChange}
                 />
               </div>
@@ -187,7 +167,7 @@ export default function Products() {
             aria-disabled={!isAnyItemChecked || loading}
             isLoading={loading}
           >
-            {loading ? "Submitting..." : "Continue"}
+            {loading ? "Verzenden..." : "Doorgaan"}
           </Button>
         </div>
       </form>

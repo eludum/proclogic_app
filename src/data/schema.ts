@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const DescriptionSchema = z.object({
   language: z.string(),
@@ -53,34 +53,6 @@ export const OrganisationSchema = z.object({
   organisationId: z.number(),
   organisationNames: z.array(OrganisationNameSchema),
   tree: z.string(),
-});
-
-export const PublicationSchema = z.object({
-  cpvAdditionalCodes: z.array(CPVCodeSchema),
-  cpvMainCode: CPVCodeSchema,
-  dispatchDate: z.date(),
-  dossier: DossierSchema,
-  insertionDate: z.date(),
-  lots: z.array(LotSchema),
-  natures: z.array(z.string()),
-  noticeIds: z.array(z.string()),
-  noticeSubType: z.string(),
-  nutsCodes: z.array(z.string()),
-  organisation: OrganisationSchema,
-  procedureId: z.string(),
-  publicationDate: z.date(),
-  publicationLanguages: z.array(z.string()),
-  publicationReferenceNumbersBDA: z.array(z.string()),
-  publicationReferenceNumbersTED: z.array(z.string()),
-  publicationType: z.string(),
-  publicationWorkspaceId: z.string(),
-  publishedAt: z.array(z.date()),
-  referenceNumber: z.string(),
-  sentAt: z.array(z.date()),
-  tedPublished: z.boolean(),
-  vaultSubmissionDeadline: z.date().optional(),
-  recommended: z.array(CompanySchema).optional(),
-  ai_summary: z.string().optional(),
 });
 
 

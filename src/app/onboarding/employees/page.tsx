@@ -9,17 +9,22 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 
-const employeeCounts = [
-  { value: "1", label: "1" },
-  { value: "2-5", label: "2 – 5" },
-  { value: "6-20", label: "6 – 20" },
-  { value: "21-100", label: "21 – 100" },
-  { value: "101-500", label: "101 – 500" },
-  { value: "501+", label: "501+" },
+const provinces = [
+  { value: "antwerpen", label: "Antwerpen" },
+  { value: "oost-vlaanderen", label: "Oost-Vlaanderen" },
+  { value: "west-vlaanderen", label: "West-Vlaanderen" },
+  { value: "vlaams-brabant", label: "Vlaams-Brabant" },
+  { value: "limburg", label: "Limburg" },
+  { value: "brussels", label: "Brussels Hoofdstedelijk Gewest" },
+  { value: "henegouwen", label: "Henegouwen" },
+  { value: "luik", label: "Luik" },
+  { value: "luxemburg", label: "Luxemburg" },
+  { value: "namen", label: "Namen" },
+  { value: "waals-brabant", label: "Waals-Brabant" },
 ]
 
-export default function Employees() {
-  const [selectedEmployeeCount, setSelectedEmployeeCount] = useState("")
+export default function Provinces() {
+  const [selectedProvince, setSelectedProvince] = useState("")
   const [loading, setLoading] = React.useState(false)
   const router = useRouter()
 
@@ -27,7 +32,7 @@ export default function Employees() {
     e.preventDefault()
     setLoading(true)
     setTimeout(() => {
-      console.log("Form submitted with employee count:", selectedEmployeeCount)
+      console.log("Form submitted with province:", selectedProvince)
       router.push("/onboarding/infrastructure")
     }, 600)
   }
@@ -39,25 +44,25 @@ export default function Employees() {
         style={{ animationDuration: "500ms" }}
       >
         <h1 className="text-2xl font-semibold text-gray-900 sm:text-xl dark:text-gray-50">
-          How many employees does your company have?
+          In welke provincie is uw bedrijf gevestigd?
         </h1>
         <p className="mt-6 text-gray-700 sm:text-sm dark:text-gray-300">
-          This will help us customize the experience to you.
+          Dit helpt ons om de ervaring aan te passen aan uw regio.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="mt-4">
         <fieldset>
-          <legend className="sr-only">Select number of employees</legend>
+          <legend className="sr-only">Selecteer uw provincie</legend>
           <RadioCardGroup
-            value={selectedEmployeeCount}
-            onValueChange={(value) => setSelectedEmployeeCount(value)}
+            value={selectedProvince}
+            onValueChange={(value) => setSelectedProvince(value)}
             required
-            aria-label="Number of employees"
+            aria-label="Provincie"
           >
-            {employeeCounts.map((count, index) => (
+            {provinces.map((province, index) => (
               <div
                 className="motion-safe:animate-revealBottom"
-                key={count.value}
+                key={province.value}
                 style={{
                   animationDuration: "600ms",
                   animationDelay: `${100 + index * 50}ms`,
@@ -66,8 +71,8 @@ export default function Employees() {
               >
                 <RadioCardItem
                   className="active:scale-[99%] dark:bg-gray-925"
-                  key={count.value}
-                  value={count.value}
+                  key={province.value}
+                  value={province.value}
                   style={{
                     animationDuration: "600ms",
                     animationDelay: `${100 + index * 50}ms`,
@@ -76,7 +81,7 @@ export default function Employees() {
                 >
                   <div className="flex items-center gap-2.5">
                     <RadioCardIndicator />
-                    <span className="block sm:text-sm">{count.label}</span>
+                    <span className="block sm:text-sm">{province.label}</span>
                   </div>
                 </RadioCardItem>
               </div>
@@ -85,16 +90,16 @@ export default function Employees() {
         </fieldset>
         <div className="mt-6 flex justify-between">
           <Button type="button" variant="ghost" asChild>
-            <Link href="/onboarding/products">Back</Link>
+            <Link href="/onboarding/products">Terug</Link>
           </Button>
           <Button
             className="disabled:bg-gray-200 disabled:text-gray-500"
             type="submit"
-            disabled={!selectedEmployeeCount || loading}
-            aria-disabled={!selectedEmployeeCount || loading}
+            disabled={!selectedProvince || loading}
+            aria-disabled={!selectedProvince || loading}
             isLoading={loading}
           >
-            {loading ? "Submitting..." : "Continue"}
+            {loading ? "Verzenden..." : "Doorgaan"}
           </Button>
         </div>
       </form>

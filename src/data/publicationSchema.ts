@@ -1,14 +1,15 @@
 import { z } from "zod";
 
 const PublicationOutSchema = z.object({
-    workspace_id: z.string(),
     title: z.string(),
+    workspace_id: z.string(),
     dispatch_date: z.date(),
     publication_date: z.date(),
     submission_deadline: z.date().nullable().optional(),
     is_active: z.boolean().nullable().optional(),
     original_description: z.string(),
-    ai_summary: z.string(),
+    ai_notice_summary: z.string().nullable().optional(),
+    ai_document_summary: z.string().nullable().optional(),
     organisation: z.string(),
     cpv_code: z.string(),
     cpv_additional_codes: z.array(z.string()).nullable().optional(),

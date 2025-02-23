@@ -11,6 +11,7 @@ import {
 import { cx } from "@/lib/utils"
 import * as React from "react"
 
+import { Publication } from "@/data/publicationSchema"
 import {
   ColumnDef,
   Row,
@@ -24,7 +25,6 @@ import {
 import { DataTablePagination } from "./DataTablePagination"
 import PublicationDetails from "./PublicationDetails"
 import { DataTableBulkEditor } from "./TableBulkEditor"
-import { Publication } from "@/data/publicationSchema"
 
 interface DataTableProps<TData> {
   columns: ColumnDef<TData>[]
@@ -115,7 +115,7 @@ export function DataTable<TData>({ columns, data, onRowClick }: DataTableProps<T
                             row.getIsSelected()
                               ? "bg-gray-50 dark:bg-gray-900"
                               : "",
-                            "relative whitespace-nowrap py-2 text-gray-700 first:w-10 dark:text-gray-300",
+                            "relative whitespace-nowrap py-12 text-gray-700 first:w-10 dark:text-gray-300",
                             cell.column.columnDef.meta?.className,
                           )}
                         >

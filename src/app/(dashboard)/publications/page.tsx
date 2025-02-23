@@ -36,7 +36,7 @@ export default function Publications() {
     };
 
     fetchPublications();
-  }, []);
+  }, [API_BASE_URL]);
 
   const handleRowClick = (row: Row<Publication>) => {
     setRow(row);

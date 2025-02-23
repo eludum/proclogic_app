@@ -4,7 +4,7 @@ import { Badge, BadgeProps } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Checkbox } from "@/components/Checkbox"
 import { Publication } from "@/data/publicationSchema"
-import { formatters } from "@/lib/utils"
+import { cx, formatters } from "@/lib/utils"
 import { ColumnDef, createColumnHelper, Row } from "@tanstack/react-table"
 import { format } from "date-fns"
 import { Ellipsis } from "lucide-react"
@@ -49,6 +49,30 @@ export const getColumns = ({
         displayName: "Select",
       },
     }),
+    columnHelper.accessor("title", {
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Title" />
+      ),
+      enableSorting: false,
+      meta: {
+        className: "text-left",
+        displayName: "`Title`",
+      },
+      cell: ({ getValue }) => {
+        const title = getValue()
+        return (
+          <div
+            title={title}
+            className={cx(
+              "break-words whitespace-normal"
+            )}
+            style={{ maxWidth: "75ch" }}
+          >
+            {title}
+          </div>
+        )
+      },
+    }),
 
     columnHelper.accessor("dispatch_date", {
       header: ({ column }) => (
@@ -87,6 +111,61 @@ export const getColumns = ({
         )
       },
     }),
+    columnHelper.accessor("publication_value", {
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Win probabiliteit" />
+      ),
+      enableSorting: false,
+      meta: {
+        className: "text-left",
+        displayName: "Win probabiliteit",
+      },
+      cell: ({ getValue }) => {
+        const value = getValue()
+
+        function Indicator({ number }: { number: number }) {
+          let category
+          if (number === 0) {
+            category = "zero"
+          } else if (number < 9) {
+            category = "bad"
+          } else if (number >= 9 && number <= 15) {
+            category = "ok"
+          } else {
+            category = "good"
+          }
+
+          const getBarClass = (index: number) => {
+            if (category === "zero") {
+              return "bg-gray-300 dark:bg-gray-800"
+            } else if (category === "good") {
+              return "bg-indigo-600 dark:bg-indigo-500"
+            } else if (category === "ok" && index < 2) {
+              return "bg-indigo-600 dark:bg-indigo-500"
+            } else if (category === "bad" && index < 1) {
+              return "bg-indigo-600 dark:bg-indigo-500"
+            }
+            return "bg-gray-300 dark:bg-gray-800"
+          }
+
+          return (
+            <div className="flex gap-0.5">
+              <div className={`h-3.5 w-1 rounded-sm ${getBarClass(0)}`} />
+              <div className={`h-3.5 w-1 rounded-sm ${getBarClass(1)}`} />
+              <div className={`h-3.5 w-1 rounded-sm ${getBarClass(2)}`} />
+            </div>
+          )
+        }
+
+        return (
+          <div className="flex items-center gap-0.5">
+            <span className="w-6">{value}</span>
+            <Indicator number={Number(value) || 0} />
+          </div>
+        )
+      },
+    }),
+
     columnHelper.accessor("organisation", {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Organisatie" />
@@ -98,24 +177,24 @@ export const getColumns = ({
       },
       filterFn: "arrIncludesSome",
     }),
-    columnHelper.accessor("cpv_code", {
+    columnHelper.accessor("sector", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="CPV Code" />
+        <DataTableColumnHeader column={column} title="Sector" />
       ),
       enableSorting: false,
       meta: {
         className: "text-left",
-        displayName: "CPV Code",
+        displayName: "Sector",
       },
     }),
     columnHelper.accessor("publication_value", {
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Bedrag" />
+        <DataTableColumnHeader column={column} title="Geraamd bedrag" />
       ),
       enableSorting: true,
       meta: {
         className: "text-right",
-        displayName: "Bedrag",
+        displayName: "Geraamd bedrag",
       },
       cell: ({ getValue }) => {
         return (
