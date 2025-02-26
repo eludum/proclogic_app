@@ -18,10 +18,8 @@ import { cx, focusRing } from "@/lib/utils"
 import { RiArrowDownSFill } from "@remixicon/react"
 import {
   BarChart2,
-  Bell,
   FileText,
   Home,
-  Search,
   Settings,
   Users
 } from "lucide-react"
@@ -36,18 +34,18 @@ const mainNavigation = [
     icon: Home,
     notifications: false,
   },
-  {
-    name: "Zoeken",
-    href: "/search",
-    icon: Search,
-    notifications: 0,
-  },
-  {
-    name: "Mijn Alerts",
-    href: "/alerts",
-    icon: Bell,
-    notifications: 3,
-  },
+  // {
+  //   name: "Zoeken",
+  //   href: "/search",
+  //   icon: Search,
+  //   notifications: 0,
+  // },
+  // {
+  //   name: "Mijn Alerts",
+  //   href: "/alerts",
+  //   icon: Bell,
+  //   notifications: 3,
+  // },
 ] as const
 
 const secondaryNavigation = [
@@ -71,33 +69,10 @@ const secondaryNavigation = [
     ],
   },
   {
-    name: "Werkruimtes",
-    href: "/workspaces",
-    icon: Users,
-    children: [
-      {
-        name: "Projecten",
-        href: "/workspaces/projects",
-      },
-      {
-        name: "Documenten",
-        href: "/workspaces/documents",
-      },
-      {
-        name: "Team Samenwerking",
-        href: "/workspaces/team",
-      }
-    ],
-  },
-  {
     name: "Analyses",
     href: "/analytics",
     icon: BarChart2,
     children: [
-      {
-        name: "AI-Samenvattingen",
-        href: "/analytics/ai-summaries",
-      },
       {
         name: "Concurrentieanalyse",
         href: "/analytics/competition",
@@ -106,6 +81,24 @@ const secondaryNavigation = [
         name: "Rapportages",
         href: "/analytics/reports",
       }
+    ],
+  },
+  {
+    name: "Werkruimtes",
+    href: "#", // Changed from "/workspaces" to "#" to prevent navigation
+    icon: Users,
+    disabled: true, // Added disabled property
+    children: [
+      {
+        name: "Projecten",
+        href: "#", // Changed from actual path to "#"
+        disabled: true, // Added disabled property
+      },
+      {
+        name: "Documenten",
+        href: "#", // Changed from actual path to "#"
+        disabled: true, // Added disabled property
+      },
     ],
   },
 ] as const
@@ -180,7 +173,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar {...props} className="bg-gray-50 dark:bg-gray-925">
+    <Sidebar {...props}>
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-md bg-white p-1.5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
@@ -237,22 +230,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <button
                       onClick={() => toggleMenu(item.name)}
                       className={cx(
-                        "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:text-gray-400 hover:dark:bg-gray-900 hover:dark:text-gray-50",
+                        "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition sm:text-sm",
                         focusRing,
-                        sectionActive
+                        item.disabled
+                          ? "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
+                          : "hover:bg-gray-200/50 dark:text-gray-400 hover:dark:bg-gray-900 hover:dark:text-gray-50",
+                        sectionActive && !item.disabled
                           ? "bg-gray-200/70 text-blue-600 dark:bg-gray-800 dark:text-blue-400"
                           : "text-gray-900"
                       )}
+                      disabled={item.disabled}
                     >
                       <div className="flex items-center gap-2.5">
                         <item.icon
                           className={cx(
                             "size-[18px] shrink-0",
-                            sectionActive && "text-blue-500 dark:text-blue-400"
+                            item.disabled
+                              ? "text-gray-400 dark:text-gray-600"
+                              : sectionActive && "text-blue-500 dark:text-blue-400"
                           )}
                           aria-hidden="true"
                         />
                         {item.name}
+                        {item.disabled && (
+                          <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-500">
+                            (Binnenkort)
+                          </span>
+                        )}
                       </div>
                       <RiArrowDownSFill
                         className={cx(
@@ -260,9 +264,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             ? "rotate-0"
                             : "-rotate-90",
                           "size-5 shrink-0 transform transition-transform duration-150 ease-in-out",
-                          sectionActive
-                            ? "text-blue-500 dark:text-blue-400"
-                            : "text-gray-400 dark:text-gray-600"
+                          item.disabled
+                            ? "text-gray-400 dark:text-gray-600"
+                            : sectionActive
+                              ? "text-blue-500 dark:text-blue-400"
+                              : "text-gray-400 dark:text-gray-600"
                         )}
                         aria-hidden="true"
                       />
@@ -275,8 +281,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             <SidebarSubLink
                               href={child.href}
                               isActive={isRouteActive(child.href)}
+                              className={cx(
+                                child.disabled && "cursor-not-allowed opacity-60 pointer-events-none text-gray-500 dark:text-gray-500 hover:bg-transparent"
+                              )}
+                              onClick={child.disabled ? (e) => e.preventDefault() : undefined}
                             >
                               {child.name}
+                              {child.disabled && (
+                                <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-500">
+                                  (Binnenkort)
+                                </span>
+                              )}
                             </SidebarSubLink>
                           </SidebarMenuItem>
                         ))}

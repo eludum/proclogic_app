@@ -6,13 +6,14 @@ import { Publication } from "@/data/publicationSchema";
 import { RiChatSmile2Line } from '@remixicon/react';
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, ClockIcon, CodeIcon, MapPinIcon, PlusIcon, StarIcon, TagIcon, ThumbsUpIcon } from 'lucide-react';
 import { useEffect, useState } from "react";
-
+import ChatComponent from "../_components/ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
 export default function Overview() {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeChatPublication, setActiveChatPublication] = useState<Publication | null>(null);
 
   useEffect(() => {
     async function fetchPublications() {
@@ -96,6 +97,11 @@ export default function Overview() {
     }
   };
 
+  // Start a chat with a publication
+  const startChat = (publication: Publication) => {
+    setActiveChatPublication(publication);
+  };
+
   return (
     <section aria-label="Overview Table">
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
@@ -132,7 +138,7 @@ export default function Overview() {
                       </div>
                       <div className="flex justify-center mb-2">
                         <h5 className="text-slate-800 text-2xl font-semibold">
-                          Loading data from the database...
+                          Aanbestedingen aan het laden...
                         </h5>
                       </div>
                     </div>
@@ -176,7 +182,9 @@ export default function Overview() {
                         {/* Header with time remaining badge */}
                         <div className="flex flex-col gap-2 w-full">
                           <div className="flex flex-wrap items-start justify-between gap-2 w-full">
-                            <h3 className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0">{publication.title}</h3>
+                            <a href={`/publications/detail/${publication.workspace_id}`} target="_blank" className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-none">
+                              {publication.title}
+                            </a>
 
                             {/* Time remaining badge */}
                             <div className={`flex items-center shrink-0 gap-1 px-3 py-1 rounded-full text-xs font-medium ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
@@ -184,7 +192,9 @@ export default function Overview() {
                               <span>{getTimeRemaining(publication.submission_deadline).text}</span>
                             </div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">ID: {publication.workspace_id}</p>
+                          <a href={`/publications/detail/${publication.workspace_id}`} target="_blank" className="text-xs text-gray-500 dark:text-gray-400 hover:underline focus:outline-none">
+                            ID: {publication.workspace_id}
+                          </a>
                         </div>
 
                         {/* Description with proper wrapping */}
@@ -244,11 +254,14 @@ export default function Overview() {
                         <div className="flex flex-col sm:flex-row gap-2 mt-2">
                           <Button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-full sm:w-auto">
                             <PlusIcon size={16} />
-                            <span>Toevoegen aan favorieten</span>
+                            <span>Opslaan</span>
                           </Button>
-                          <Button className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-500 px-4 py-2 rounded-md w-full sm:w-auto" disabled>
-                            <RiChatSmile2Line className="size-5 transition-transform group-hover:scale-110" />
-                            <span>ProcLogic AI Chat</span>
+                          <Button
+                            onClick={() => startChat(publication)}
+                            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md w-full sm:w-auto"
+                          >
+                            <RiChatSmile2Line className="size-5" />
+                            <span>Analyze met ProcLogic AI</span>
                           </Button>
                         </div>
                       </div>
@@ -261,6 +274,14 @@ export default function Overview() {
           </TableBody>
         </Table>
       </TableRoot>
-    </section >
+
+      {/* Chat dialog */}
+      {activeChatPublication && (
+        <ChatComponent
+          publicationId={activeChatPublication.workspace_id}
+          onClose={() => setActiveChatPublication(null)}
+        />
+      )}
+    </section>
   );
 }

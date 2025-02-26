@@ -9,7 +9,7 @@ const routeTranslations: Record<string, string> = {
   // Main sections
   dashboard: "Dashboard",
   search: "Zoeken",
-  alerts: "Mijn Alerts",
+  // alerts: "Mijn Alerts",
   publications: "Aanbestedingen",
   workspaces: "Werkruimtes",
   analytics: "Analyses",
@@ -20,15 +20,15 @@ const routeTranslations: Record<string, string> = {
   saved: "Opgeslagen",
   expiring: "Verlopend",
 
+  // Analytics subsections
+  competition: "Concurrentieanalyse",
+  reports: "Rapportages",
+
   // Workspaces subsections
   projects: "Projecten",
   documents: "Documenten",
   team: "Team Samenwerking",
 
-  // Analytics subsections
-  "ai-summaries": "AI-Samenvattingen",
-  competition: "Concurrentieanalyse",
-  reports: "Rapportages",
 
   // Settings subsections
   "company-profile": "Bedrijfsprofiel",

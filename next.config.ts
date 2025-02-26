@@ -5,7 +5,17 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/quotes/overview",
+        destination: "/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/publications",
+        destination: "/publications/overview",
+        permanent: true,
+      },
+      {
+        source: "/analytics",
+        destination: "/analytics/competition",
         permanent: true,
       },
     ]
