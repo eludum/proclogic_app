@@ -1,10 +1,10 @@
-// Tremor Raw Divider [v0.0.0]
+// Tremor Divider [v0.0.2]
 
 import React from "react"
 
 import { cx } from "@/lib/utils"
 
-interface DividerProps extends React.ComponentPropsWithoutRef<"div"> { }
+type DividerProps = React.ComponentPropsWithoutRef<"div">
 
 const Divider = React.forwardRef<HTMLDivElement, DividerProps>(
   ({ className, children, ...props }, forwardedRef) => (
@@ -45,7 +45,7 @@ const Divider = React.forwardRef<HTMLDivElement, DividerProps>(
           className={cx(
             // base
             "h-[1px] w-full",
-            // backround color
+            // background color
             "bg-gray-200 dark:bg-gray-800",
           )}
         />

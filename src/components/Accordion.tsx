@@ -1,8 +1,8 @@
-// Tremor Raw Accordion [v0.0.0]
+// Tremor Accordion [v0.0.1]
 
-import * as AccordionPrimitives from "@radix-ui/react-accordion"
-import { ChevronDown } from "lucide-react"
 import React from "react"
+import * as AccordionPrimitives from "@radix-ui/react-accordion"
+import { RiArrowDownSLine } from "@remixicon/react"
 
 import { cx } from "@/lib/utils"
 
@@ -22,23 +22,23 @@ const AccordionTrigger = React.forwardRef<
         // text color
         "text-gray-900 dark:text-gray-50",
         // disabled
-        "data-disabled:cursor-default data-disabled:text-gray-400 dark:data-disabled:text-gray-600",
+        "data-[disabled]:cursor-default data-[disabled]:text-gray-400 dark:data-[disabled]:text-gray-600",
         //focus
-        "focus-visible:z-10 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
+        "focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
         className,
       )}
       {...props}
       ref={forwardedRef}
     >
       {children}
-      <ChevronDown
+      <RiArrowDownSLine
         className={cx(
           // base
-          "size-5 shrink-0 transition-transform duration-150 group-data-[state=open]:rotate-180",
+          "size-5 shrink-0 transition-transform duration-150 ease-[cubic-bezier(0.87,_0,_0.13,_1)] group-data-[state=open]:rotate-180",
           // text color
           "text-gray-400 dark:text-gray-600",
           // disabled
-          "group-data-disabled:text-gray-300 dark:group-data-disabled:text-gray-700",
+          "group-data-[disabled]:text-gray-300 group-data-[disabled]:dark:text-gray-700",
         )}
         aria-hidden="true"
         focusable="false"

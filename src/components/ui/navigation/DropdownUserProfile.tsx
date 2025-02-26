@@ -1,6 +1,5 @@
 "use client"
 
-import { siteConfig } from "@/app/siteConfig"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +42,7 @@ export function DropdownUserProfile({
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent
           align={align}
-          className="min-w-[calc(var(--radix-dropdown-menu-trigger-width))]!"
+          className="sm:!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
         >
           <DropdownMenuLabel>emma.stone@acme.com</DropdownMenuLabel>
           <DropdownMenuGroup>
@@ -111,7 +110,7 @@ export function DropdownUserProfile({
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem>
-              <a href={siteConfig.baseLinks.logout} className="w-full">
+              <a href="#" className="w-full">
                 Sign out
               </a>
             </DropdownMenuItem>

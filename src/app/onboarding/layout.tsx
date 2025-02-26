@@ -1,6 +1,4 @@
 "use client"
-import { Button } from "@/components/Button"
-import { Logo } from "@/components/ui/Logo"
 import useScroll from "@/lib/useScroll"
 import { cx } from "@/lib/utils"
 import { usePathname } from "next/navigation"
@@ -64,29 +62,6 @@ const Layout = ({
 
   return (
     <>
-      <header
-        className={cx(
-          "fixed inset-x-0 top-0 isolate z-50 flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 transition-all md:grid md:grid-cols-[200px_auto_200px] md:px-6 dark:border-gray-900 dark:bg-gray-925",
-          scrolled ? "h-12" : "h-20",
-        )}
-      >
-        <div
-          className="hidden flex-nowrap items-center gap-0.5 md:flex"
-          aria-hidden="true"
-        >
-          <Logo
-            className="w-7 p-px text-blue-500 dark:text-blue-500"
-            aria-hidden="true"
-          />
-          <span className="mt-0.5 text-lg font-semibold text-gray-900 dark:text-gray-50">
-            Insights
-          </span>
-        </div>
-        <StepProgress steps={steps} />
-        <Button variant="ghost" className="ml-auto w-fit" asChild>
-          <a href="/reports">Skip to dashboard</a>
-        </Button>
-      </header>
       <main id="main-content" className="mx-auto mb-20 mt-28 max-w-lg">
         {children}
       </main>

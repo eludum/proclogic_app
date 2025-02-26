@@ -1,8 +1,8 @@
-# Tremor – Insights
+# Tremor – Planner
 
-`Insights` is a SaaS application template from [Tremor](https://tremor.so). It's built
-using [`Tremor Raw`](https://raw.tremor.so/docs/getting-started/installation)
-and [Next.js](https://nextjs.org).
+`Planner` is a SaaS application template from [Tremor](https://tremor.so). It's built
+using [`Tremor`](https://tremor.so/docs/getting-started/installation) and
+[Next.js](https://nextjs.org).
 
 ## Getting started
 
@@ -26,11 +26,11 @@ pnpm run dev
 
 This project uses
 [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to
-automatically optimize and load Inter, a custom Google Font.
+automatically optimize and load Geist, a custom Google Font.
 
 This project uses
-[`Tremor Raw`](https://raw.tremor.so/docs/getting-started/installation)
-components for the UI.
+[`Tremor`](https://raw.tremor.so/docs/getting-started/installation) components
+for the UI.
 
 ## License
 
@@ -42,9 +42,6 @@ This site template is a commercial product and is licensed under the
 For a deeper understanding of the technologies used in this template, check out
 the resources listed below:
 
-- [Tremor Raw](https://raw.tremor.so) - Tremor Raw documentation
-- [Tailwind CSS](https://tailwindcss.com) - A utility-first CSS framework
+- [Tailwind CSS v4 beta](https://tailwindcss.com/docs/v4-beta) - A utility-first CSS framework
 - [Next.js](https://nextjs.org/docs) - Next.js documentation
 - [Radix UI](https://www.radix-ui.com) - Radix UI Website
-- [Recharts](https://recharts.org) - Recharts documentation and website
-- [Tanstack](https://tanstack.com/table/latest) - TanStack table documentation

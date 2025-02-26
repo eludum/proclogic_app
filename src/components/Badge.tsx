@@ -1,4 +1,4 @@
-// Tremor Raw Badge [v0.0.0]
+// Tremor Badge [v0.0.1]
 
 import React from "react"
 import { tv, type VariantProps } from "tailwind-variants"
@@ -24,12 +24,12 @@ const badgeVariants = tv({
         "dark:bg-emerald-400/10 dark:text-emerald-400 dark:ring-emerald-400/20",
       ],
       error: [
-        "bg-rose-50 text-rose-900 ring-rose-600/20",
-        "dark:bg-rose-400/10 dark:text-rose-500 dark:ring-rose-400/20",
+        "bg-red-50 text-red-900 ring-red-600/20",
+        "dark:bg-red-400/10 dark:text-red-400 dark:ring-red-400/20",
       ],
       warning: [
-        "bg-orange-50 text-orange-900 ring-orange-600/30",
-        "dark:bg-orange-400/10 dark:text-orange-500 dark:ring-orange-400/20",
+        "bg-yellow-50 text-yellow-900 ring-yellow-600/30",
+        "dark:bg-yellow-400/10 dark:text-yellow-500 dark:ring-yellow-400/20",
       ],
     },
   },
@@ -40,7 +40,7 @@ const badgeVariants = tv({
 
 interface BadgeProps
   extends React.ComponentPropsWithoutRef<"span">,
-  VariantProps<typeof badgeVariants> { }
+    VariantProps<typeof badgeVariants> {}
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className, variant, ...props }: BadgeProps, forwardedRef) => {

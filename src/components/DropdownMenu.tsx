@@ -1,7 +1,8 @@
-// Tremor Raw Dropdown Menu [v0.0.0]
+// Tremor Dropdown Menu [v0.0.2]
 
 "use client"
 
+import * as React from "react"
 import * as DropdownMenuPrimitives from "@radix-ui/react-dropdown-menu"
 import {
   RiArrowRightSLine,
@@ -9,7 +10,6 @@ import {
   RiCheckLine,
   RiRadioButtonFill,
 } from "@remixicon/react"
-import * as React from "react"
 
 import { cx } from "@/lib/utils"
 
@@ -30,31 +30,31 @@ DropdownMenuRadioGroup.displayName = "DropdownMenuRadioGroup"
 
 const DropdownMenuSubMenuTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitives.SubTrigger>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.SubTrigger>
+  Omit<
+    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.SubTrigger>,
+    "asChild"
+  >
 >(({ className, children, ...props }, forwardedRef) => (
   <DropdownMenuPrimitives.SubTrigger
     ref={forwardedRef}
     className={cx(
       // base
-      "relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-1 outline-hidden transition-colors data-[state=checked]:font-semibold sm:text-sm",
+      "relative flex cursor-default select-none items-center rounded py-1.5 pl-2 pr-1 outline-none transition-colors data-[state=checked]:font-semibold sm:text-sm",
       // text color
       "text-gray-900 dark:text-gray-50",
       // disabled
-      "data-disabled:pointer-events-none data-disabled:text-gray-400 data-disabled:hover:bg-none dark:data-disabled:text-gray-600",
+      "data-[disabled]:pointer-events-none data-[disabled]:text-gray-400 data-[disabled]:hover:bg-none dark:data-[disabled]:text-gray-600",
       // focus
-      "focus-visible:bg-gray-100 data-[state=open]:bg-gray-100 dark:focus-visible:bg-gray-900 dark:data-[state=open]:bg-gray-900",
+      "focus-visible:bg-gray-100 data-[state=open]:bg-gray-100 focus-visible:dark:bg-gray-900 data-[state=open]:dark:bg-gray-900",
       // hover
-      "hover:bg-gray-100 dark:hover:bg-gray-900",
+      "hover:bg-gray-100 hover:dark:bg-gray-900",
       //
       className,
     )}
     {...props}
   >
     {children}
-    <RiArrowRightSLine
-      className="ml-auto size-4 shrink-0 dark:text-gray-500"
-      aria-hidden="true"
-    />
+    <RiArrowRightSLine className="ml-auto size-4 shrink-0" aria-hidden="true" />
   </DropdownMenuPrimitives.SubTrigger>
 ))
 DropdownMenuSubMenuTrigger.displayName = "DropdownMenuSubMenuTrigger"
@@ -75,7 +75,7 @@ const DropdownMenuSubMenuContent = React.forwardRef<
         // heights
         "max-h-[var(--radix-popper-available-height)]",
         // background color
-        "bg-white dark:bg-[#090E1A]",
+        "bg-white dark:bg-gray-950",
         // text color
         "text-gray-900 dark:text-gray-50",
         // border color
@@ -119,7 +119,7 @@ const DropdownMenuContent = React.forwardRef<
           // heights
           "max-h-[var(--radix-popper-available-height)]",
           // background color
-          "bg-white dark:bg-[#090E1A]",
+          "bg-white dark:bg-gray-950",
           // text color
           "text-gray-900 dark:text-gray-50",
           // border color
@@ -143,7 +143,10 @@ DropdownMenuContent.displayName = "DropdownMenuContent"
 
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitives.Item>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.Item> & {
+  Omit<
+    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.Item>,
+    "asChild"
+  > & {
     shortcut?: string
     hint?: string
   }
@@ -152,15 +155,15 @@ const DropdownMenuItem = React.forwardRef<
     ref={forwardedRef}
     className={cx(
       // base
-      "group/DropdownMenuItem relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-1 outline-hidden transition-colors data-[state=checked]:font-semibold sm:text-sm",
+      "group/DropdownMenuItem relative flex cursor-pointer select-none items-center rounded py-1.5 pl-2 pr-1 outline-none transition-colors data-[state=checked]:font-semibold sm:text-sm",
       // text color
       "text-gray-900 dark:text-gray-50",
       // disabled
-      "data-disabled:pointer-events-none data-disabled:text-gray-400 data-disabled:hover:bg-none dark:data-disabled:text-gray-600",
+      "data-[disabled]:pointer-events-none data-[disabled]:text-gray-400 data-[disabled]:hover:bg-none dark:data-[disabled]:text-gray-600",
       // focus
-      "focus-visible:bg-gray-100 dark:focus-visible:bg-gray-900",
+      "focus-visible:bg-gray-100 focus-visible:dark:bg-gray-900",
       // hover
-      "hover:bg-gray-100 dark:hover:bg-gray-900",
+      "hover:bg-gray-100 hover:dark:bg-gray-900",
       className,
     )}
     tremor-id="tremor-raw"
@@ -187,7 +190,10 @@ DropdownMenuItem.displayName = "DropdownMenuItem"
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitives.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.CheckboxItem> & {
+  Omit<
+    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitives.CheckboxItem>,
+    "asChild"
+  > & {
     shortcut?: string
     hint?: string
   }
@@ -200,15 +206,15 @@ const DropdownMenuCheckboxItem = React.forwardRef<
       ref={forwardedRef}
       className={cx(
         // base
-        "relative flex cursor-pointer select-none items-center gap-x-2 rounded-sm py-1.5 pl-8 pr-1 outline-hidden transition-colors data-[state=checked]:font-semibold sm:text-sm",
+        "relative flex cursor-pointer select-none items-center gap-x-2 rounded py-1.5 pl-8 pr-1 outline-none transition-colors data-[state=checked]:font-semibold sm:text-sm",
         // text color
         "text-gray-900 dark:text-gray-50",
         // disabled
-        "data-disabled:pointer-events-none data-disabled:text-gray-400 data-disabled:hover:bg-none dark:data-disabled:text-gray-600",
+        "data-[disabled]:pointer-events-none data-[disabled]:text-gray-400 data-[disabled]:hover:bg-none dark:data-[disabled]:text-gray-600",
         // focus
-        "focus-visible:bg-gray-100 dark:focus-visible:bg-gray-900",
+        "focus-visible:bg-gray-100 focus-visible:dark:bg-gray-900",
         // hover
-        "hover:bg-gray-100 dark:hover:bg-gray-900",
+        "hover:bg-gray-100 hover:dark:bg-gray-900",
         className,
       )}
       checked={checked}
@@ -262,15 +268,15 @@ const DropdownMenuRadioItem = React.forwardRef<
       ref={forwardedRef}
       className={cx(
         // base
-        "group/DropdownMenuRadioItem relative flex cursor-pointer select-none items-center gap-x-2 rounded-sm py-1.5 pl-8 pr-1 outline-hidden transition-colors data-[state=checked]:font-semibold sm:text-sm",
+        "group/DropdownMenuRadioItem relative flex cursor-pointer select-none items-center gap-x-2 rounded py-1.5 pl-8 pr-1 outline-none transition-colors data-[state=checked]:font-semibold sm:text-sm",
         // text color
         "text-gray-900 dark:text-gray-50",
         // disabled
-        "data-disabled:pointer-events-none data-disabled:text-gray-400 data-disabled:hover:bg-none dark:data-disabled:text-gray-600",
+        "data-[disabled]:pointer-events-none data-[disabled]:text-gray-400 data-[disabled]:hover:bg-none dark:data-[disabled]:text-gray-600",
         // focus
-        "focus-visible:bg-gray-100 dark:focus-visible:bg-gray-900",
+        "focus-visible:bg-gray-100 focus-visible:dark:bg-gray-900",
         // hover
-        "hover:bg-gray-100 dark:hover:bg-gray-900",
+        "hover:bg-gray-100 hover:dark:bg-gray-900",
         className,
       )}
       {...props}
@@ -361,7 +367,7 @@ const DropdownMenuIconWrapper = ({
         // text color
         "text-gray-600 dark:text-gray-400",
         // disabled
-        "group-data-disabled/DropdownMenuItem:text-gray-400 dark:group-data-disabled/DropdownMenuItem:text-gray-700",
+        "group-data-[disabled]/DropdownMenuItem:text-gray-400 group-data-[disabled]/DropdownMenuItem:dark:text-gray-700",
         className,
       )}
       {...props}
@@ -371,8 +377,18 @@ const DropdownMenuIconWrapper = ({
 DropdownMenuIconWrapper.displayName = "DropdownMenuIconWrapper"
 
 export {
-  DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuIconWrapper, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup,
-  DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSubMenu,
-  DropdownMenuSubMenuContent, DropdownMenuSubMenuTrigger, DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuSubMenuTrigger,
+  DropdownMenuSubMenu,
+  DropdownMenuSubMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuIconWrapper,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 }
-
