@@ -1,22 +1,16 @@
-"use client"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuSubMenu,
-  DropdownMenuSubMenuContent,
-  DropdownMenuSubMenuTrigger,
-  DropdownMenuTrigger,
-} from "@/components/DropdownMenu"
-import { ArrowUpRight, Monitor, Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
-import * as React from "react"
+  DropdownMenuTrigger
+} from "@/components/DropdownMenu";
+import { useUser } from '@clerk/nextjs';
+import { ArrowUpRight, LoaderIcon } from "lucide-react";
+import { useTheme } from "next-themes";
+import * as React from "react";
 
 export type DropdownUserProfileProps = {
   children: React.ReactNode
@@ -27,6 +21,7 @@ export function DropdownUserProfile({
   children,
   align = "start",
 }: DropdownUserProfileProps) {
+  const { isLoaded, isSignedIn, user } = useUser();
   const [mounted, setMounted] = React.useState(false)
   const { theme, setTheme } = useTheme()
   React.useEffect(() => {
@@ -36,6 +31,10 @@ export function DropdownUserProfile({
   if (!mounted) {
     return null
   }
+  if (!isLoaded) {
+    return < LoaderIcon size={16} className="animate-spin text-emerald-600" />
+  }
+
   return (
     <>
       <DropdownMenu>
@@ -44,8 +43,8 @@ export function DropdownUserProfile({
           align={align}
           className="sm:!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
         >
-          <DropdownMenuLabel>emma.stone@acme.com</DropdownMenuLabel>
-          <DropdownMenuGroup>
+          <DropdownMenuLabel>{user && (user.fullName)}</DropdownMenuLabel>
+          {/* <DropdownMenuGroup>
             <DropdownMenuSubMenu>
               <DropdownMenuSubMenuTrigger>Theme</DropdownMenuSubMenuTrigger>
               <DropdownMenuSubMenuContent>
@@ -83,7 +82,7 @@ export function DropdownUserProfile({
               </DropdownMenuSubMenuContent>
             </DropdownMenuSubMenu>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator /> */}
           <DropdownMenuGroup>
             <DropdownMenuItem>
               Changelog
@@ -108,13 +107,6 @@ export function DropdownUserProfile({
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <a href="#" className="w-full">
-                Sign out
-              </a>
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

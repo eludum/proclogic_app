@@ -18,10 +18,11 @@ interface Message {
 
 interface ChatComponentProps {
     publicationId: string;
+    vatNumber: string; // Add VAT number prop to identify the company
     onClose: () => void;
 }
 
-export default function ChatComponent({ publicationId, onClose }: ChatComponentProps) {
+export default function ChatComponent({ publicationId, vatNumber, onClose }: ChatComponentProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [currentMessage, setCurrentMessage] = useState("");
     const [loading, setLoading] = useState(false);
@@ -88,7 +89,7 @@ export default function ChatComponent({ publicationId, onClose }: ChatComponentP
         setLoading(true);
 
         try {
-            // Call the conversation API
+            // Call the conversation API with vatNumber included
             const response = await fetch(`${API_BASE_URL}/conversation`, {
                 method: "POST",
                 headers: {
@@ -96,6 +97,7 @@ export default function ChatComponent({ publicationId, onClose }: ChatComponentP
                 },
                 body: JSON.stringify({
                     publication_id: publicationId,
+                    vat_number: vatNumber, // Include VAT number in the request
                     message: currentMessage,
                     thread_id: threadId
                 })
@@ -154,8 +156,8 @@ export default function ChatComponent({ publicationId, onClose }: ChatComponentP
     const handleClose = async () => {
         try {
             if (threadId) {
-                // Call the end conversation API
-                await fetch(`${API_BASE_URL}/conversation/${publicationId}`, {
+                // Call the end conversation API with vatNumber included
+                await fetch(`${API_BASE_URL}/conversation/${vatNumber}/${publicationId}`, {
                     method: "DELETE"
                 });
             }
@@ -185,6 +187,7 @@ export default function ChatComponent({ publicationId, onClose }: ChatComponentP
                         onClick={handleClose}
                         className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
                         aria-label="Close chat"
+                        variant="ghost"
                     >
                         <RiCloseLine className="size-5" />
                     </Button>
