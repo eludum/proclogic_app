@@ -49,7 +49,7 @@ export function Breadcrumbs() {
     // Always start with Home
     const items: BreadcrumbItem[] = [
       {
-        name: "Home",
+        name: "Start",
         href: "/",
         isCurrent: pathname === "/"
       }

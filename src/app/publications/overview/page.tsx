@@ -1,10 +1,8 @@
 "use server"
 import { siteConfig } from "@/app/siteConfig";
-import { Table, TableBody, TableCell, TableRoot, TableRow } from "@/components/Table";
 import { getCompanyData } from "@/lib/userUtils";
 import { currentUser } from '@clerk/nextjs/server';
 import PublicationList from "../_components/PublicationList";
-
 
 const API_BASE_URL = siteConfig.api_base_url;
 
@@ -50,11 +48,8 @@ export default async function Overview() {
     console.error("Error fetching publications:", error);
   }
 
-  // Client-side interactivity will be handled by a client component
-  // We'll create PublicationList as a client component to handle the chat functionality
-
   return (
-    <section aria-label="Overview Table">
+    <section aria-label="Publications Overview">
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
         <div className="w-full">
           <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingen Overzicht</h1>
@@ -62,31 +57,21 @@ export default async function Overview() {
         </div>
       </div>
 
-      <TableRoot className="border-t border-gray-200 dark:border-gray-800 w-full">
-        <Table>
-          <TableBody>
-            {fetchError ? (
-              <TableRow>
-                <TableCell>
-                  <div className="p-6 text-center">
-                    <p className="text-red-500">Error loading publications: {fetchError}</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : publications.length === 0 ? (
-              <TableRow>
-                <TableCell>
-                  <div className="p-6 text-center">
-                    <p className="text-gray-500">Geen aanbestedingen gevonden</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              <PublicationList publications={publications} company={company} />
-            )}
-          </TableBody>
-        </Table>
-      </TableRoot>
+      <div className="border-t border-gray-200 dark:border-gray-800 w-full">
+        {fetchError ? (
+          <div className="p-6 text-center">
+            <p className="text-red-500">Error loading publications: {fetchError}</p>
+          </div>
+        ) : publications.length === 0 ? (
+          <div className="p-6 text-center">
+            <p className="text-gray-500">Geen aanbestedingen gevonden</p>
+          </div>
+        ) : (
+          <div className="p-4">
+            <PublicationList publications={publications} company={company} />
+          </div>
+        )}
+      </div>
     </section>
   );
 }

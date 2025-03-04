@@ -1,6 +1,5 @@
 "use client"
 import { Divider } from "@/components/Divider"
-import { Input } from "@/components/Input"
 import {
   Sidebar,
   SidebarContent,
@@ -14,12 +13,14 @@ import {
   SidebarMenuSub,
   SidebarSubLink,
 } from "@/components/Sidebar"
+import { SafeUser } from '@/lib/userUtils'
 import { cx, focusRing } from "@/lib/utils"
 import { RiArrowDownSFill } from "@remixicon/react"
 import {
   BarChart2,
   FileText,
   Home,
+  Search,
   Settings,
   Users
 } from "lucide-react"
@@ -27,19 +28,18 @@ import * as React from "react"
 import { Logo } from "../../../../public/Logo"
 import { UserProfile } from "./UserProfile"
 
+// Type for the props
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: null | SafeUser;
+}
+
 const mainNavigation = [
   {
-    name: "Dashboard",
-    href: "/dashboard",
-    icon: Home,
+    name: "Zoeken",
+    href: "/search",
+    icon: Search,
     notifications: false,
   },
-  // {
-  //   name: "Zoeken",
-  //   href: "/search",
-  //   icon: Search,
-  //   notifications: 0,
-  // },
   // {
   //   name: "Mijn Alerts",
   //   href: "/alerts",
@@ -50,9 +50,17 @@ const mainNavigation = [
 
 const secondaryNavigation = [
   {
+    name: "Dashboard",
+    href: "/dashboard",
+    icon: Home,
+    notifications: false,
+    hasChildren: false, // Added this property to indicate no children
+  },
+  {
     name: "Aanbestedingen",
     href: "/publications",
     icon: FileText,
+    hasChildren: true, // Added this property to indicate it has children
     children: [
       {
         name: "Overzicht",
@@ -72,6 +80,7 @@ const secondaryNavigation = [
     name: "Analyses",
     href: "/analytics",
     icon: BarChart2,
+    hasChildren: true, // Added this property to indicate it has children
     children: [
       {
         name: "Concurrentieanalyse",
@@ -88,6 +97,7 @@ const secondaryNavigation = [
     href: "#", // Changed from "/workspaces" to "#" to prevent navigation
     icon: Users,
     disabled: true, // Added disabled property
+    hasChildren: true, // Added this property to indicate it has children
     children: [
       {
         name: "Projecten",
@@ -108,6 +118,7 @@ const adminNavigation = [
     name: "Instellingen",
     href: "/settings",
     icon: Settings,
+    hasChildren: true, // Added this property to indicate it has children
     children: [
       {
         name: "Bedrijfsprofiel",
@@ -125,7 +136,14 @@ const adminNavigation = [
   },
 ] as const
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // Set loading to false once component mounts
+    setIsLoading(false);
+  }, []);
+
   // Initialize with all menu sections open
   const [openMenus, setOpenMenus] = React.useState<string[]>([
     secondaryNavigation[0].name,
@@ -168,9 +186,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   // Helper to check if a child route is active in a section
-  const isChildActive = (children: { href: string }[]): boolean => {
+  const isChildActive = (children?: { href: string }[]): boolean => {
+    // Handle case where children might be undefined
+    if (!children || !Array.isArray(children)) {
+      return false;
+    }
     return children.some(child => isRouteActive(child.href));
   };
+
+  // Function to determine if an item should be blurred
+  const shouldBlurItem = (itemName: string): boolean => {
+    // Only blur if user is not signed in
+    if (!user) return itemName !== "Zoeken";
+    return false;
+  };
+
+  // CSS class for blurred items - lighter blur so text remains readable
+  const blurredClass = "filter blur-[0.8px] pointer-events-none opacity-70";
 
   return (
     <Sidebar {...props}>
@@ -190,20 +222,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <Input
-              type="search"
-              placeholder="Zoeken naar aanbestedingen..."
-              className="[&>input]:sm:py-1.5"
-            />
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup className="pt-0">
+        <SidebarGroup className="pt-6">
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {mainNavigation.map((item) => (
-                <SidebarMenuItem key={item.name}>
+                <SidebarMenuItem key={item.name} className={shouldBlurItem(item.name) ? blurredClass : ""}>
                   <SidebarLink
                     href={item.href}
                     isActive={isRouteActive(item.href)}
@@ -220,11 +243,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="px-3">
           <Divider className="my-0 py-0" />
         </div>
-        <SidebarGroup>
+        <SidebarGroup className={!user ? blurredClass : ""}>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-4">
               {secondaryNavigation.map((item) => {
                 const sectionActive = isChildActive(item.children);
+                // For Dashboard, render SidebarLink instead of button with dropdown arrow
+                if (!item.hasChildren) {
+                  return (
+                    <SidebarMenuItem key={item.name}>
+                      <SidebarLink
+                        href={item.href}
+                        isActive={isRouteActive(item.href)}
+                        icon={item.icon}
+                        notifications={item.notifications}
+                        className={cx(
+                          item.disabled && "cursor-not-allowed opacity-60 pointer-events-none"
+                        )}
+                      >
+                        {item.name}
+                      </SidebarLink>
+                    </SidebarMenuItem>
+                  );
+                }
+
+                // For other items with children, keep the original dropdown behavior
                 return (
                   <SidebarMenuItem key={item.name}>
                     <button
@@ -306,7 +349,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="px-3">
           <Divider className="my-0 py-0" />
         </div>
-        <SidebarGroup>
+        <SidebarGroup className={!user ? blurredClass : ""}>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-4">
               {adminNavigation.map((item) => {
@@ -370,7 +413,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <div className="border-t border-gray-200 dark:border-gray-800" />
-        <UserProfile />
+        <UserProfile user={user} loading={isLoading} />
+
       </SidebarFooter>
     </Sidebar>
   )

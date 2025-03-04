@@ -1,10 +1,29 @@
-// userUtils.js
 import { siteConfig } from "@/app/siteConfig";
 import { CompanySchema } from '@/data/companySchema';
+import { User } from '@clerk/nextjs/server';
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-// Server-side function to fetch company data
+export interface SafeUser {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    fullName: string | null;
+    emailAddress: string | null;
+}
+
+export function extractSafeUser(user: User | null | undefined): SafeUser | null {
+    if (!user) return null;
+
+    return {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        emailAddress: user.emailAddresses[0]?.emailAddress || null,
+    };
+}
+
 export async function getCompanyData(user: { emailAddresses: string | any[]; primaryEmailAddress: { emailAddress: any; }; }) {
     if (!user || !user.emailAddresses || user.emailAddresses.length === 0) {
         return { company: null, error: 'User not available or no email found' };

@@ -7,6 +7,3 @@ export default function SignInPage() {
         </div>
     );
 }
-
-// Disable the default layout by returning only the page component
-SignInPage.getLayout = (page: React.ReactNode) => page;

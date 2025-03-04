@@ -2,7 +2,7 @@
 
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
-import { RiChatSmile2Line, RiCloseLine } from "@remixicon/react";
+import { RiChatSmile2Line, RiCloseLine, RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react";
 import { FileTextIcon, LoaderIcon, SendIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from "react";
 
@@ -18,18 +18,27 @@ interface Message {
 
 interface ChatComponentProps {
     publicationId: string;
-    vatNumber: string; // Add VAT number prop to identify the company
+    vatNumber: string;
     onClose: () => void;
+    isFullscreen?: boolean;
+    toggleFullscreen?: () => void;
 }
 
-export default function ChatComponent({ publicationId, vatNumber, onClose }: ChatComponentProps) {
+export default function ChatComponent({ publicationId, vatNumber, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [currentMessage, setCurrentMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [threadId, setThreadId] = useState<string | null>(null);
     const [availableFiles, setAvailableFiles] = useState<Record<string, { name: string }>>({});
+    // Use provided isFullscreen state if available, otherwise manage locally
+    const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+
+    // Determine which fullscreen state and toggle function to use
+    const fullscreenState = toggleFullscreen ? isFullscreen : localIsFullscreen;
+    const handleToggleFullscreen = toggleFullscreen || (() => setLocalIsFullscreen(prev => !prev));
 
     // Fetch available files when component mounts
     useEffect(() => {
@@ -61,6 +70,11 @@ export default function ChatComponent({ publicationId, vatNumber, onClose }: Cha
         if (inputRef.current) {
             inputRef.current.focus();
         }
+
+        // Cleanup function for when component unmounts
+        return () => {
+            handleCleanup();
+        };
     }, [publicationId]);
 
     // Auto-scroll to bottom when messages change
@@ -97,20 +111,22 @@ export default function ChatComponent({ publicationId, vatNumber, onClose }: Cha
                 },
                 body: JSON.stringify({
                     publication_id: publicationId,
-                    vat_number: vatNumber, // Include VAT number in the request
+                    vat_number: vatNumber,
                     message: currentMessage,
                     thread_id: threadId
                 })
             });
 
             if (!response.ok) {
-                throw new Error("Error getting response");
+                throw new Error(`Error getting response: ${response.status}`);
             }
 
             const data = await response.json();
 
             // Save thread ID for future messages
-            setThreadId(data.thread_id);
+            if (data.thread_id) {
+                setThreadId(data.thread_id);
+            }
 
             // Add assistant response to chat
             setMessages((prev) => [
@@ -152,27 +168,36 @@ export default function ChatComponent({ publicationId, vatNumber, onClose }: Cha
         }
     };
 
-    // Cleanup when chat is closed
-    const handleClose = async () => {
+    // Cleanup resources
+    const handleCleanup = async () => {
         try {
             if (threadId) {
-                // Call the end conversation API with vatNumber included
+                // Call the end conversation API
                 await fetch(`${API_BASE_URL}/conversation/${vatNumber}/${publicationId}`, {
                     method: "DELETE"
                 });
             }
         } catch (error) {
             console.error("Error ending conversation:", error);
-        } finally {
-            // Always call onClose, even if API call fails
-            onClose();
         }
+    };
+
+    // Handle closing the chat
+    const handleClose = () => {
+        handleCleanup();
+        onClose();
     };
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleClose}>
             <div
-                className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl flex flex-col w-full max-w-4xl h-full sm:h-[85vh] sm:max-h-[800px] m-4 border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-200 ease-in-out"
+                ref={chatContainerRef}
+                className={`bg-white dark:bg-slate-900 rounded-xl shadow-2xl flex flex-col
+                ${fullscreenState
+                        ? "w-full h-full max-w-none m-0 rounded-none"
+                        : "w-full max-w-4xl h-full sm:h-[85vh] sm:max-h-[800px] m-4"
+                    } 
+                border border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 ease-in-out`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -183,14 +208,28 @@ export default function ChatComponent({ publicationId, vatNumber, onClose }: Cha
                         </div>
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-white">ProcLogic AI Chat</h2>
                     </div>
-                    <Button
-                        onClick={handleClose}
-                        className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
-                        aria-label="Close chat"
-                        variant="ghost"
-                    >
-                        <RiCloseLine className="size-5" />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {/* Fullscreen toggle button */}
+                        <Button
+                            onClick={handleToggleFullscreen}
+                            className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                            aria-label={fullscreenState ? "Exit fullscreen" : "Enter fullscreen"}
+                            variant="ghost"
+                        >
+                            {fullscreenState
+                                ? <RiFullscreenExitLine className="size-5" />
+                                : <RiFullscreenLine className="size-5" />
+                            }
+                        </Button>
+                        <Button
+                            onClick={handleClose}
+                            className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
+                            aria-label="Close chat"
+                            variant="ghost"
+                        >
+                            <RiCloseLine className="size-5" />
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Available files */}

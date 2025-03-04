@@ -38,7 +38,7 @@ export default async function PublicationDetailPage({ params }) {
 
     try {
         if (company) {
-            const response = await fetch(`${API_BASE_URL}/publications/${company.email}/publication/${workspaceId}/`);
+            const response = await fetch(`${API_BASE_URL}/publications/${company.vat_number}/publication/${workspaceId}/`);
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);
             }

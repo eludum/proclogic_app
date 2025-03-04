@@ -418,5 +418,6 @@ export {
   SidebarProvider,
   SidebarSubLink,
   SidebarTrigger,
-  useSidebar,
+  useSidebar
 }
+

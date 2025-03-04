@@ -1,15 +1,16 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/Sidebar"
 import { AppSidebar } from "@/components/ui/navigation/AppSidebar"
 import { Breadcrumbs } from "@/components/ui/navigation/Breadcrumbs"
+import { extractSafeUser } from "@/lib/userUtils"
+import { nlBE } from '@clerk/localizations'
 import { ClerkProvider } from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs/server'
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
 import localFont from "next/font/local"
 import { cookies } from "next/headers"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
-
-
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -55,9 +56,14 @@ export default async function RootLayout({
   const cookieStore = await cookies()
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true" ? "true" : "false"
 
-  return (
-    <ClerkProvider>
+  // Fetch user data with a Promise to handle potential delay
+  const user = await currentUser();
 
+  // Extract only the safe properties to pass to the client component
+  const safeUser = extractSafeUser(user)
+
+  return (
+    <ClerkProvider localization={nlBE}>
       <html lang="en" className="h-full" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} bg-white-50 h-full antialiased dark:bg-gray-950`}
@@ -68,7 +74,7 @@ export default async function RootLayout({
             attribute="class"
           >
             <SidebarProvider defaultOpen={defaultOpen}>
-              <AppSidebar />
+              <AppSidebar user={safeUser} />
               <div className="w-full">
                 <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-950">
                   <SidebarTrigger className="-ml-1" />
@@ -82,6 +88,5 @@ export default async function RootLayout({
         </body>
       </html>
     </ClerkProvider>
-
   )
 }

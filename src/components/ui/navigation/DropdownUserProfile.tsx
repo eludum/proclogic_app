@@ -1,3 +1,5 @@
+"use client"
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,32 +9,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/DropdownMenu";
-import { useUser } from '@clerk/nextjs';
-import { ArrowUpRight, LoaderIcon } from "lucide-react";
+import { SafeUser } from '@/lib/userUtils';
+import { ArrowUpRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import * as React from "react";
 
 export type DropdownUserProfileProps = {
-  children: React.ReactNode
-  align?: "center" | "start" | "end"
+  children: React.ReactNode;
+  align?: "center" | "start" | "end";
+  user: null | SafeUser;
 }
 
 export function DropdownUserProfile({
   children,
   align = "start",
+  user
 }: DropdownUserProfileProps) {
-  const { isLoaded, isSignedIn, user } = useUser();
-  const [mounted, setMounted] = React.useState(false)
-  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false);
+  const { theme, setTheme } = useTheme();
+
   React.useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
-  }
-  if (!isLoaded) {
-    return < LoaderIcon size={16} className="animate-spin text-emerald-600" />
+    return null;
   }
 
   return (
@@ -43,46 +44,8 @@ export function DropdownUserProfile({
           align={align}
           className="sm:!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
         >
-          <DropdownMenuLabel>{user && (user.fullName)}</DropdownMenuLabel>
-          {/* <DropdownMenuGroup>
-            <DropdownMenuSubMenu>
-              <DropdownMenuSubMenuTrigger>Theme</DropdownMenuSubMenuTrigger>
-              <DropdownMenuSubMenuContent>
-                <DropdownMenuRadioGroup
-                  value={theme}
-                  onValueChange={(value) => {
-                    setTheme(value)
-                  }}
-                >
-                  <DropdownMenuRadioItem
-                    aria-label="Switch to Light Mode"
-                    value="light"
-                    iconType="check"
-                  >
-                    <Sun className="size-4 shrink-0" aria-hidden="true" />
-                    Light
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem
-                    aria-label="Switch to Dark Mode"
-                    value="dark"
-                    iconType="check"
-                  >
-                    <Moon className="size-4 shrink-0" aria-hidden="true" />
-                    Dark
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem
-                    aria-label="Switch to System Mode"
-                    value="system"
-                    iconType="check"
-                  >
-                    <Monitor className="size-4 shrink-0" aria-hidden="true" />
-                    System
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubMenuContent>
-            </DropdownMenuSubMenu>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator /> */}
+          <DropdownMenuLabel>{user && user.emailAddress}</DropdownMenuLabel>
+          {/* Theme selector commented out in the original code */}
           <DropdownMenuGroup>
             <DropdownMenuItem>
               Changelog
@@ -110,5 +73,5 @@ export function DropdownUserProfile({
         </DropdownMenuContent>
       </DropdownMenu>
     </>
-  )
+  );
 }

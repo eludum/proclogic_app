@@ -27,6 +27,7 @@ const API_BASE_URL = siteConfig.api_base_url;
 
 // Modified getCompany hook to use server-side data
 export default function PublicationDetail({ publication, timelineEvents, company }) {
+    console.log(publication)
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('ai');
     const [activeChatPublication, setActiveChatPublication] = useState(null);
@@ -145,14 +146,21 @@ export default function PublicationDetail({ publication, timelineEvents, company
                         )}
                     </div>
 
-                    {/* Recommendation banner (if recommended) */}
+                    {/* Enhanced Recommendation banner (if recommended) */}
                     {publication.is_recommended && (
-                        <div className="w-full bg-blue-50 dark:bg-blue-900/20 px-4 py-2 border-b border-blue-100 dark:border-blue-800">
-                            <div className="flex items-center gap-2">
-                                <StarIcon size={14} className="text-amber-500 shrink-0" />
-                                <span className="text-xs text-blue-800 dark:text-blue-200">
-                                    <strong>ProcLogic AI beveelt deze publicatie aan voor uw bedrijf</strong> gebaseerd op uw profiel en eerdere activiteit.
-                                </span>
+                        <div className="w-full bg-blue-100 dark:bg-blue-900/30 px-4 py-3 border-blue-300 dark:border-blue-700 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-center bg-amber-500 text-white rounded-full p-2 shrink-0 animate-pulse">
+                                    <StarIcon size={18} />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-blue-800 dark:text-blue-100">
+                                        ProcLogic AI beveelt deze publicatie aan voor uw bedrijf!
+                                    </span>
+                                    <span className="text-xs text-blue-700 dark:text-blue-200">
+                                        Geselecteerd op basis van uw bedrijfsprofiel
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -416,13 +424,13 @@ export default function PublicationDetail({ publication, timelineEvents, company
 
                         {/* Action buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                            <Button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md w-full sm:w-auto">
+                            <Button className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md w-full sm:w-auto">
                                 <PlusIcon size={16} />
-                                <span>Opslaan in Mijn Aanbestedingen</span>
+                                <span>Opslaan</span>
                             </Button>
                             <Button
                                 onClick={() => startChat(publication)}
-                                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md w-full sm:w-auto"
+                                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md w-full sm:w-auto"
                             >
                                 <RiChatSmile2Line className="size-5" />
                                 <span>ProcLogic AI</span>
