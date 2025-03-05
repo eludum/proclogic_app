@@ -26,8 +26,7 @@ import ChatComponent from "./ChatComponent";
 const API_BASE_URL = siteConfig.api_base_url;
 
 // Modified getCompany hook to use server-side data
-export default function PublicationDetail({ publication, timelineEvents, company }) {
-    console.log(publication)
+export default function PublicationDetail({ publication, timelineEvents }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('ai');
     const [activeChatPublication, setActiveChatPublication] = useState(null);
@@ -226,23 +225,23 @@ export default function PublicationDetail({ publication, timelineEvents, company
 
                                     {activeTab === 'ai' && (
                                         <div className="flex flex-col gap-4">
-                                            {publication.ai_notice_summary && (
+                                            {publication.ai_summary_without_documents && (
                                                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                                                     <h3 className="text-lg font-medium mb-3 text-blue-900 dark:text-blue-200">AI Aankondiging Samenvatting</h3>
                                                     <div className="max-h-80 overflow-y-auto">
                                                         <p className="text-sm text-blue-800 dark:text-blue-200 break-words whitespace-pre-line">
-                                                            {publication.ai_notice_summary}
+                                                            {publication.ai_summary_without_documents}
                                                         </p>
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {publication.ai_document_summary && (
+                                            {publication.ai_summary_with_documents && (
                                                 <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg">
                                                     <h3 className="text-lg font-medium mb-3 text-emerald-900 dark:text-emerald-200">AI Document Samenvatting</h3>
                                                     <div className="max-h-60 overflow-y-auto">
                                                         <p className="text-sm text-emerald-800 dark:text-emerald-200 break-words whitespace-pre-line">
-                                                            {publication.ai_document_summary}
+                                                            {publication.ai_summary_with_documents}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -444,7 +443,6 @@ export default function PublicationDetail({ publication, timelineEvents, company
             {activeChatPublication && (
                 <ChatComponent
                     publicationId={activeChatPublication.workspace_id}
-                    vatNumber={company.vat_number}
                     onClose={() => setActiveChatPublication(null)}
                 />
             )}

@@ -6,7 +6,7 @@ import { BuildingIcon, CalendarIcon, CheckCircleIcon, ClockIcon, CodeIcon, MapPi
 import { useState } from "react";
 import ChatComponent from "./ChatComponent";
 
-export default function PublicationList({ publications, company }) {
+export default function PublicationList({ publications }) {
     const [activeChatPublication, setActiveChatPublication] = useState(null);
 
     // Start a chat with a publication
@@ -150,7 +150,6 @@ export default function PublicationList({ publications, company }) {
             {activeChatPublication && (
                 <ChatComponent
                     publicationId={activeChatPublication.workspace_id}
-                    vatNumber={company.vat_number}
                     onClose={() => setActiveChatPublication(null)}
                 />
             )}

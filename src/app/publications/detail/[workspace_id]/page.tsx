@@ -1,49 +1,30 @@
 // app/publications/detail/[workspace_id]/page.jsx
 import { siteConfig } from "@/app/siteConfig";
-import { getCompanyData } from "@/lib/userUtils";
-import { currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import PublicationDetail from "../../_components/PublicationDetail";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
 export default async function PublicationDetailPage({ params }) {
     const workspaceId = params.workspace_id;
-    const user = await currentUser();
-
-    if (!user) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-60 p-6">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">Niet ingelogd</h2>
-                <p className="text-gray-600 dark:text-gray-400">Log in om aanbestedingen te bekijken</p>
-            </div>
-        );
-    }
-
-    // Get company data
-    const { company, error } = await getCompanyData(user);
-
-    if (error) {
-        console.error("Error loading company data:", error);
-        return (
-            <div className="flex flex-col items-center justify-center min-h-60 p-6">
-                <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">Fout bij laden</h2>
-                <p className="text-gray-600 dark:text-gray-400">Er is een probleem opgetreden bij het laden van bedrijfsgegevens</p>
-            </div>
-        );
-    }
+    const { getToken } = await auth()
 
     // Fetch publication details
     let publication = null;
     let fetchError = null;
 
     try {
-        if (company) {
-            const response = await fetch(`${API_BASE_URL}/publications/${company.vat_number}/publication/${workspaceId}/`);
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
-            }
-            publication = await response.json();
+        const token = await getToken();
+
+        const response = await fetch(`${API_BASE_URL}/publications/publication/${workspaceId}/`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
         }
+        publication = await response.json();
     } catch (error) {
         fetchError = error.message;
         console.error("Error fetching publication:", error);
@@ -119,6 +100,5 @@ export default async function PublicationDetailPage({ params }) {
     return <PublicationDetail
         publication={publication}
         timelineEvents={publication ? generateTimelineEvents(publication) : []}
-        company={company}
     />;
 }

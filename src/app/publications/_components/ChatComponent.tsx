@@ -2,6 +2,7 @@
 
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
+import { useAuth } from "@clerk/nextjs";
 import { RiChatSmile2Line, RiCloseLine, RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react";
 import { FileTextIcon, LoaderIcon, SendIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from "react";
@@ -18,43 +19,228 @@ interface Message {
 
 interface ChatComponentProps {
     publicationId: string;
-    vatNumber: string;
     onClose: () => void;
     isFullscreen?: boolean;
     toggleFullscreen?: () => void;
 }
 
-export default function ChatComponent({ publicationId, vatNumber, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
+export default function ChatComponent({ publicationId, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
+    const { getToken } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [currentMessage, setCurrentMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const [threadId, setThreadId] = useState<string | null>(null);
     const [availableFiles, setAvailableFiles] = useState<Record<string, { name: string }>>({});
-    // Use provided isFullscreen state if available, otherwise manage locally
+    const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
     const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
+    const [connectionEstablished, setConnectionEstablished] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
+    const websocketRef = useRef<WebSocket | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Determine which fullscreen state and toggle function to use
     const fullscreenState = toggleFullscreen ? isFullscreen : localIsFullscreen;
     const handleToggleFullscreen = toggleFullscreen || (() => setLocalIsFullscreen(prev => !prev));
 
-    // Fetch available files when component mounts
+    // Setup WebSocket when component mounts
     useEffect(() => {
-        const fetchFiles = async () => {
+        let reconnectTimeout: NodeJS.Timeout;
+
+        const setupWebSocket = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/publications/${publicationId}/files`);
-                if (response.ok) {
-                    const files = await response.json();
-                    setAvailableFiles(files);
+                const token = await getToken();
+                if (!token) {
+                    console.error("No authentication token available");
+                    return;
                 }
+
+                // Close existing connection if any
+                if (websocketRef.current) {
+                    websocketRef.current.close();
+                }
+
+                // Create new WebSocket connection
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${wsProtocol}//${API_BASE_URL.replace(/^https?:\/\//, '')}/ws/conversation`;
+                console.log(`Connecting to WebSocket at: ${wsUrl}`);
+
+                websocketRef.current = new WebSocket(wsUrl);
+
+                websocketRef.current.onopen = () => {
+                    console.log("WebSocket connection established");
+
+                    // Send initial connection message with required parameters
+                    if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+                        const connectionMessage = {
+                            type: "connect",
+                            data: {
+                                publication_workspace_id: publicationId,
+                                thread_id: threadId,
+                                token: token
+                            }
+                        };
+
+                        console.log("Sending connection message:", connectionMessage);
+                        websocketRef.current.send(JSON.stringify(connectionMessage));
+                        setConnectionEstablished(true);
+                    }
+                };
+
+                websocketRef.current.onmessage = (event) => {
+                    console.log("Received WebSocket message:", event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        switch (data.type) {
+                            case "response_chunk":
+                                // Handle streaming chunks of response
+                                if (!data.data.done) {
+                                    setStreamingMessage(prev => {
+                                        if (!prev) {
+                                            return {
+                                                id: `assistant-${Date.now()}`,
+                                                role: "assistant",
+                                                content: data.data.content || "",
+                                                timestamp: new Date()
+                                            };
+                                        }
+                                        return {
+                                            ...prev,
+                                            content: data.data.content || prev.content
+                                        };
+                                    });
+                                }
+                                break;
+
+                            case "response_complete":
+                                // Handle complete response
+                                if (data.data.thread_id) {
+                                    setThreadId(data.data.thread_id);
+                                }
+
+                                setMessages(prev => [
+                                    ...prev,
+                                    {
+                                        id: `assistant-${Date.now()}`,
+                                        role: "assistant",
+                                        content: data.data.content,
+                                        timestamp: new Date()
+                                    }
+                                ]);
+
+                                setStreamingMessage(null);
+                                setLoading(false);
+                                break;
+
+                            case "citations":
+                                // Handle citations
+                                setMessages(prev => {
+                                    // Get the last assistant message
+                                    const lastAssistantIndex = [...prev].reverse().findIndex(msg => msg.role === 'assistant');
+                                    if (lastAssistantIndex === -1) return prev;
+
+                                    const actualIndex = prev.length - 1 - lastAssistantIndex;
+                                    const newMessages = [...prev];
+                                    newMessages[actualIndex] = {
+                                        ...newMessages[actualIndex],
+                                        citations: data.data.citations
+                                    };
+                                    return newMessages;
+                                });
+                                break;
+
+                            case "error":
+                                // Handle errors
+                                console.error("WebSocket error:", data.data.detail);
+                                setMessages(prev => [
+                                    ...prev,
+                                    {
+                                        id: `error-${Date.now()}`,
+                                        role: "assistant",
+                                        content: `Er is een fout opgetreden: ${data.data.detail}`,
+                                        timestamp: new Date()
+                                    }
+                                ]);
+                                setStreamingMessage(null);
+                                setLoading(false);
+                                break;
+
+                            default:
+                                console.log("Unhandled message type:", data.type);
+                                break;
+                        }
+                    } catch (err) {
+                        console.error("Error parsing WebSocket message:", err);
+                    }
+                };
+
+                websocketRef.current.onerror = (event) => {
+                    // The error event itself doesn't contain much useful information
+                    // Just log that an error occurred
+                    console.log("WebSocket connection error occurred");
+                    setConnectionEstablished(false);
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            id: `error-${Date.now()}`,
+                            role: "assistant",
+                            content: "Er is een fout opgetreden bij de verbinding. Probeer het later opnieuw.",
+                            timestamp: new Date()
+                        }
+                    ]);
+                    setLoading(false);
+                };
+
+                websocketRef.current.onclose = (event) => {
+                    console.log(`WebSocket connection closed: code=${event.code}`);
+                    setConnectionEstablished(false);
+
+                    // Attempt to reconnect after a delay
+                    reconnectTimeout = setTimeout(() => {
+                        if (document.visibilityState !== 'hidden') {
+                            setupWebSocket();
+                        }
+                    }, 3000);
+                };
             } catch (error) {
-                console.error("Error fetching files:", error);
+                console.error("Error setting up WebSocket:", error);
             }
         };
 
-        fetchFiles();
+        // When component mounts, try to get the list of documents from the publication first
+        const fetchDocuments = async () => {
+            try {
+                const token = await getToken();
+                if (!token) return;
+
+                // Get publication details which includes documents
+                const response = await fetch(`${API_BASE_URL}/publications/publication/${publicationId}/`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const publicationData = await response.json();
+                    // If documents exists in the publication data, use it
+                    if (publicationData.documents) {
+                        const fileMap: Record<string, { name: string }> = {};
+                        Object.keys(publicationData.documents).forEach(key => {
+                            fileMap[key] = { name: key };
+                        });
+                        setAvailableFiles(fileMap);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching documents:", error);
+            }
+        };
+
+        // Set up WebSocket and fetch documents
+        setupWebSocket();
+        fetchDocuments();
 
         // Add welcome message
         setMessages([
@@ -73,16 +259,19 @@ export default function ChatComponent({ publicationId, vatNumber, onClose, isFul
 
         // Cleanup function for when component unmounts
         return () => {
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+            }
             handleCleanup();
         };
-    }, [publicationId]);
+    }, [publicationId, getToken]);
 
     // Auto-scroll to bottom when messages change
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages]);
+    }, [messages, streamingMessage?.content]);
 
     // Handle sending messages
     const handleSendMessage = async () => {
@@ -102,61 +291,26 @@ export default function ChatComponent({ publicationId, vatNumber, onClose, isFul
         setCurrentMessage("");
         setLoading(true);
 
-        try {
-            // Call the conversation API with vatNumber included
-            const response = await fetch(`${API_BASE_URL}/conversation`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    publication_id: publicationId,
-                    vat_number: vatNumber,
-                    message: currentMessage,
-                    thread_id: threadId
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error getting response: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            // Save thread ID for future messages
-            if (data.thread_id) {
-                setThreadId(data.thread_id);
-            }
-
-            // Add assistant response to chat
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: `assistant-${Date.now()}`,
-                    role: "assistant",
-                    content: data.response,
-                    citations: data.citations,
-                    timestamp: new Date()
+        // Send message through WebSocket
+        if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+            websocketRef.current.send(JSON.stringify({
+                type: "message",
+                data: {
+                    content: currentMessage
                 }
-            ]);
-        } catch (error) {
-            console.error("Error sending message:", error);
-            // Add error message
+            }));
+        } else {
+            // WebSocket is not connected, try to reconnect
             setMessages((prev) => [
                 ...prev,
                 {
                     id: `error-${Date.now()}`,
                     role: "assistant",
-                    content: "Er is een fout opgetreden bij het verwerken van uw verzoek. Probeer het later opnieuw.",
+                    content: "Verbinding verbroken. Probeer het later opnieuw.",
                     timestamp: new Date()
                 }
             ]);
-        } finally {
             setLoading(false);
-            // Focus input field after response
-            if (inputRef.current) {
-                inputRef.current.focus();
-            }
         }
     };
 
@@ -171,14 +325,32 @@ export default function ChatComponent({ publicationId, vatNumber, onClose, isFul
     // Cleanup resources
     const handleCleanup = async () => {
         try {
+            // Close WebSocket connection
+            if (websocketRef.current) {
+                websocketRef.current.close();
+                websocketRef.current = null;
+            }
+
+            // Abort any in-progress HTTP requests
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
+
+            // If we have a thread ID, call endpoint to clean up the thread
             if (threadId) {
-                // Call the end conversation API
-                await fetch(`${API_BASE_URL}/conversation/${vatNumber}/${publicationId}`, {
-                    method: "DELETE"
-                });
+                const token = await getToken();
+                if (token) {
+                    await fetch(`${API_BASE_URL}/conversation/${publicationId}`, {
+                        method: "DELETE",
+                        headers: {
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+                }
             }
         } catch (error) {
-            console.error("Error ending conversation:", error);
+            console.error("Error cleaning up conversation:", error);
         }
     };
 
@@ -189,7 +361,17 @@ export default function ChatComponent({ publicationId, vatNumber, onClose, isFul
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={handleClose}>
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            margin: 0,
+            padding: 0
+        }} onClick={handleClose}>
             <div
                 ref={chatContainerRef}
                 className={`bg-white dark:bg-slate-900 rounded-xl shadow-2xl flex flex-col
@@ -209,6 +391,8 @@ export default function ChatComponent({ publicationId, vatNumber, onClose, isFul
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-white">ProcLogic AI Chat</h2>
                     </div>
                     <div className="flex items-center gap-2">
+                        {/* Connection indicator */}
+                        <div className={`w-3 h-3 rounded-full ${connectionEstablished ? 'bg-green-500' : 'bg-red-500'}`} title={connectionEstablished ? 'Verbinding actief' : 'Verbinding verbroken'}></div>
                         {/* Fullscreen toggle button */}
                         <Button
                             onClick={handleToggleFullscreen}
@@ -285,7 +469,27 @@ export default function ChatComponent({ publicationId, vatNumber, onClose, isFul
                             </div>
                         </div>
                     ))}
-                    {loading && (
+
+                    {/* Streaming message (showing real-time response) */}
+                    {streamingMessage && (
+                        <div
+                            className="flex justify-start animate-fadeIn"
+                        >
+                            <div className="max-w-[80%] rounded-xl p-4 shadow-sm bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
+                                <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                                    {streamingMessage.content}
+                                    <span className="inline-block w-2 h-4 ml-1 bg-emerald-500 animate-pulse"></span>
+                                </div>
+                                <div className="mt-1 text-right">
+                                    <span className="text-xs opacity-70">
+                                        {streamingMessage.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {loading && !streamingMessage && (
                         <div className="flex items-start animate-fadeIn">
                             <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-sm">
                                 <div className="flex items-center gap-2">
