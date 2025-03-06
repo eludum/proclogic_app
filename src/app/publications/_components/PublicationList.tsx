@@ -1,21 +1,127 @@
 "use client"
+import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
 import { formatDate, getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
+import { useAuth } from "@clerk/nextjs";
 import { RiChatSmile2Line } from '@remixicon/react';
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, ClockIcon, CodeIcon, MapPinIcon, PlusIcon, StarIcon, TagIcon, ThumbsUpIcon } from 'lucide-react';
 import { useState } from "react";
 import ChatComponent from "./ChatComponent";
 
-export default function PublicationList({ publications }) {
+const API_BASE_URL = siteConfig.api_base_url;
+
+export default function PublicationList({ publications, initialToken }) {
     const [activeChatPublication, setActiveChatPublication] = useState(null);
+    const [savingPublications, setSavingPublications] = useState({});
+    const [unsavingPublications, setUnsavingPublications] = useState({});
+    const [publicationsList, setPublicationsList] = useState(publications);
+    const { getToken } = useAuth();
 
     // Start a chat with a publication
     const startChat = (publication) => {
         setActiveChatPublication(publication);
     };
 
+    // Get auth token (use initialToken or get a fresh one)
+    const getAuthToken = async () => {
+        return initialToken || await getToken();
+    };
+
+    // Save a publication
+    const savePublication = async (publication) => {
+        // Set saving state for this publication
+        setSavingPublications(prev => ({ ...prev, [publication.workspace_id]: true }));
+
+        try {
+            const token = await getAuthToken();
+
+            const response = await fetch(`${API_BASE_URL}/publications/publication/${publication.workspace_id}/save`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                // Update the publication locally to show it's saved
+                const updatedPublications = publicationsList.map(pub =>
+                    pub.workspace_id === publication.workspace_id
+                        ? { ...pub, is_saved: true }
+                        : pub
+                );
+
+                setPublicationsList(updatedPublications);
+            } else {
+                console.error('Failed to save publication:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error saving publication:', error);
+        } finally {
+            // Clear saving state
+            setSavingPublications(prev => ({ ...prev, [publication.workspace_id]: false }));
+        }
+    };
+
+    // Unsave a publication
+    const unsavePublication = async (publication) => {
+        // Set unsaving state for this publication
+        setUnsavingPublications(prev => ({ ...prev, [publication.workspace_id]: true }));
+
+        try {
+            const token = await getAuthToken();
+
+            const response = await fetch(`${API_BASE_URL}/publications/publication/${publication.workspace_id}/unsave`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                // Update the publication locally to show it's not saved
+                const updatedPublications = publicationsList.map(pub =>
+                    pub.workspace_id === publication.workspace_id
+                        ? { ...pub, is_saved: false }
+                        : pub
+                );
+
+                setPublicationsList(updatedPublications);
+            } else {
+                console.error('Failed to unsave publication:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error unsaving publication:', error);
+        } finally {
+            // Clear unsaving state
+            setUnsavingPublications(prev => ({ ...prev, [publication.workspace_id]: false }));
+        }
+    };
+
+    // Mark publication as viewed
+    const markAsViewed = async (publication) => {
+        try {
+            const token = await getAuthToken();
+
+            const response = await fetch(`${API_BASE_URL}/publications/publication/${publication.workspace_id}/viewed`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                console.error('Failed to mark publication as viewed:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error marking publication as viewed:', error);
+        }
+    };
+
     // Sort publications to show recommended ones first
-    const sortedPublications = [...publications].sort((a, b) => {
+    const sortedPublications = [...publicationsList].sort((a, b) => {
         if (a.is_recommended && !b.is_recommended) return -1;
         if (!a.is_recommended && b.is_recommended) return 1;
         return 0;
@@ -60,7 +166,12 @@ export default function PublicationList({ publications }) {
                         {/* Header with time remaining badge */}
                         <div className="flex flex-col gap-2 w-full">
                             <div className="flex flex-wrap items-start justify-between gap-2 w-full">
-                                <a href={`/publications/detail/${publication.workspace_id}`} target="_blank" className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-none">
+                                <a
+                                    href={`/publications/detail/${publication.workspace_id}`}
+                                    target="_blank"
+                                    className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-none"
+                                    onClick={() => markAsViewed(publication)}
+                                >
                                     {publication.title}
                                 </a>
 
@@ -70,7 +181,12 @@ export default function PublicationList({ publications }) {
                                     <span>{getTimeRemaining(publication.submission_deadline).text}</span>
                                 </div>
                             </div>
-                            <a href={`/publications/detail/${publication.workspace_id}`} target="_blank" className="text-xs text-gray-500 dark:text-gray-400 hover:underline focus:outline-none">
+                            <a
+                                href={`/publications/detail/${publication.workspace_id}`}
+                                target="_blank"
+                                className="text-xs text-gray-500 dark:text-gray-400 hover:underline focus:outline-none"
+                                onClick={() => markAsViewed(publication)}
+                            >
                                 ID: {publication.workspace_id}
                             </a>
                         </div>
@@ -130,10 +246,37 @@ export default function PublicationList({ publications }) {
 
                         {/* Action buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                            <Button className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md w-full sm:w-auto">
-                                <PlusIcon size={16} />
-                                <span>Opslaan</span>
-                            </Button>
+                            {publication.is_saved ? (
+                                <Button
+                                    onClick={() => unsavePublication(publication)}
+                                    disabled={unsavingPublications[publication.workspace_id]}
+                                    className="flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-3 rounded-md w-full sm:w-auto"
+                                >
+                                    {unsavingPublications[publication.workspace_id] ? (
+                                        <span>Verwijderen...</span>
+                                    ) : (
+                                        <>
+                                            <CheckCircleIcon size={16} />
+                                            <span>Verwijderen</span>
+                                        </>
+                                    )}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={() => savePublication(publication)}
+                                    disabled={savingPublications[publication.workspace_id]}
+                                    className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md w-full sm:w-auto"
+                                >
+                                    {savingPublications[publication.workspace_id] ? (
+                                        <span>Opslaan...</span>
+                                    ) : (
+                                        <>
+                                            <PlusIcon size={16} />
+                                            <span>Opslaan</span>
+                                        </>
+                                    )}
+                                </Button>
+                            )}
                             <Button
                                 onClick={() => startChat(publication)}
                                 className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md w-full sm:w-auto"
@@ -151,6 +294,7 @@ export default function PublicationList({ publications }) {
                 <ChatComponent
                     publicationId={activeChatPublication.workspace_id}
                     onClose={() => setActiveChatPublication(null)}
+                    initialToken={initialToken}
                 />
             )}
         </div>

@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/DropdownMenu";
-import { SafeUser } from '@/lib/userUtils';
+import { SafeUser } from '@/lib/clerkUserUtils';
 import { ArrowUpRight } from "lucide-react";
 import { useTheme } from "next-themes";
 import * as React from "react";

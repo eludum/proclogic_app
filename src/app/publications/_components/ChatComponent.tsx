@@ -29,240 +29,410 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
     const [messages, setMessages] = useState<Message[]>([]);
     const [currentMessage, setCurrentMessage] = useState("");
     const [loading, setLoading] = useState(false);
-    const [threadId, setThreadId] = useState<string | null>(null);
-    const [availableFiles, setAvailableFiles] = useState<Record<string, { name: string }>>({});
     const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
     const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
-    const [connectionEstablished, setConnectionEstablished] = useState(false);
+    const [availableFiles, setAvailableFiles] = useState<Record<string, { name: string }>>({});
+    const [connectionError, setConnectionError] = useState<string | null>(null);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const websocketRef = useRef<WebSocket | null>(null);
-    const abortControllerRef = useRef<AbortController | null>(null);
 
     // Determine which fullscreen state and toggle function to use
     const fullscreenState = toggleFullscreen ? isFullscreen : localIsFullscreen;
     const handleToggleFullscreen = toggleFullscreen || (() => setLocalIsFullscreen(prev => !prev));
 
-    // Setup WebSocket when component mounts
-    useEffect(() => {
-        let reconnectTimeout: NodeJS.Timeout;
+    // Setup WebSocket connection
+    const setupWebSocket = async () => {
+        try {
+            const token = await getToken();
+            if (!token) {
+                console.error("No authentication token available");
+                setConnectionError("Authentication failed. Please log in again.");
+                return false;
+            }
 
-        const setupWebSocket = async () => {
-            try {
-                const token = await getToken();
-                if (!token) {
-                    console.error("No authentication token available");
+            // Close existing connection if any
+            if (websocketRef.current &&
+                (websocketRef.current.readyState === WebSocket.OPEN ||
+                    websocketRef.current.readyState === WebSocket.CONNECTING)) {
+                websocketRef.current.close();
+            }
+
+            // Create new WebSocket connection
+            const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/ws/conversation`;
+            console.log(`Connecting to WebSocket at: ${wsUrl}`);
+
+            websocketRef.current = new WebSocket(wsUrl);
+
+            return new Promise((resolve) => {
+                if (!websocketRef.current) {
+                    resolve(false);
                     return;
                 }
 
-                // Close existing connection if any
-                if (websocketRef.current) {
-                    websocketRef.current.close();
-                }
-
-                // Create new WebSocket connection
-                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${wsProtocol}//${API_BASE_URL.replace(/^https?:\/\//, '')}/ws/conversation`;
-                console.log(`Connecting to WebSocket at: ${wsUrl}`);
-
-                websocketRef.current = new WebSocket(wsUrl);
-
                 websocketRef.current.onopen = () => {
                     console.log("WebSocket connection established");
+                    setConnectionError(null);
 
-                    // Send initial connection message with required parameters
+                    // Sending the initial connection data right after connection is established
                     if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-                        const connectionMessage = {
-                            type: "connect",
-                            data: {
-                                publication_workspace_id: publicationId,
-                                thread_id: threadId,
-                                token: token
-                            }
-                        };
-
-                        console.log("Sending connection message:", connectionMessage);
-                        websocketRef.current.send(JSON.stringify(connectionMessage));
-                        setConnectionEstablished(true);
+                        // First message format based on backend requirements
+                        const connectionMessage = JSON.stringify({
+                            publication_workspace_id: publicationId,
+                            token: token
+                        });
+                        console.log("Sending initial connection data:", connectionMessage);
+                        websocketRef.current.send(connectionMessage);
                     }
+                    resolve(true);
                 };
 
-                websocketRef.current.onmessage = (event) => {
-                    console.log("Received WebSocket message:", event.data);
-                    try {
-                        const data = JSON.parse(event.data);
-
-                        switch (data.type) {
-                            case "response_chunk":
-                                // Handle streaming chunks of response
-                                if (!data.data.done) {
-                                    setStreamingMessage(prev => {
-                                        if (!prev) {
-                                            return {
-                                                id: `assistant-${Date.now()}`,
-                                                role: "assistant",
-                                                content: data.data.content || "",
-                                                timestamp: new Date()
-                                            };
-                                        }
-                                        return {
-                                            ...prev,
-                                            content: data.data.content || prev.content
-                                        };
-                                    });
-                                }
-                                break;
-
-                            case "response_complete":
-                                // Handle complete response
-                                if (data.data.thread_id) {
-                                    setThreadId(data.data.thread_id);
-                                }
-
-                                setMessages(prev => [
-                                    ...prev,
-                                    {
-                                        id: `assistant-${Date.now()}`,
-                                        role: "assistant",
-                                        content: data.data.content,
-                                        timestamp: new Date()
-                                    }
-                                ]);
-
-                                setStreamingMessage(null);
-                                setLoading(false);
-                                break;
-
-                            case "citations":
-                                // Handle citations
-                                setMessages(prev => {
-                                    // Get the last assistant message
-                                    const lastAssistantIndex = [...prev].reverse().findIndex(msg => msg.role === 'assistant');
-                                    if (lastAssistantIndex === -1) return prev;
-
-                                    const actualIndex = prev.length - 1 - lastAssistantIndex;
-                                    const newMessages = [...prev];
-                                    newMessages[actualIndex] = {
-                                        ...newMessages[actualIndex],
-                                        citations: data.data.citations
-                                    };
-                                    return newMessages;
-                                });
-                                break;
-
-                            case "error":
-                                // Handle errors
-                                console.error("WebSocket error:", data.data.detail);
-                                setMessages(prev => [
-                                    ...prev,
-                                    {
-                                        id: `error-${Date.now()}`,
-                                        role: "assistant",
-                                        content: `Er is een fout opgetreden: ${data.data.detail}`,
-                                        timestamp: new Date()
-                                    }
-                                ]);
-                                setStreamingMessage(null);
-                                setLoading(false);
-                                break;
-
-                            default:
-                                console.log("Unhandled message type:", data.type);
-                                break;
-                        }
-                    } catch (err) {
-                        console.error("Error parsing WebSocket message:", err);
-                    }
-                };
+                websocketRef.current.onmessage = handleWebSocketMessage;
 
                 websocketRef.current.onerror = (event) => {
-                    // The error event itself doesn't contain much useful information
-                    // Just log that an error occurred
-                    console.log("WebSocket connection error occurred");
-                    setConnectionEstablished(false);
+                    console.error("WebSocket connection error occurred", event);
+                    setConnectionError("Connection error occurred. Please try again.");
+                    resolve(false);
+                };
+
+                websocketRef.current.onclose = (event) => {
+                    console.log(`WebSocket connection closed: code=${event.code}`);
+                    if (event.code !== 1000) { // Not a normal closure
+                        setConnectionError("Connection was closed. Please try again.");
+                        // Add this line to reset loading state when connection closes unexpectedly
+                        setLoading(false);
+                        setStreamingMessage(null);
+                    }
+                    resolve(false);
+                };
+            });
+        } catch (error) {
+            console.error("Error setting up WebSocket:", error);
+            setConnectionError("Failed to establish connection. Please try again later.");
+            return false;
+        }
+    };
+
+    // Handler for WebSocket messages
+    const handleWebSocketMessage = (event) => {
+        console.log("Received WebSocket message:", event.data);
+        try {
+            const data = JSON.parse(event.data);
+
+            // Direct content handling first (without type field)
+            if (!data.type && data.content !== undefined) {
+                console.log("Received direct content:", data.content);
+                setStreamingMessage(prev => {
+                    if (!prev) {
+                        return {
+                            id: `assistant-${Date.now()}`,
+                            role: "assistant",
+                            content: data.content || "",
+                            timestamp: new Date()
+                        };
+                    }
+                    return {
+                        ...prev,
+                        content: data.content
+                    };
+                });
+                return;
+            }
+
+            // Handle different message types
+            switch (data.type) {
+
+                case "connected":
+                    console.log("Connection confirmed:", data.data);
+                    break;
+
+                case "stream_start":
+                    console.log("Stream starting");
+                    // Reset any previous streaming message
+                    setStreamingMessage({
+                        id: `assistant-${Date.now()}`,
+                        role: "assistant",
+                        content: "",
+                        timestamp: new Date()
+                    });
+                    break;
+
+                case "stream_chunk":
+                    const chunkContent = data.data?.content || "";
+                    console.log("Received chunk:", chunkContent);
+
+                    setStreamingMessage(prev => {
+                        if (!prev) {
+                            return {
+                                id: `assistant-${Date.now()}`,
+                                role: "assistant",
+                                content: chunkContent,
+                                timestamp: new Date()
+                            };
+                        }
+                        return {
+                            ...prev,
+                            content: prev.content + chunkContent
+                        };
+                    });
+                    break;
+
+                case "stream_end":
+                case "response_complete":
+                    console.log("Stream complete:", data.data);
+
+                    // Determine content and citations based on available data
+                    const content = data.data?.content || streamingMessage?.content || "";
+                    const citations = data.data?.citations || [];
+
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            id: `assistant-${Date.now()}`,
+                            role: "assistant",
+                            content: content,
+                            citations: citations,
+                            timestamp: new Date()
+                        }
+                    ]);
+
+                    setStreamingMessage(null);
+                    setLoading(false);
+                    break;
+
+                case "error":
+                    // Handle errors - safely extract error details
+                    const errorDetail = data.data?.detail || data.detail || "Onbekende fout";
+                    console.error("WebSocket error:", errorDetail);
+                    setConnectionError(null); // Clear connection error
                     setMessages(prev => [
                         ...prev,
                         {
                             id: `error-${Date.now()}`,
                             role: "assistant",
-                            content: "Er is een fout opgetreden bij de verbinding. Probeer het later opnieuw.",
+                            content: `Er is een fout opgetreden: ${errorDetail}`,
                             timestamp: new Date()
                         }
                     ]);
+                    setStreamingMessage(null);
                     setLoading(false);
-                };
+                    break;
 
-                websocketRef.current.onclose = (event) => {
-                    console.log(`WebSocket connection closed: code=${event.code}`);
-                    setConnectionEstablished(false);
+                case "response_chunk":
+                    // Support for alternate chunk format
+                    console.log("Received response chunk");
+                    const responseChunkContent = data.data?.content || "";
+                    const isDone = data.data?.done === true;
 
-                    // Attempt to reconnect after a delay
-                    reconnectTimeout = setTimeout(() => {
-                        if (document.visibilityState !== 'hidden') {
-                            setupWebSocket();
+                    if (!isDone) {
+                        setStreamingMessage(prev => {
+                            if (!prev) {
+                                return {
+                                    id: `assistant-${Date.now()}`,
+                                    role: "assistant",
+                                    content: responseChunkContent,
+                                    timestamp: new Date()
+                                };
+                            }
+                            return {
+                                ...prev,
+                                content: responseChunkContent
+                            };
+                        });
+                    } else {
+                        // Handle completion
+                        if (data.data?.thread_id) {
+                            console.log("Thread ID received:", data.data.thread_id);
                         }
-                    }, 3000);
-                };
-            } catch (error) {
-                console.error("Error setting up WebSocket:", error);
+
+                        setMessages(prev => [
+                            ...prev,
+                            {
+                                id: `assistant-${Date.now()}`,
+                                role: "assistant",
+                                content: responseChunkContent,
+                                timestamp: new Date()
+                            }
+                        ]);
+
+                        setStreamingMessage(null);
+                        setLoading(false);
+                    }
+                    break;
+
+                case "citations":
+                    // Handle citations separately
+                    console.log("Received citations:", data.data?.citations);
+                    // Update the last assistant message to include citations
+                    setMessages(prev => {
+                        const lastAssistantIndex = [...prev].reverse().findIndex(msg => msg.role === 'assistant');
+                        if (lastAssistantIndex === -1) return prev;
+
+                        const actualIndex = prev.length - 1 - lastAssistantIndex;
+                        const newMessages = [...prev];
+                        newMessages[actualIndex] = {
+                            ...newMessages[actualIndex],
+                            citations: data.data?.citations
+                        };
+                        return newMessages;
+                    });
+                    break;
+
+                default:
+                    console.log("Unhandled message type or format:", data.type || "no type", data);
+                    // Try to handle data even without a recognized type
+                    if (data.content) {
+                        console.log("Treating as direct content message");
+                        setMessages(prev => [
+                            ...prev,
+                            {
+                                id: `assistant-${Date.now()}`,
+                                role: "assistant",
+                                content: data.content,
+                                timestamp: new Date()
+                            }
+                        ]);
+                        setStreamingMessage(null);
+                        setLoading(false);
+                    }
+                    break;
             }
-        };
+        } catch (err) {
+            console.error("Error parsing WebSocket message:", err);
+            setConnectionError(`Error parsing message: ${err.message}`);
+        }
+    };
 
-        // When component mounts, try to get the list of documents from the publication first
-        const fetchDocuments = async () => {
+    // Fetch documents and set up initial state when component mounts
+    // Replace your current useEffect with this updated version
+    useEffect(() => {
+        // Fetch documents and conversation history
+        const initializeChat = async () => {
+            setLoading(true);
             try {
+                // Step 1: Fetch publication details (same as before)
                 const token = await getToken();
-                if (!token) return;
+                if (!token) {
+                    console.error("Failed to get authentication token");
+                    setConnectionError("Authentication failed. Please log in again.");
+                    return;
+                }
 
-                // Get publication details which includes documents
+                console.log("Fetching publication details for ID:", publicationId);
                 const response = await fetch(`${API_BASE_URL}/publications/publication/${publicationId}/`, {
                     headers: {
-                        "Authorization": `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
                 if (response.ok) {
-                    const publicationData = await response.json();
-                    // If documents exists in the publication data, use it
-                    if (publicationData.documents) {
-                        const fileMap: Record<string, { name: string }> = {};
-                        Object.keys(publicationData.documents).forEach(key => {
+                    const data = await response.json();
+                    console.log("Publication data retrieved:", data.title);
+                    if (data.documents) {
+                        const fileMap = {};
+                        Object.keys(data.documents).forEach(key => {
                             fileMap[key] = { name: key };
                         });
                         setAvailableFiles(fileMap);
+                        console.log("Available documents:", Object.keys(fileMap).length);
+                    } else {
+                        console.log("No documents found for this publication");
                     }
+                } else {
+                    console.error("Failed to fetch publication:", response.status);
+                    setConnectionError(`Failed to fetch publication data: ${response.status}`);
+                }
+
+                // Step 2: NEW - Fetch previous conversation if it exists
+                const conversationResponse = await fetch(`${API_BASE_URL}/publications/${publicationId}/conversation`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (conversationResponse.ok) {
+                    const conversationData = await conversationResponse.json();
+
+                    if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
+                        // Convert backend messages to our message format
+                        const previousMessages = conversationData.messages.map(msg => {
+                            // Process citations based on format
+                            let citations = msg.citations;
+                            if (citations && typeof citations === 'string' && citations.includes('\n')) {
+                                // If citations is a newline-separated string, split it into an array
+                                citations = citations.split('\n').filter(c => c.trim() !== '');
+                            }
+
+                            return {
+                                id: `${msg.role}-${new Date(msg.created_at).getTime()}`,
+                                role: msg.role,
+                                content: msg.content,
+                                citations: citations, // Use the processed citations
+                                timestamp: new Date(msg.created_at)
+                            };
+                        });
+
+                        console.log("Previous conversation loaded:", previousMessages.length, "messages");
+                        setMessages(previousMessages);
+                    } else {
+                        // If no previous conversation, show welcome message
+                        setMessages([{
+                            id: "welcome",
+                            role: "assistant",
+                            content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                            timestamp: new Date()
+                        }]);
+                    }
+                } else {
+                    // If error or no previous conversation, show welcome message
+                    console.log("No previous conversation found, showing welcome message");
+                    setMessages([{
+                        id: "welcome",
+                        role: "assistant",
+                        content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                        timestamp: new Date()
+                    }]);
+                }
+
+                // Step 3: Setup WebSocket (same as before)
+                console.log("Setting up WebSocket connection...");
+                const connectionSuccess = await setupWebSocket();
+                console.log("WebSocket setup result:", connectionSuccess);
+
+                if (!connectionSuccess) {
+                    console.log("Initial WebSocket connection failed, will retry on user input");
                 }
             } catch (error) {
-                console.error("Error fetching documents:", error);
+                console.error("Error initializing chat:", error);
+                setConnectionError(`Error initializing chat: ${error.message}`);
+
+                // Fall back to welcome message if there's an error
+                setMessages([{
+                    id: "welcome",
+                    role: "assistant",
+                    content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                    timestamp: new Date()
+                }]);
+            } finally {
+                setLoading(false);
             }
         };
 
-        // Set up WebSocket and fetch documents
-        setupWebSocket();
-        fetchDocuments();
-
-        // Add welcome message
-        setMessages([
-            {
-                id: "welcome",
-                role: "assistant",
-                content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
-                timestamp: new Date()
-            }
-        ]);
+        initializeChat();
 
         // Focus input field
         if (inputRef.current) {
             inputRef.current.focus();
         }
 
-        // Cleanup function for when component unmounts
+        // Cleanup function
         return () => {
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
+            if (websocketRef.current) {
+                console.log("Closing WebSocket connection");
+                websocketRef.current.close();
             }
-            handleCleanup();
         };
     }, [publicationId, getToken]);
 
@@ -279,28 +449,69 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
         // Add user message to chat
         const userMessageId = `user-${Date.now()}`;
+        const userMessageContent = currentMessage;
         setMessages((prev) => [
             ...prev,
             {
                 id: userMessageId,
                 role: "user",
-                content: currentMessage,
+                content: userMessageContent,
                 timestamp: new Date()
             }
         ]);
         setCurrentMessage("");
         setLoading(true);
+        setConnectionError(null); // Clear any previous errors
+
+        // Ensure WebSocket connection is active
+        if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
+            console.log("WebSocket not connected, attempting to reconnect...");
+            const connectionSuccess = await setupWebSocket();
+
+            if (!connectionSuccess) {
+                console.error("Failed to establish WebSocket connection");
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: `error-${Date.now()}`,
+                        role: "assistant",
+                        content: "Kon geen verbinding maken. Probeer het later opnieuw.",
+                        timestamp: new Date()
+                    }
+                ]);
+                setLoading(false);
+                return;
+            }
+
+            // Wait a moment for the connection to fully establish
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
 
         // Send message through WebSocket
         if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
-            websocketRef.current.send(JSON.stringify({
-                type: "message",
-                data: {
-                    content: currentMessage
-                }
-            }));
+            try {
+                // Format message according to what the backend expects
+                const messageObject = {
+                    content: userMessageContent
+                };
+                console.log("Sending message:", messageObject);
+                websocketRef.current.send(JSON.stringify(messageObject));
+            } catch (error) {
+                console.error("Error sending message:", error);
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        id: `error-${Date.now()}`,
+                        role: "assistant",
+                        content: `Fout bij het verzenden van bericht: ${error.message}`,
+                        timestamp: new Date()
+                    }
+                ]);
+                setLoading(false);
+            }
         } else {
-            // WebSocket is not connected, try to reconnect
+            // WebSocket is not connected
+            console.error("WebSocket is not open, cannot send message");
             setMessages((prev) => [
                 ...prev,
                 {
@@ -322,41 +533,11 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
         }
     };
 
-    // Cleanup resources
-    const handleCleanup = async () => {
-        try {
-            // Close WebSocket connection
-            if (websocketRef.current) {
-                websocketRef.current.close();
-                websocketRef.current = null;
-            }
-
-            // Abort any in-progress HTTP requests
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-                abortControllerRef.current = null;
-            }
-
-            // If we have a thread ID, call endpoint to clean up the thread
-            if (threadId) {
-                const token = await getToken();
-                if (token) {
-                    await fetch(`${API_BASE_URL}/conversation/${publicationId}`, {
-                        method: "DELETE",
-                        headers: {
-                            "Authorization": `Bearer ${token}`
-                        }
-                    });
-                }
-            }
-        } catch (error) {
-            console.error("Error cleaning up conversation:", error);
-        }
-    };
-
     // Handle closing the chat
     const handleClose = () => {
-        handleCleanup();
+        if (websocketRef.current) {
+            websocketRef.current.close();
+        }
         onClose();
     };
 
@@ -391,8 +572,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-white">ProcLogic AI Chat</h2>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* Connection indicator */}
-                        <div className={`w-3 h-3 rounded-full ${connectionEstablished ? 'bg-green-500' : 'bg-red-500'}`} title={connectionEstablished ? 'Verbinding actief' : 'Verbinding verbroken'}></div>
                         {/* Fullscreen toggle button */}
                         <Button
                             onClick={handleToggleFullscreen}
@@ -415,6 +594,15 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         </Button>
                     </div>
                 </div>
+
+                {/* Connection error notification */}
+                {connectionError && (
+                    <div className="px-4 py-2 bg-red-100 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
+                        <div className="flex items-center gap-2 text-sm text-red-800 dark:text-red-300">
+                            <span>{connectionError}</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Available files */}
                 {Object.keys(availableFiles).length > 0 && (
@@ -447,16 +635,27 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                                 <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</div>
 
                                 {/* Citations */}
-                                {message.citations && message.citations.length > 0 && (
+                                {message.citations && (
                                     <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                                         <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Bronnen:</p>
                                         <ul className="space-y-1">
-                                            {message.citations.map((citation, index) => (
-                                                <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
-                                                    <FileTextIcon size={10} className="mt-1 flex-shrink-0" />
-                                                    <span>{citation}</span>
-                                                </li>
-                                            ))}
+                                            {Array.isArray(message.citations) ? (
+                                                // If citations is an array, map through it
+                                                message.citations.map((citation, index) => (
+                                                    <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
+                                                        <FileTextIcon size={10} className="mt-1 flex-shrink-0" />
+                                                        <span>{citation}</span>
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                // If citations is a string, split by newlines
+                                                typeof message.citations === 'string' && message.citations.split('\n').map((citation, index) => (
+                                                    <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
+                                                        <FileTextIcon size={10} className="mt-1 flex-shrink-0" />
+                                                        <span>{citation}</span>
+                                                    </li>
+                                                ))
+                                            )}
                                         </ul>
                                     </div>
                                 )}
@@ -494,7 +693,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-sm">
                                 <div className="flex items-center gap-2">
                                     <LoaderIcon size={16} className="animate-spin text-emerald-600" />
-                                    <span className="text-sm text-gray-800 dark:text-gray-200">ProcLogic AI is aan het denken...</span>
+                                    <span className="text-sm text-gray-800 dark:text-gray-200">ProcLogic AI is aan het initialiseren...</span>
                                 </div>
                             </div>
                         </div>
@@ -527,7 +726,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         </Button>
                     </div>
 
-                    {/* Assistant capabilities */}
+                    {/* Suggestion buttons */}
                     <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                         <p>Suggesties:</p>
                         <div className="mt-2 flex flex-wrap gap-2">

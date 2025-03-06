@@ -18,7 +18,6 @@ const routeTranslations: Record<string, string> = {
   // Publications subsections
   overview: "Overzicht",
   saved: "Opgeslagen",
-  expiring: "Verlopend",
 
   // Analytics subsections
   competition: "Concurrentieanalyse",

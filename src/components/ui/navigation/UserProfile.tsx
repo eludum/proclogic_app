@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/Button";
-import { SafeUser } from '@/lib/userUtils';
+import { SafeUser } from '@/lib/clerkUserUtils';
 import { cx, focusRing } from "@/lib/utils";
 import { SignInButton, SignOutButton } from '@clerk/nextjs';
 import { ChevronsUpDown } from "lucide-react";

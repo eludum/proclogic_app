@@ -1,9 +1,13 @@
 "use client"
 import { Button } from "@/components/Button";
 import { FilterIcon, LockIcon, SearchIcon, StarIcon } from "lucide-react";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function Search({ isPremium = false }) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
     const [searchTerm, setSearchTerm] = useState("");
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -15,6 +19,27 @@ export default function Search({ isPremium = false }) {
         cpvCode: ""
     });
 
+    // Load values from URL on component mount
+    useEffect(() => {
+        setSearchTerm(searchParams.get("q") || "");
+        setFilters({
+            sector: searchParams.get("sector") || "",
+            region: searchParams.get("region") || "",
+            date: searchParams.get("date") || "",
+            cpvCode: searchParams.get("cpv_code") || ""
+        });
+
+        // Open filters panel if any filters are set
+        if (
+            searchParams.get("sector") ||
+            searchParams.get("region") ||
+            searchParams.get("date") ||
+            searchParams.get("cpv_code")
+        ) {
+            setShowAdvancedFilters(true);
+        }
+    }, [searchParams]);
+
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({
@@ -23,10 +48,31 @@ export default function Search({ isPremium = false }) {
         }));
     };
 
+    // Create a query string from the current search parameters
+    const createQueryString = useCallback((params) => {
+        const newSearchParams = new URLSearchParams();
+
+        // Add search term if present
+        if (params.q) newSearchParams.set("q", params.q);
+
+        // Add other parameters if they have values
+        if (params.sector) newSearchParams.set("sector", params.sector);
+        if (params.region) newSearchParams.set("region", params.region);
+        if (params.date) newSearchParams.set("date", params.date);
+        if (params.cpvCode) newSearchParams.set("cpv_code", params.cpvCode);
+
+        return newSearchParams.toString();
+    }, []);
+
     const handleSearch = (e) => {
         e.preventDefault();
-        // In a real implementation, this would trigger an API call with the search parameters
-        console.log("Search with:", { searchTerm, filters });
+
+        const queryString = createQueryString({
+            q: searchTerm,
+            ...filters
+        });
+
+        router.push(`/publications/search?${queryString}`);
     };
 
     return (
@@ -94,10 +140,11 @@ export default function Search({ isPremium = false }) {
                                         className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
                                     >
                                         <option value="">Alle sectoren</option>
-                                        <option value="it">IT & Technologie</option>
-                                        <option value="healthcare">Gezondheidszorg</option>
-                                        <option value="construction">Bouw & Infrastructuur</option>
-                                        <option value="education">Onderwijs</option>
+                                        <option value="45000000">Bouwwerkzaamheden</option>
+                                        <option value="72000000">IT & Technologie</option>
+                                        <option value="85000000">Gezondheidszorg</option>
+                                        <option value="80000000">Onderwijs</option>
+                                        <option value="71000000">Architectuur en Engineering</option>
                                     </select>
                                 </div>
 
@@ -114,10 +161,12 @@ export default function Search({ isPremium = false }) {
                                         className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
                                     >
                                         <option value="">Alle regio's</option>
-                                        <option value="noord-holland">Noord-Holland</option>
-                                        <option value="zuid-holland">Zuid-Holland</option>
-                                        <option value="utrecht">Utrecht</option>
-                                        <option value="gelderland">Gelderland</option>
+                                        <option value="BE21">Antwerpen</option>
+                                        <option value="BE10">Brussel</option>
+                                        <option value="BE22">Limburg</option>
+                                        <option value="BE23">Oost-Vlaanderen</option>
+                                        <option value="BE24">Vlaams-Brabant</option>
+                                        <option value="BE25">West-Vlaanderen</option>
                                     </select>
                                 </div>
 

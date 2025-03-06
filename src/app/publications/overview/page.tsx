@@ -12,6 +12,7 @@ export default async function Overview() {
   // Fetch publications using authenticated endpoint
   let publications = [];
   let fetchError = null;
+  let token = null;
 
   try {
     const token = await getToken();
@@ -64,7 +65,7 @@ export default async function Overview() {
           </div>
         ) : (
           <div className="p-4">
-            <PublicationList publications={publications} />
+            <PublicationList publications={publications} initialToken={token} />
           </div>
         )}
       </div>

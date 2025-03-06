@@ -1,57 +1,74 @@
 "use server"
 import { siteConfig } from "@/app/siteConfig";
 import { Table, TableBody, TableCell, TableRoot, TableRow } from "@/components/Table";
-import { getCompanyData } from "@/lib/userUtils";
-import { currentUser } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import FreePublicationList from "../publications/_components/FreePublicationList";
-import SearchComponent from "../publications/_components/Search";
-
+import PublicationList from "../publications/_components/PublicationList";
+import Search from "../publications/_components/Search";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default async function PublicSearch() {
+export default async function PublicSearch({ searchParams }) {
     const user = await currentUser();
-    let company = null;
-    let isLoggedIn = false;
-    let isPremium = false;
+    const { getToken } = await auth();
+    const isLoggedIn = !!user;
 
-    // Check if user is logged in and get company data if available
-    if (user) {
-        isLoggedIn = true;
-        const companyData = await getCompanyData(user);
-        if (!companyData.error && companyData.company) {
-            company = companyData.company;
-            isPremium = company.license === 'premium';
-        }
-    }
+    // Get search term and filters from URL parameters
+    const searchTerm = searchParams.q || "";
+    const sector = searchParams.sector || "";
+    const region = searchParams.region || "";
+    const date = searchParams.date || "";
+    const cpvCode = searchParams.cpv_code || "";
 
     // Fetch publications - different endpoints for logged in vs anonymous
     let publications = [];
     let fetchError = null;
 
     try {
-        // Different API endpoints based on user status
-        let apiUrl = `${API_BASE_URL}/publications/public`;
+        // Determine API endpoint based on user status
+        let apiUrl = `${API_BASE_URL}/publications/free/search/${searchTerm}`;
+        let headers = {};
+        let queryParams = new URLSearchParams();
 
-        if (isLoggedIn && company) {
-            // For logged in users, we can personalize results
-            apiUrl = isPremium
-                ? `${API_BASE_URL}/publications/search/${company.vat_number}/`
-                : `${API_BASE_URL}/publications/search/free/${company.vat_number}/`;
+        // Add filters if they exist
+        if (sector) queryParams.append("sector", sector);
+        if (region) queryParams.append("region", region);
+
+        // Add the query parameters to the URL
+        if (queryParams.toString()) {
+            apiUrl += `?${queryParams.toString()}`;
         }
 
-        const response = await fetch(apiUrl);
+        if (isLoggedIn) {
+            // For logged in users with proper authentication
+            const token = await getToken();
+            apiUrl = `${API_BASE_URL}/publications/search/${searchTerm}`;
+
+            // Add premium filters if logged in
+            if (date) queryParams.append("date", date);
+            if (cpvCode) queryParams.append("cpv_code", cpvCode);
+
+            // Update URL with all parameters
+            if (queryParams.toString()) {
+                apiUrl += `?${queryParams.toString()}`;
+            }
+
+            headers = {
+                Authorization: `Bearer ${token}`,
+            };
+        }
+
+        const response = await fetch(apiUrl, { headers });
+
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
         }
-        console.log(apiUrl);
 
         publications = await response.json();
     } catch (error) {
         fetchError = error.message;
         console.error("Error fetching publications:", error);
     }
-
 
     return (
         <section aria-label="Publications Search">
@@ -63,27 +80,25 @@ export default async function PublicSearch() {
             </div>
 
             {/* Search Component */}
-            <SearchComponent isPremium={isPremium} />
+            <Search isPremium={isLoggedIn} />
 
-            {/* Premium Banner - only show for non-premium users */}
-            {!isPremium && (
+            {/* Premium Banner - only show for non-logged in users */}
+            {!isLoggedIn && (
                 <div className="mx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg border border-blue-100 dark:border-blue-800 shadow-sm">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
                             <h3 className="text-base font-semibold text-blue-800 dark:text-blue-300 mb-1">
-                                {isLoggedIn ? "Upgrade naar Premium" : "Maak een account aan"}
+                                Maak een account aan
                             </h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
-                                {isLoggedIn
-                                    ? "Krijg toegang tot AI-aanbevelingen, uitgebreide zoekopties, en gepersonaliseerde inzichten."
-                                    : "Registreer voor gratis toegang tot basis aanbestedingen. Premium gebruikers krijgen AI-aanbevelingen en meer."}
+                                Registreer voor toegang tot uitgebreide zoekmogelijkheden, AI-aanbevelingen en meer.
                             </p>
                         </div>
                         <a
-                            href={isLoggedIn ? "/pricing" : "/register"}
+                            href="/register"
                             className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
                         >
-                            {isLoggedIn ? "Meer informatie" : "Registreren"}
+                            Registreren
                         </a>
                     </div>
                 </div>
@@ -96,7 +111,7 @@ export default async function PublicSearch() {
                             <TableRow>
                                 <TableCell>
                                     <div className="p-6 text-center">
-                                        <p className="text-red-500">Error loading publications: {fetchError}</p>
+                                        <p className="text-red-500">Fout bij het laden van aanbestedingen: {fetchError}</p>
                                     </div>
                                 </TableCell>
                             </TableRow>
@@ -109,12 +124,21 @@ export default async function PublicSearch() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            <FreePublicationList
-                                publications={publications}
-                                isLoggedIn={isLoggedIn}
-                                isPremium={isPremium}
-                                company={company}
-                            />
+                            <>
+                                {isLoggedIn ? (
+                                    // Logged-in users see the full PublicationList with all features
+                                    <PublicationList
+                                        publications={publications}
+                                        initialToken={await getToken()}
+                                    />
+                                ) : (
+                                    // Non-logged in users see the limited PublicationList
+                                    <FreePublicationList
+                                        publications={publications}
+                                        isLoggedIn={isLoggedIn}
+                                    />
+                                )}
+                            </>
                         )}
                     </TableBody>
                 </Table>

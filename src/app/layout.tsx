@@ -1,7 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/Sidebar"
 import { AppSidebar } from "@/components/ui/navigation/AppSidebar"
 import { Breadcrumbs } from "@/components/ui/navigation/Breadcrumbs"
-import { extractSafeUser } from "@/lib/userUtils"
+import { extractSafeUser } from "@/lib/clerkUserUtils"
 import { nlBE } from '@clerk/localizations'
 import { ClerkProvider } from '@clerk/nextjs'
 import { currentUser } from '@clerk/nextjs/server'

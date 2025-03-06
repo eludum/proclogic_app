@@ -13,7 +13,7 @@ import {
   SidebarMenuSub,
   SidebarSubLink,
 } from "@/components/Sidebar"
-import { SafeUser } from '@/lib/userUtils'
+import { SafeUser } from '@/lib/clerkUserUtils'
 import { cx, focusRing } from "@/lib/utils"
 import { RiArrowDownSFill } from "@remixicon/react"
 import {
@@ -69,10 +69,6 @@ const secondaryNavigation = [
       {
         name: "Opgeslagen",
         href: "/publications/saved",
-      },
-      {
-        name: "Verlopend",
-        href: "/publications/expiring",
       },
     ],
   },
