@@ -76,8 +76,8 @@ export default function Search({ isPremium = false }) {
     };
 
     return (
-        <div className="mx-4 sm:mx-6 mb-6">
-            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="w-full px-4 sm:px-6 mb-6 max-w-full overflow-hidden">
+            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm w-full">
                 <div className="p-4 sm:p-6">
                     {/* Main search bar */}
                     <form onSubmit={handleSearch} className="w-full">

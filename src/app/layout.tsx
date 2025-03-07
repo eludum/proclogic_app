@@ -54,7 +54,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar:state")?.value === "true" ? "true" : "false"
+  const defaultOpen = cookieStore.get("sidebar:state")?.value
 
   // Fetch user data with a Promise to handle potential delay
   const user = await currentUser();

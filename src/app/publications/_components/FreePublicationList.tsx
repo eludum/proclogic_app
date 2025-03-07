@@ -1,5 +1,4 @@
 "use client"
-import { TableCell, TableRow } from "@/components/Table";
 import { formatDate, getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, ClockIcon, CodeIcon, MapPinIcon, TagIcon } from 'lucide-react';
 import { useState } from "react";
@@ -16,18 +15,18 @@ export default function FreePublicationList({ publications, isLoggedIn }) {
     };
 
     return (
-        <>
+        <div className="w-full">
             {publications.map((publication, index) => (
-                <TableRow key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <TableCell className="p-4">
+                <div key={index} className="border-b border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div className="p-6">
                         <div className="flex flex-col space-y-4">
                             {/* Publication header section with status and title */}
                             <div className="flex flex-col sm:flex-row justify-between w-full">
                                 {/* Status indicator */}
                                 <div className="flex items-center gap-2 mb-2 sm:mb-0">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${publication.is_active
-                                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
-                                            : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                        : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
                                         }`}>
                                         <CheckCircleIcon className="mr-1 size-3" />
                                         {publication.is_active ? "Actief" : "Inactief"}
@@ -35,10 +34,10 @@ export default function FreePublicationList({ publications, isLoggedIn }) {
                                 </div>
 
                                 {/* Deadline indicator */}
-                                <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
+                                <span className={`inline-flex items-center self-start gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
                                     <ClockIcon className="size-3" />
                                     <span>{getTimeRemaining(publication.submission_deadline).text}</span>
-                                </div>
+                                </span>
                             </div>
 
                             {/* Publication title */}
@@ -117,21 +116,10 @@ export default function FreePublicationList({ publications, isLoggedIn }) {
                                 </div>
                             </div>
 
-                            {/* CTA for non-premium or non-logged-in users */}
-                            {!isLoggedIn && (
-                                <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                                    <a
-                                        href="/register"
-                                        className="text-sm text-blue-600 dark:text-blue-400 font-medium hover:underline"
-                                    >
-                                        Maak een account aan om meer details te zien →
-                                    </a>
-                                </div>
-                            )}
                         </div>
-                    </TableCell>
-                </TableRow>
+                    </div>
+                </div>
             ))}
-        </>
+        </div>
     );
 }

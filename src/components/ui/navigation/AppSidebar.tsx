@@ -15,7 +15,7 @@ import {
 } from "@/components/Sidebar"
 import { SafeUser } from '@/lib/clerkUserUtils'
 import { cx, focusRing } from "@/lib/utils"
-import { RiArrowDownSFill } from "@remixicon/react"
+import { RiArrowDownSFill, RiChatSmile2Line } from "@remixicon/react"
 import {
   BarChart2,
   FileText,
@@ -24,6 +24,7 @@ import {
   Settings,
   Users
 } from "lucide-react"
+
 import * as React from "react"
 import { Logo } from "../../../../public/Logo"
 import { UserProfile } from "./UserProfile"
@@ -87,6 +88,13 @@ const secondaryNavigation = [
         href: "/analytics/reports",
       }
     ],
+  },
+  {
+    name: "Proclogic AI",
+    href: "/proclogic-ai",
+    icon: RiChatSmile2Line,
+    notifications: false,
+    hasChildren: false, // Added this property to indicate no children
   },
   {
     name: "Werkruimtes",

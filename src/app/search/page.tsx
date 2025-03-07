@@ -1,6 +1,5 @@
 "use server"
 import { siteConfig } from "@/app/siteConfig";
-import { Table, TableBody, TableCell, TableRoot, TableRow } from "@/components/Table";
 import { auth, currentUser } from '@clerk/nextjs/server';
 import FreePublicationList from "../publications/_components/FreePublicationList";
 import PublicationList from "../publications/_components/PublicationList";
@@ -104,45 +103,33 @@ export default async function PublicSearch({ searchParams }) {
                 </div>
             )}
 
-            <TableRoot className="border-t border-gray-200 dark:border-gray-800 w-full">
-                <Table>
-                    <TableBody>
-                        {fetchError ? (
-                            <TableRow>
-                                <TableCell>
-                                    <div className="p-6 text-center">
-                                        <p className="text-red-500">Fout bij het laden van aanbestedingen: {fetchError}</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        ) : publications.length === 0 ? (
-                            <TableRow>
-                                <TableCell>
-                                    <div className="p-6 text-center">
-                                        <p className="text-gray-500">Geen aanbestedingen gevonden</p>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
+            <div className="border-t border-gray-200 dark:border-gray-800 w-full">
+                {fetchError ? (
+                    <div className="p-6 text-center">
+                        <p className="text-red-500">Fout bij het laden van aanbestedingen: {fetchError}</p>
+                    </div>
+                ) : publications.length === 0 ? (
+                    <div className="p-6 text-center">
+                        <p className="text-gray-500">Geen aanbestedingen gevonden</p>
+                    </div>
+                ) : (
+                    <div className="">
+                        {isLoggedIn ? (
+                            // Logged-in users see the full PublicationList with all features
+                            <PublicationList
+                                publications={publications}
+                                initialToken={await getToken()}
+                            />
                         ) : (
-                            <>
-                                {isLoggedIn ? (
-                                    // Logged-in users see the full PublicationList with all features
-                                    <PublicationList
-                                        publications={publications}
-                                        initialToken={await getToken()}
-                                    />
-                                ) : (
-                                    // Non-logged in users see the limited PublicationList
-                                    <FreePublicationList
-                                        publications={publications}
-                                        isLoggedIn={isLoggedIn}
-                                    />
-                                )}
-                            </>
+                            // Non-logged in users see the limited PublicationList
+                            <FreePublicationList
+                                publications={publications}
+                                isLoggedIn={isLoggedIn}
+                            />
                         )}
-                    </TableBody>
-                </Table>
-            </TableRoot>
+                    </div>
+                )}
+            </div>
         </section>
     );
 }
