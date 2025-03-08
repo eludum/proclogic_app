@@ -113,7 +113,7 @@ export default async function PublicSearch({ searchParams }) {
                         <p className="text-gray-500">Geen aanbestedingen gevonden</p>
                     </div>
                 ) : (
-                    <div className="">
+                    <div className="p-4">
                         {isLoggedIn ? (
                             // Logged-in users see the full PublicationList with all features
                             <PublicationList

@@ -220,7 +220,9 @@ export default function PublicationList({ publications, initialToken }) {
                                         className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-none"
                                         onClick={() => markAsViewed(publication)}
                                     >
-                                        {publication.title}
+                                        {publication.title.length > 300
+                                            ? `${publication.title.substring(0, 300)}...`
+                                            : publication.title}
                                     </a>
 
                                     {/* Time remaining badge */}
