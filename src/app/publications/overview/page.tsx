@@ -39,19 +39,6 @@ export default async function Overview() {
     console.error("Error fetching publications:", error);
   }
 
-  if (fetchError) {
-    return (
-      <section aria-label="Publications Overview">
-        <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
-          <div className="w-full">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingen Overzicht</h1>
-            <p className="text-sm text-red-500">Error: {fetchError}</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section aria-label="Publications Overview">
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">

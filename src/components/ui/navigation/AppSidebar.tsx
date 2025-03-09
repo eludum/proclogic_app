@@ -77,17 +77,7 @@ const secondaryNavigation = [
     name: "Analyses",
     href: "/analytics",
     icon: BarChart2,
-    hasChildren: true, // Added this property to indicate it has children
-    children: [
-      {
-        name: "Concurrentieanalyse",
-        href: "/analytics/competition",
-      },
-      {
-        name: "Rapportages",
-        href: "/analytics/reports",
-      }
-    ],
+    hasChildren: false, // Added this property to indicate it has children
   },
   {
     name: "Proclogic AI",

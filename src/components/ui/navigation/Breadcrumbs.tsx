@@ -19,15 +19,10 @@ const routeTranslations: Record<string, string> = {
   overview: "Overzicht",
   saved: "Opgeslagen",
 
-  // Analytics subsections
-  competition: "Concurrentieanalyse",
-  reports: "Rapportages",
-
   // Workspaces subsections
   projects: "Projecten",
   documents: "Documenten",
   team: "Team Samenwerking",
-
 
   // Settings subsections
   "company-profile": "Bedrijfsprofiel",

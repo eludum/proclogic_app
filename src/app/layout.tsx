@@ -37,14 +37,11 @@ export const metadata: Metadata = {
   creator: "Mehmet Köse",
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "nl_BE",
     url: siteConfig.url,
     title: siteConfig.name,
     description: siteConfig.description,
     siteName: siteConfig.name,
-  },
-  icons: {
-    icon: "/favicon.ico",
   },
 }
 

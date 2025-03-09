@@ -13,7 +13,7 @@ import ChatComponent from "./ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default function PublicationList({ initialPublications, initialPagination }) {
+export default function PublicationList({ initialPublications }) {
     const [activeChatPublication, setActiveChatPublication] = useState(null);
     const [savingPublications, setSavingPublications] = useState({});
     const [unsavingPublications, setUnsavingPublications] = useState({});
@@ -367,11 +367,11 @@ export default function PublicationList({ initialPublications, initialPagination
                                     <div className="flex flex-col sm:flex-row gap-2 text-xs">
                                         <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-md w-full sm:w-auto">
                                             <CalendarIcon size={14} className="shrink-0" />
-                                            <span className="whitespace-nowrap">Published: {formatDate(publication.publication_date)}</span>
+                                            <span className="whitespace-nowrap">Gepubliceerd: {formatDate(publication.publication_date)}</span>
                                         </div>
                                         <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-3 py-2 rounded-md w-full sm:w-auto">
                                             <CalendarIcon size={14} className="shrink-0" />
-                                            <span className="whitespace-nowrap">Due: {formatDate(publication.submission_deadline)}</span>
+                                            <span className="whitespace-nowrap">Deadline: {formatDate(publication.submission_deadline)}</span>
                                         </div>
                                     </div>
 
@@ -438,10 +438,10 @@ export default function PublicationList({ initialPublications, initialPagination
                                             onClick={() => typeof pageNum === 'number' ? handlePageChange(pageNum) : null}
                                             disabled={pageNum === '...' || pageNum === pagination.page || isLoading}
                                             className={`px-4 py-2 rounded-md ${pageNum === pagination.page
-                                                    ? 'bg-blue-600 text-white dark:bg-blue-700'
-                                                    : pageNum === '...'
-                                                        ? 'bg-transparent text-gray-500 dark:text-gray-400 cursor-default'
-                                                        : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                ? 'bg-blue-600 text-white dark:bg-blue-700'
+                                                : pageNum === '...'
+                                                    ? 'bg-transparent text-gray-500 dark:text-gray-400 cursor-default'
+                                                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                                                 }`}
                                         >
                                             {pageNum}

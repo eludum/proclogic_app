@@ -1,0 +1,83 @@
+// app/analytics/page.jsx
+import { siteConfig } from "@/app/siteConfig";
+import { auth } from '@clerk/nextjs/server';
+import AnalyticsDashboard from './_components/AnalyticsDashboard';
+
+export const metadata = {
+    title: 'Aanbestedingsanalyse | ProcLogic',
+    description: 'Analyse van gunningstrends, sectoren en contracten',
+};
+
+const API_BASE_URL = siteConfig.api_base_url;
+
+export default async function AnalyticsPage() {
+    // Get server-side authentication token
+    const { getToken } = await auth();
+    const token = await getToken();
+
+    // Fetch initial analytics data for the dashboard
+    let initialData = {
+        totalValue: 0,
+        sectorData: [],
+        years: []
+    };
+    let error = null;
+
+    try {
+        // Fetch total value data
+        const totalValueResponse = await fetch(`${API_BASE_URL}/analytics/total-value`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            cache: 'no-store' // Don't cache this data
+        });
+
+        if (!totalValueResponse.ok) {
+            throw new Error(`API error: ${totalValueResponse.status}`);
+        }
+
+        const totalValueData = await totalValueResponse.json();
+        initialData.totalValue = totalValueData.total_value;
+
+        // Fetch sector data
+        const sectorResponse = await fetch(`${API_BASE_URL}/analytics/by-sector`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            cache: 'no-store'
+        });
+
+        if (!sectorResponse.ok) {
+            throw new Error(`API error: ${sectorResponse.status}`);
+        }
+
+        initialData.sectorData = await sectorResponse.json();
+
+        // Fetch time series data to extract available years
+        const timeSeriesResponse = await fetch(`${API_BASE_URL}/analytics/time-series?timeframe=yearly`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+            cache: 'no-store'
+        });
+
+        if (timeSeriesResponse.ok) {
+            const timeSeriesData = await timeSeriesResponse.json();
+            initialData.years = timeSeriesData.map(item => parseInt(item.period)).sort((a, b) => b - a); // Sort descending
+        }
+
+    } catch (e) {
+        console.error("Error fetching initial analytics data:", e);
+        error = e.message;
+    }
+
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <AnalyticsDashboard
+                initialData={initialData}
+                error={error}
+                apiBaseUrl={API_BASE_URL}
+            />
+        </div>
+    );
+}

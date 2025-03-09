@@ -13,11 +13,6 @@ const nextConfig = {
         destination: "/publications/overview",
         permanent: true,
       },
-      {
-        source: "/analytics",
-        destination: "/analytics/competition",
-        permanent: true,
-      },
     ]
   },
 }
