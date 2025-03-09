@@ -68,7 +68,7 @@ function BarListInner<T>(
             }}
             className={cx(
               // base
-              "group w-full rounded-sm",
+              "group w-full rounded-xs",
               // focus
               focusRing,
               onValueChange
@@ -83,7 +83,7 @@ function BarListInner<T>(
             <div
               className={cx(
                 // base
-                "flex items-center rounded-sm transition-all",
+                "flex items-center rounded-xs transition-all",
                 rowHeight,
                 // background color
                 "bg-blue-200 dark:bg-blue-900",
@@ -104,7 +104,7 @@ function BarListInner<T>(
                     href={item.href}
                     className={cx(
                       // base
-                      "truncate whitespace-nowrap rounded-sm text-sm",
+                      "truncate whitespace-nowrap rounded-xs text-sm",
                       // text color
                       "text-gray-900 dark:text-gray-50",
                       // hover

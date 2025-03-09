@@ -149,7 +149,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
               <DrawerClose className="absolute right-4 top-4" asChild>
                 <Button
                   variant="ghost"
-                  className="!p-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 hover:dark:text-gray-50"
+                  className="p-2! text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-50"
                 >
                   <RiCloseLine className="size-5 shrink-0" aria-hidden="true" />
                 </Button>
@@ -171,13 +171,13 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
         {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cx(
-            "relative h-svh w-[--sidebar-width] bg-transparent transition-[width] duration-150 ease-in-out will-change-transform",
+            "relative h-svh w-(--sidebar-width) bg-transparent transition-[width] duration-150 ease-in-out will-change-transform",
             "group-data-[collapsible=true]:w-0",
           )}
         />
         <div
           className={cx(
-            "fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-150 ease-in-out will-change-transform md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-150 ease-in-out will-change-transform md:flex",
             "left-0 group-data-[collapsible=true]:left-[calc(var(--sidebar-width)*-1)]",
             "border-r border-gray-200 dark:border-gray-800",
             className,
@@ -208,7 +208,7 @@ const SidebarTrigger = React.forwardRef<
       ref={ref}
       data-sidebar="trigger"
       className={cx(
-        "group inline-flex rounded-md p-1.5 hover:bg-gray-200/50 hover:dark:bg-gray-900",
+        "group inline-flex rounded-md p-1.5 hover:bg-gray-200/50 dark:hover:bg-gray-900",
         focusRing,
       )}
       onClick={(event) => {
@@ -291,9 +291,9 @@ const SidebarLink = React.forwardRef<
       aria-current={isActive ? "page" : undefined}
       data-active={isActive}
       className={cx(
-        "flex items-center justify-between rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
-        "text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
-        "data-[active=true]:text-blue-600 data-[active=true]:dark:text-blue-500",
+        "flex items-center justify-between rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:hover:bg-gray-900",
+        "text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
+        "data-[active=true]:text-blue-600 dark:data-[active=true]:text-blue-500",
         focusRing,
       )}
       {...props}
@@ -303,7 +303,7 @@ const SidebarLink = React.forwardRef<
         {children}
       </span>
       {notifications && (
-        <span className="inline-flex size-5 items-center justify-center rounded bg-blue-100 text-sm font-medium text-blue-600 sm:text-xs dark:bg-blue-500/10 dark:text-blue-500">
+        <span className="inline-flex size-5 items-center justify-center rounded-sm bg-blue-100 text-sm font-medium text-blue-600 sm:text-xs dark:bg-blue-500/10 dark:text-blue-500">
           {notifications}
         </span>
       )}
@@ -374,7 +374,7 @@ const SidebarSubLink = React.forwardRef<
       className={cx(
         "relative flex gap-2 rounded-md py-1.5 pl-9 pr-3 text-base transition sm:text-sm",
         "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-        "data-[active=true]:rounded data-[active=true]:bg-white data-[active=true]:text-blue-600 data-[active=true]:shadow data-[active=true]:ring-1 data-[active=true]:ring-gray-200 data-[active=true]:dark:bg-gray-900 data-[active=true]:dark:text-blue-500 data-[active=true]:dark:ring-gray-800",
+        "data-[active=true]:rounded-sm data-[active=true]:bg-white data-[active=true]:text-blue-600 data-[active=true]:shadow-sm data-[active=true]:ring-1 data-[active=true]:ring-gray-200 dark:data-[active=true]:bg-gray-900 dark:data-[active=true]:text-blue-500 dark:data-[active=true]:ring-gray-800",
         focusRing,
       )}
       {...props}

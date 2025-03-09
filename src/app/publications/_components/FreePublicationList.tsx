@@ -44,7 +44,7 @@ export default function FreePublicationList({ publications, isLoggedIn }) {
                             <div className="flex flex-col w-full">
                                 <a
                                     href={isLoggedIn ? `/publications/detail/${publication.workspace_id}` : `/publications/free/detail/${publication.workspace_id}`}
-                                    className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline focus:outline-none mb-1"
+                                    className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline focus:outline-hidden mb-1"
                                 >
                                     {publication.title}
                                 </a>
@@ -61,7 +61,7 @@ export default function FreePublicationList({ publications, isLoggedIn }) {
                                 {publication.original_description && publication.original_description.length > 150 && (
                                     <button
                                         onClick={() => toggleDescription(publication.workspace_id)}
-                                        className="text-blue-600 dark:text-blue-400 mt-1 text-xs font-medium hover:underline focus:outline-none"
+                                        className="text-blue-600 dark:text-blue-400 mt-1 text-xs font-medium hover:underline focus:outline-hidden"
                                     >
                                         {expandedDescriptions[publication.workspace_id] ? "Minder tonen" : "Meer tonen"}
                                     </button>

@@ -564,9 +564,9 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-blue-50 to-emerald-50 dark:from-slate-800 dark:to-slate-900">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-linear-to-r from-blue-50 to-emerald-50 dark:from-slate-800 dark:to-slate-900">
                     <div className="flex items-center gap-2">
-                        <div className="bg-white dark:bg-slate-800 p-2 rounded-full shadow-sm">
+                        <div className="bg-white dark:bg-slate-800 p-2 rounded-full shadow-xs">
                             <RiChatSmile2Line className="size-5 text-emerald-600" />
                         </div>
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-white">ProcLogic AI Chat</h2>
@@ -610,7 +610,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         <div className="flex flex-wrap items-center gap-2 text-xs">
                             <span className="font-medium text-blue-700 dark:text-blue-300">Beschikbare documenten:</span>
                             {Object.values(availableFiles).map((file, index) => (
-                                <div key={index} className="flex items-center gap-1 bg-white dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded-full shadow-sm">
+                                <div key={index} className="flex items-center gap-1 bg-white dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded-full shadow-xs">
                                     <FileTextIcon size={12} />
                                     <span className="truncate max-w-[150px]">{file.name}</span>
                                 </div>
@@ -627,7 +627,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} animate-fadeIn`}
                         >
                             <div
-                                className={`max-w-[80%] rounded-xl p-4 shadow-sm ${message.role === "user"
+                                className={`max-w-[80%] rounded-xl p-4 shadow-xs ${message.role === "user"
                                     ? "bg-blue-600 text-white"
                                     : "bg-white dark:bg-slate-800 text-gray-800 dark:text-white"
                                     }`}
@@ -643,7 +643,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                                                 // If citations is an array, map through it
                                                 message.citations.map((citation, index) => (
                                                     <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
-                                                        <FileTextIcon size={10} className="mt-1 flex-shrink-0" />
+                                                        <FileTextIcon size={10} className="mt-1 shrink-0" />
                                                         <span>{citation}</span>
                                                     </li>
                                                 ))
@@ -651,7 +651,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                                                 // If citations is a string, split by newlines
                                                 typeof message.citations === 'string' && message.citations.split('\n').map((citation, index) => (
                                                     <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
-                                                        <FileTextIcon size={10} className="mt-1 flex-shrink-0" />
+                                                        <FileTextIcon size={10} className="mt-1 shrink-0" />
                                                         <span>{citation}</span>
                                                     </li>
                                                 ))
@@ -674,7 +674,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         <div
                             className="flex justify-start animate-fadeIn"
                         >
-                            <div className="max-w-[80%] rounded-xl p-4 shadow-sm bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
+                            <div className="max-w-[80%] rounded-xl p-4 shadow-xs bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
                                 <div className="text-sm whitespace-pre-wrap leading-relaxed">
                                     {streamingMessage.content}
                                     <span className="inline-block w-2 h-4 ml-1 bg-emerald-500 animate-pulse"></span>
@@ -690,7 +690,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                     {loading && !streamingMessage && (
                         <div className="flex items-start animate-fadeIn">
-                            <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-sm">
+                            <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-xs">
                                 <div className="flex items-center gap-2">
                                     <LoaderIcon size={16} className="animate-spin text-emerald-600" />
                                     <span className="text-sm text-gray-800 dark:text-gray-200">ProcLogic AI is aan het initialiseren...</span>
@@ -706,7 +706,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     <div className="flex gap-2">
                         <textarea
                             ref={inputRef}
-                            className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white resize-none shadow-sm transition-all"
+                            className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white resize-none shadow-xs transition-all"
                             placeholder="Stel een vraag over deze aanbesteding..."
                             rows={2}
                             value={currentMessage}
@@ -738,7 +738,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             ].map((suggestion, index) => (
                                 <button
                                     key={index}
-                                    className="bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shadow-sm hover:shadow text-gray-700 dark:text-gray-300"
+                                    className="bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors shadow-xs hover:shadow-sm text-gray-700 dark:text-gray-300"
                                     onClick={() => {
                                         setCurrentMessage(suggestion);
                                         if (inputRef.current) {

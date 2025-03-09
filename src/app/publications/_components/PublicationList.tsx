@@ -261,7 +261,7 @@ export default function PublicationList({ initialPublications }) {
                         {sortedPublications.map((publication, index) => (
                             <div
                                 key={index}
-                                className="w-full max-w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900"
+                                className="w-full max-w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900"
                             >
                                 {/* Status banner - Green for active */}
                                 <div className={`w-full py-2 px-4 flex flex-wrap justify-between items-center gap-2 text-xs font-medium text-white ${publication.is_active ? "bg-emerald-500" : "bg-amber-500"}`}>
@@ -298,7 +298,7 @@ export default function PublicationList({ initialPublications }) {
                                             <a
                                                 href={`/publications/detail/${publication.workspace_id}`}
                                                 target="_blank"
-                                                className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-none"
+                                                className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-hidden"
                                                 onClick={() => markAsViewed(publication)}
                                             >
                                                 {publication.title.length > 300
@@ -315,7 +315,7 @@ export default function PublicationList({ initialPublications }) {
                                         <a
                                             href={`/publications/detail/${publication.workspace_id}`}
                                             target="_blank"
-                                            className="text-xs text-gray-500 dark:text-gray-400 hover:underline focus:outline-none"
+                                            className="text-xs text-gray-500 dark:text-gray-400 hover:underline focus:outline-hidden"
                                             onClick={() => markAsViewed(publication)}
                                         >
                                             ID: {publication.workspace_id}

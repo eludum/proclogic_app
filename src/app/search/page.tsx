@@ -83,7 +83,7 @@ export default async function PublicSearch({ searchParams }) {
 
             {/* Premium Banner - only show for non-logged in users */}
             {!isLoggedIn && (
-                <div className="mx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg border border-blue-100 dark:border-blue-800 shadow-sm">
+                <div className="mx-4 sm:mx-6 mb-6 p-4 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg border border-blue-100 dark:border-blue-800 shadow-xs">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
                             <h3 className="text-base font-semibold text-blue-800 dark:text-blue-300 mb-1">

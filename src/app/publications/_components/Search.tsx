@@ -77,7 +77,7 @@ export default function Search({ isPremium = false }) {
 
     return (
         <div className="w-full px-4 sm:px-6 mb-6 max-w-full overflow-hidden">
-            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm w-full">
+            <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xs w-full">
                 <div className="p-4 sm:p-6">
                     {/* Main search bar */}
                     <form onSubmit={handleSearch} className="w-full">
@@ -92,7 +92,7 @@ export default function Search({ isPremium = false }) {
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="block w-full pl-10 py-3 pr-3 border border-gray-300 dark:border-gray-700 rounded-md 
                                     bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white 
-                                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="Zoek op trefwoord, organisatie, of omschrijving..."
                                 />
                             </div>

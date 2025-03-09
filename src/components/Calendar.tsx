@@ -45,7 +45,7 @@ const NavigationButton = React.forwardRef<
         type="button"
         disabled={disabled}
         className={cx(
-          "flex size-8 shrink-0 select-none items-center justify-center rounded-sm border p-1 outline-hidden transition sm:size-[30px]",
+          "flex size-8 shrink-0 select-none items-center justify-center rounded-xs border p-1 outline-hidden transition sm:size-[30px]",
           // text color
           "text-gray-600 hover:text-gray-800",
           "dark:text-gray-400 dark:hover:text-gray-200",
@@ -123,13 +123,13 @@ const Calendar = ({
           "text-gray-900 dark:text-gray-50",
         ),
         day: cx(
-          "size-9 rounded-sm text-sm text-gray-900 dark:text-gray-50",
+          "size-9 rounded-xs text-sm text-gray-900 dark:text-gray-50",
           "hover:bg-gray-200 dark:hover:bg-gray-700",
           focusRing,
         ),
         day_today: "font-semibold",
         day_selected: cx(
-          "rounded-sm",
+          "rounded-xs",
           "aria-selected:bg-blue-500 aria-selected:text-gray-50",
           "dark:aria-selected:bg-blue-500 dark:aria-selected:text-gray-50",
         ),

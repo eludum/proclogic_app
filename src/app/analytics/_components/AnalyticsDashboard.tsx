@@ -32,7 +32,7 @@ const formatPercent = (value) => {
 const CustomTooltip = ({ active, payload, label, valuePrefix = "€" }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 rounded shadow-lg">
+            <div className="bg-white dark:bg-slate-800 p-3 border border-slate-200 dark:border-slate-700 rounded-sm shadow-lg">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
                 {payload.map((entry, index) => (
                     <p key={index} className="text-sm" style={{ color: entry.color }}>
@@ -61,7 +61,7 @@ const ErrorMessage = ({ message }) => (
 
 // Card component for charts
 const ChartCard = ({ title, description, children, className = "" }) => (
-    <div className={`bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 hover:shadow-md ${className}`}>
+    <div className={`bg-white dark:bg-slate-900 rounded-lg shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 hover:shadow-md ${className}`}>
         <div className="p-4 border-b border-slate-200 dark:border-slate-800">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white">{title}</h3>
             {description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>}
@@ -77,7 +77,7 @@ const SummaryCard = ({ title, value, icon, colorClass = "text-blue-600 dark:text
     const IconComponent = icon;
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xs border border-slate-200 dark:border-slate-800 p-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
                 {IconComponent && <IconComponent className="h-5 w-5 text-gray-400 dark:text-gray-500" />}
@@ -346,14 +346,14 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
         <>
             <Toaster />
 
-            <div className="w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm bg-white dark:bg-slate-900 p-4 sm:p-6">
+            <div className="w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs bg-white dark:bg-slate-900 p-4 sm:p-6">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Analyse van Aanbestedingen</h1>
                     <p className="text-gray-600 dark:text-gray-400">Krijg inzicht in gegunde aanbestedingen en trends</p>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 p-4 mb-6">
+                <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xs border border-slate-200 dark:border-slate-800 p-4 mb-6">
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="w-full sm:w-auto">
                             <label htmlFor="yearFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -706,7 +706,7 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                     </p>
                     <div className="flex flex-wrap gap-3">
                         <button
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-sm"
                             onClick={() => exportData('csv')}
                             disabled={isAllLoading}
                         >
@@ -714,7 +714,7 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                             <span>Exporteren als CSV</span>
                         </button>
                         <button
-                            className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded"
+                            className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded-sm"
                             onClick={() => exportData('json')}
                             disabled={isAllLoading}
                         >

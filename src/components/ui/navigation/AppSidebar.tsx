@@ -202,7 +202,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     <Sidebar {...props}>
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-md bg-white p-1.5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+          <span className="flex size-9 items-center justify-center rounded-md bg-white p-1.5 shadow-xs ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
             <Logo className="size-6 text-blue-500 dark:text-blue-500" />
           </span>
           <div>
@@ -271,7 +271,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                         focusRing,
                         item.disabled
                           ? "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
-                          : "hover:bg-gray-200/50 dark:text-gray-400 hover:dark:bg-gray-900 hover:dark:text-gray-50",
+                          : "hover:bg-gray-200/50 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
                         sectionActive && !item.disabled
                           ? "bg-gray-200/70 text-blue-600 dark:bg-gray-800 dark:text-blue-400"
                           : "text-gray-900"
@@ -353,7 +353,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                     <button
                       onClick={() => toggleMenu(item.name)}
                       className={cx(
-                        "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:text-gray-400 hover:dark:bg-gray-900 hover:dark:text-gray-50",
+                        "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
                         focusRing,
                         sectionActive
                           ? "bg-gray-200/70 text-blue-600 dark:bg-gray-800 dark:text-blue-400"

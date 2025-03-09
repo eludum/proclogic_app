@@ -110,7 +110,7 @@ export default function ConversationsList() {
                     conversations.map((conversation) => (
                         <div
                             key={conversation.id}
-                            className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900"
+                            className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900"
                         >
                             {/* We've removed the header bar */}
 

@@ -31,8 +31,8 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
           <div className="w-full h-10 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md"></div>
           <div className="w-full h-10 px-1 py-2 flex items-center gap-3 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md">
             <div className="size-8 rounded-full bg-gray-300 dark:bg-gray-700 animate-pulse"></div>
-            <div className="h-4 flex-1 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
-            <div className="size-4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-4 flex-1 bg-gray-300 dark:bg-gray-700 rounded-sm animate-pulse"></div>
+            <div className="size-4 bg-gray-300 dark:bg-gray-700 rounded-sm animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -69,7 +69,7 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
                 aria-label="User settings"
                 variant="ghost"
                 className={cx(
-                  "group flex w-full items-center justify-between rounded-md px-1 py-1 text-sm font-medium text-gray-900 hover:bg-gray-200/50 data-[state=open]:bg-gray-200/50 hover:dark:bg-gray-800/50 data-[state=open]:dark:bg-gray-900",
+                  "group flex w-full items-center justify-between rounded-md px-1 py-1 text-sm font-medium text-gray-900 hover:bg-gray-200/50 data-[state=open]:bg-gray-200/50 dark:hover:bg-gray-800/50 dark:data-[state=open]:bg-gray-900",
                   focusRing,
                 )}
               >
@@ -83,7 +83,7 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
                   <span className="truncate">{user.fullName}</span>
                 </span>
                 <ChevronsUpDown
-                  className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700 group-hover:dark:text-gray-400"
+                  className="size-4 shrink-0 text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-400"
                   aria-hidden="true"
                 />
               </Button>

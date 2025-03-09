@@ -15,7 +15,7 @@ const Checkbox = React.forwardRef<
       checked={checked}
       className={cx(
         // base
-        "relative inline-flex size-4 shrink-0 appearance-none items-center justify-center rounded-sm border shadow-xs outline-hidden transition duration-100 enabled:cursor-pointer",
+        "relative inline-flex size-4 shrink-0 appearance-none items-center justify-center rounded-xs border shadow-2xs outline-hidden transition duration-100 enabled:cursor-pointer",
         // text color
         "text-white dark:text-gray-50",
         // background color

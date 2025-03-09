@@ -42,7 +42,7 @@ export function DropdownUserProfile({
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent
           align={align}
-          className="sm:!min-w-[calc(var(--radix-dropdown-menu-trigger-width))]"
+          className="sm:min-w-[calc(var(--radix-dropdown-menu-trigger-width))]!"
         >
           <DropdownMenuLabel>{user && user.emailAddress}</DropdownMenuLabel>
           {/* Theme selector commented out in the original code */}

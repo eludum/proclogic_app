@@ -41,7 +41,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                     </div>
                 </div>
 
-                <div className="relative min-h-60 w-full flex flex-col justify-center items-center my-6 bg-white shadow-sm border border-slate-200 rounded-lg p-2 dark:bg-[#090E1A]">
+                <div className="relative min-h-60 w-full flex flex-col justify-center items-center my-6 bg-white shadow-xs border border-slate-200 rounded-lg p-2 dark:bg-[#090E1A]">
                     <div className="p-3 text-center">
                         <div className="flex justify-center mb-4">
                             <svg
@@ -127,7 +127,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                     {/* Enhanced Recommendation banner (if recommended) */}
                     {publication.is_recommended && (
-                        <div className="w-full bg-blue-100 dark:bg-blue-900/30 px-4 py-3 border-blue-300 dark:border-blue-700 shadow-sm">
+                        <div className="w-full bg-blue-100 dark:bg-blue-900/30 px-4 py-3 border-blue-300 dark:border-blue-700 shadow-xs">
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center justify-center bg-amber-500 text-white rounded-full p-2 shrink-0 animate-pulse">
                                     <StarIcon size={18} />
@@ -326,7 +326,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                     <h3 className="font-medium text-gray-900 dark:text-white">CPV Codes</h3>
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded text-sm">
+                                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-sm text-sm">
                                         <span>{publication.cpv_code}</span>
                                     </div>
 
@@ -337,7 +337,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                                 {publication.cpv_additional_codes.map((code, index) => (
                                                     <span
                                                         key={index}
-                                                        className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-700 dark:text-gray-300"
+                                                        className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-sm text-xs text-gray-700 dark:text-gray-300"
                                                     >
                                                         {code}
                                                     </span>

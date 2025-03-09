@@ -146,7 +146,7 @@ const Dashboard = () => {
 
             {/* Stats grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Totaal aanbestedingen</p>
@@ -162,7 +162,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Aanbevolen voor u</p>
@@ -178,7 +178,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Opgeslagen</p>
@@ -194,7 +194,7 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Actieve aanbestedingen</p>
@@ -215,7 +215,7 @@ const Dashboard = () => {
             <div className="flex flex-col lg:flex-row gap-6">
                 {/* Main content - Publications */}
                 <div className="w-full lg:w-2/3">
-                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                         {/* Header with tabs and search */}
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700">
                             <div className="flex flex-col sm:flex-row gap-3 justify-between mb-4">
@@ -288,7 +288,7 @@ const Dashboard = () => {
                 {/* Sidebar */}
                 <div className="w-full lg:w-1/3 space-y-6">
                     {/* Upcoming deadlines */}
-                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs p-4">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Aankomende deadlines</h3>
                             <Calendar size={18} className="text-slate-400" />
@@ -302,14 +302,14 @@ const Dashboard = () => {
                                     <li key={index} className="border-b border-slate-200 dark:border-slate-700 pb-2 last:border-0">
                                         <a
                                             href={`/publications/detail/${pub.workspace_id}`}
-                                            className="block hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded p-2 -mx-2"
+                                            className="block hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-sm p-2 -mx-2"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div className="flex-1">
                                                     <p className="text-sm font-medium text-slate-800 dark:text-white line-clamp-1">{pub.title}</p>
                                                     <p className="text-xs text-slate-500 dark:text-slate-400">{pub.organisation}</p>
                                                 </div>
-                                                <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded text-xs whitespace-nowrap">
+                                                <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-sm text-xs whitespace-nowrap">
                                                     <Clock size={12} />
                                                     <span>{new Date(pub.submission_deadline).toLocaleDateString()}</span>
                                                 </div>
@@ -332,7 +332,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* Quick stats / charts */}
-                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm p-4">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs p-4">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Sector verdeling</h3>
                             <BarChart size={18} className="text-slate-400" />

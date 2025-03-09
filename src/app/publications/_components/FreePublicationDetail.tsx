@@ -33,7 +33,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                     </div>
                 </div>
 
-                <div className="relative min-h-60 w-full flex flex-col justify-center items-center my-6 bg-white shadow-sm border border-slate-200 rounded-lg p-2 dark:bg-[#090E1A]">
+                <div className="relative min-h-60 w-full flex flex-col justify-center items-center my-6 bg-white shadow-xs border border-slate-200 rounded-lg p-2 dark:bg-[#090E1A]">
                     <div className="p-3 text-center">
                         <div className="flex justify-center mb-4">
                             <svg
@@ -205,7 +205,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                         </div>
 
                         {/* CTA in the middle of the page */}
-                        <div className="w-full my-2 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                        <div className="w-full my-2 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
                             <div className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
                                 <div className="flex-1">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -229,13 +229,13 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
                                         onClick={() => router.push('/pricing')}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-md shadow-sm"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-md shadow-xs"
                                     >
                                         Registreer
                                     </Button>
                                     <Button
                                         onClick={() => router.push('/demo')}
-                                        className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 font-medium px-5 py-2.5 rounded-md shadow-sm"
+                                        className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 font-medium px-5 py-2.5 rounded-md shadow-xs"
                                     >
                                         Meer informatie
                                     </Button>
@@ -279,7 +279,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                                 <h3 className="font-medium text-gray-900 dark:text-white">CPV Codes</h3>
                             </div>
                             <div className="flex flex-col gap-2">
-                                <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded text-sm">
+                                <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-sm text-sm">
                                     <span>{publication.cpv_code}</span>
                                 </div>
 
@@ -290,7 +290,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                                             {publication.cpv_additional_codes.map((code, index) => (
                                                 <span
                                                     key={index}
-                                                    className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-700 dark:text-gray-300"
+                                                    className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-sm text-xs text-gray-700 dark:text-gray-300"
                                                 >
                                                     {code}
                                                 </span>
@@ -317,11 +317,11 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                             </div>
 
                             {/* Blurred content behind overlay */}
-                            <div className="flex items-center gap-2 mb-4 blur-sm">
+                            <div className="flex items-center gap-2 mb-4 blur-xs">
                                 <FileIcon size={16} className="text-blue-500" />
                                 <h3 className="font-medium text-gray-900 dark:text-white">Documenten</h3>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 blur-sm">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 blur-xs">
                                 {Array(3).fill(0).map((_, index) => (
                                     <div key={index} className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
                                         <div className="flex items-center gap-2 overflow-hidden">
