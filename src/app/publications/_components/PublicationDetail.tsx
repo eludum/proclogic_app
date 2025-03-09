@@ -30,7 +30,8 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('ai');
     const [activeChatPublication, setActiveChatPublication] = useState(null);
-    const [publicationFiles, setPublicationFiles] = useState({});
+
+    console.log(publication);
 
     if (!publication) {
         return (
@@ -82,25 +83,6 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     const startChat = async (pub) => {
         try {
             setActiveChatPublication(pub);
-
-            // Fetch the publication files if not already fetched
-            if (!publicationFiles[pub.workspace_id]) {
-                const response = await fetch(`${API_BASE_URL}/publications/${pub.workspace_id}/files`);
-                if (response.ok) {
-                    const files = await response.json();
-                    setPublicationFiles(prev => ({
-                        ...prev,
-                        [pub.workspace_id]: files
-                    }));
-                } else {
-                    console.error("Error fetching publication files");
-                    // If we can't fetch files, provide an empty object
-                    setPublicationFiles(prev => ({
-                        ...prev,
-                        [pub.workspace_id]: {}
-                    }));
-                }
-            }
         } catch (error) {
             console.error("Error starting chat:", error);
         }
@@ -347,7 +329,6 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded text-sm">
-                                        <span className="font-medium">Hoofd CPV: </span>
                                         <span>{publication.cpv_code}</span>
                                     </div>
 

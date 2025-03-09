@@ -43,7 +43,7 @@ export default function FreePublicationList({ publications, isLoggedIn }) {
                             {/* Publication title */}
                             <div className="flex flex-col w-full">
                                 <a
-                                    href={isLoggedIn ? `/publications/detail/${publication.workspace_id}` : "/register"}
+                                    href={isLoggedIn ? `/publications/detail/${publication.workspace_id}` : `/publications/free/detail/${publication.workspace_id}`}
                                     className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline focus:outline-none mb-1"
                                 >
                                     {publication.title}
