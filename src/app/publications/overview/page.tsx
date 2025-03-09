@@ -6,18 +6,23 @@ import PublicationList from "../_components/PublicationList";
 const API_BASE_URL = siteConfig.api_base_url;
 
 export default async function Overview() {
-  const { getToken } = await auth()
-
+  const { getToken } = await auth();
 
   // Fetch publications using authenticated endpoint
-  let publications = [];
+  let publicationsData = {
+    items: [],
+    total: 0,
+    page: 1,
+    size: 10,
+    pages: 0
+  };
   let fetchError = null;
-  let token = null;
 
   try {
     const token = await getToken();
 
-    const response = await fetch(`${API_BASE_URL}/publications/`, {
+    // Default to page 1 with 10 items per page
+    const response = await fetch(`${API_BASE_URL}/publications/?page=1&size=10`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -26,7 +31,9 @@ export default async function Overview() {
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
     }
-    publications = await response.json();
+
+    publicationsData = await response.json();
+    console.log("Fetched paginated data:", publicationsData);
   } catch (error) {
     fetchError = error.message;
     console.error("Error fetching publications:", error);
@@ -59,13 +66,13 @@ export default async function Overview() {
           <div className="p-6 text-center">
             <p className="text-red-500">Fout bij het laden van publicaties: {fetchError}</p>
           </div>
-        ) : publications.length === 0 ? (
+        ) : publicationsData.items.length === 0 ? (
           <div className="p-6 text-center">
             <p className="text-gray-500">Geen aanbestedingen gevonden</p>
           </div>
         ) : (
           <div className="p-4">
-            <PublicationList publications={publications} initialToken={token} />
+            <PublicationList initialPublications={publicationsData} />
           </div>
         )}
       </div>

@@ -62,7 +62,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
             // Create new WebSocket connection
             const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/ws/conversation`;
-            console.log(`Connecting to WebSocket at: ${wsUrl}`);
+
 
             websocketRef.current = new WebSocket(wsUrl);
 
@@ -73,7 +73,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 }
 
                 websocketRef.current.onopen = () => {
-                    console.log("WebSocket connection established");
+
                     setConnectionError(null);
 
                     // Sending the initial connection data right after connection is established
@@ -83,7 +83,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             publication_workspace_id: publicationId,
                             token: token
                         });
-                        console.log("Sending initial connection data:", connectionMessage);
+
                         websocketRef.current.send(connectionMessage);
                     }
                     resolve(true);
@@ -98,7 +98,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 };
 
                 websocketRef.current.onclose = (event) => {
-                    console.log(`WebSocket connection closed: code=${event.code}`);
+
                     if (event.code !== 1000) { // Not a normal closure
                         setConnectionError("Connection was closed. Please try again.");
                         // Add this line to reset loading state when connection closes unexpectedly
@@ -117,13 +117,13 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
     // Handler for WebSocket messages
     const handleWebSocketMessage = (event) => {
-        console.log("Received WebSocket message:", event.data);
+
         try {
             const data = JSON.parse(event.data);
 
             // Direct content handling first (without type field)
             if (!data.type && data.content !== undefined) {
-                console.log("Received direct content:", data.content);
+
                 setStreamingMessage(prev => {
                     if (!prev) {
                         return {
@@ -145,11 +145,11 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
             switch (data.type) {
 
                 case "connected":
-                    console.log("Connection confirmed:", data.data);
+
                     break;
 
                 case "stream_start":
-                    console.log("Stream starting");
+
                     // Reset any previous streaming message
                     setStreamingMessage({
                         id: `assistant-${Date.now()}`,
@@ -161,7 +161,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 case "stream_chunk":
                     const chunkContent = data.data?.content || "";
-                    console.log("Received chunk:", chunkContent);
+
 
                     setStreamingMessage(prev => {
                         if (!prev) {
@@ -181,7 +181,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 case "stream_end":
                 case "response_complete":
-                    console.log("Stream complete:", data.data);
+
 
                     // Determine content and citations based on available data
                     const content = data.data?.content || streamingMessage?.content || "";
@@ -222,7 +222,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 case "response_chunk":
                     // Support for alternate chunk format
-                    console.log("Received response chunk");
+
                     const responseChunkContent = data.data?.content || "";
                     const isDone = data.data?.done === true;
 
@@ -244,7 +244,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     } else {
                         // Handle completion
                         if (data.data?.thread_id) {
-                            console.log("Thread ID received:", data.data.thread_id);
+
                         }
 
                         setMessages(prev => [
@@ -264,7 +264,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 case "citations":
                     // Handle citations separately
-                    console.log("Received citations:", data.data?.citations);
+
                     // Update the last assistant message to include citations
                     setMessages(prev => {
                         const lastAssistantIndex = [...prev].reverse().findIndex(msg => msg.role === 'assistant');
@@ -281,10 +281,10 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     break;
 
                 default:
-                    console.log("Unhandled message type or format:", data.type || "no type", data);
+
                     // Try to handle data even without a recognized type
                     if (data.content) {
-                        console.log("Treating as direct content message");
+
                         setMessages(prev => [
                             ...prev,
                             {
@@ -320,7 +320,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     return;
                 }
 
-                console.log("Fetching publication details for ID:", publicationId);
+
                 const response = await fetch(`${API_BASE_URL}/publications/publication/${publicationId}/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -329,16 +329,16 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log("Publication data retrieved:", data.title);
+
                     if (data.documents) {
                         const fileMap = {};
                         Object.keys(data.documents).forEach(key => {
                             fileMap[key] = { name: key };
                         });
                         setAvailableFiles(fileMap);
-                        console.log("Available documents:", Object.keys(fileMap).length);
+
                     } else {
-                        console.log("No documents found for this publication");
+
                     }
                 } else {
                     console.error("Failed to fetch publication:", response.status);
@@ -374,7 +374,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             };
                         });
 
-                        console.log("Previous conversation loaded:", previousMessages.length, "messages");
+
                         setMessages(previousMessages);
                     } else {
                         // If no previous conversation, show welcome message
@@ -387,7 +387,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     }
                 } else {
                     // If error or no previous conversation, show welcome message
-                    console.log("No previous conversation found, showing welcome message");
+
                     setMessages([{
                         id: "welcome",
                         role: "assistant",
@@ -397,12 +397,12 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 }
 
                 // Step 3: Setup WebSocket (same as before)
-                console.log("Setting up WebSocket connection...");
+
                 const connectionSuccess = await setupWebSocket();
-                console.log("WebSocket setup result:", connectionSuccess);
+
 
                 if (!connectionSuccess) {
-                    console.log("Initial WebSocket connection failed, will retry on user input");
+
                 }
             } catch (error) {
                 console.error("Error initializing chat:", error);
@@ -430,7 +430,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
         // Cleanup function
         return () => {
             if (websocketRef.current) {
-                console.log("Closing WebSocket connection");
+
                 websocketRef.current.close();
             }
         };
@@ -465,7 +465,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
         // Ensure WebSocket connection is active
         if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
-            console.log("WebSocket not connected, attempting to reconnect...");
+
             const connectionSuccess = await setupWebSocket();
 
             if (!connectionSuccess) {
@@ -494,7 +494,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 const messageObject = {
                     content: userMessageContent
                 };
-                console.log("Sending message:", messageObject);
+
                 websocketRef.current.send(JSON.stringify(messageObject));
             } catch (error) {
                 console.error("Error sending message:", error);

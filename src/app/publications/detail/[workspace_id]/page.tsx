@@ -1,4 +1,5 @@
-// app/publications/detail/[workspace_id]/page.jsx
+"use server"
+
 import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
 import PublicationDetail from "../../_components/PublicationDetail";

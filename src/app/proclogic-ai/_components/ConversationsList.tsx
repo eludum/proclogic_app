@@ -10,23 +10,18 @@ import ChatComponent from "../../publications/_components/ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default function ConversationsList({ initialToken }) {
+export default function ConversationsList() {
     const [activeConversation, setActiveConversation] = useState(null);
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const { getToken } = useAuth();
 
-    // Get auth token (use initialToken or get a fresh one)
-    const getAuthToken = async () => {
-        return initialToken || await getToken();
-    };
-
     // Fetch conversations
     const fetchConversations = async () => {
         setLoading(true);
         try {
-            const token = await getAuthToken();
+            const token = await await getToken();
 
             const response = await fetch(`${API_BASE_URL}/conversations/`, {
                 headers: {
@@ -175,7 +170,6 @@ export default function ConversationsList({ initialToken }) {
                             setActiveConversation(null);
                             fetchConversations();
                         }}
-                        initialToken={initialToken}
                     />
                 )}
             </div>

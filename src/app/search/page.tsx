@@ -118,7 +118,6 @@ export default async function PublicSearch({ searchParams }) {
                             // Logged-in users see the full PublicationList with all features
                             <PublicationList
                                 publications={publications}
-                                initialToken={await getToken()}
                             />
                         ) : (
                             // Non-logged in users see the limited PublicationList

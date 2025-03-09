@@ -65,7 +65,7 @@ export default async function Overview() {
                     </div>
                 ) : (
                     <div className="p-4">
-                        <PublicationList publications={publications} initialToken={token} />
+                        <PublicationList publications={publications} />
                     </div>
                 )}
             </div>

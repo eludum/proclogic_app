@@ -35,7 +35,7 @@ const Dashboard = () => {
             try {
                 const token = await getToken();
 
-                // Fetch all publications
+                // Fetch all publications TODO: server side component
                 const allResponse = await fetch(`${API_BASE_URL}/publications/`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -278,7 +278,6 @@ const Dashboard = () => {
                                 <div className="p-4">
                                     <PublicationList
                                         publications={filteredPublications()}
-                                        initialToken={getToken()}
                                     />
                                 </div>
                             )}

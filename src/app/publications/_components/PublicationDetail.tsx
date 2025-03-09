@@ -31,8 +31,6 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     const [activeTab, setActiveTab] = useState('ai');
     const [activeChatPublication, setActiveChatPublication] = useState(null);
 
-    console.log(publication);
-
     if (!publication) {
         return (
             <section aria-label="Publication Detail">

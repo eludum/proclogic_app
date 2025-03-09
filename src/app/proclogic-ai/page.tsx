@@ -9,6 +9,26 @@ export default async function Conversations() {
     const { getToken } = await auth();
     const token = await getToken();
 
+    // Fetch publications using authenticated endpoint
+    let publications = [];
+    let fetchError = null;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/publications/`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        publications = await response.json();
+    } catch (error) {
+        fetchError = error.message;
+        console.error("Error fetching publications:", error);
+    }
+
     return (
         <section aria-label="AI Conversations Overview" className="max-w-6xl mx-auto">
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
@@ -23,7 +43,7 @@ export default async function Conversations() {
             </div>
 
             <div className="px-4 sm:px-6">
-                <ConversationsList initialToken={token} />
+                <ConversationsList />
             </div>
         </section>
     );
