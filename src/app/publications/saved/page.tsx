@@ -5,67 +5,69 @@ import PublicationList from "../_components/PublicationList";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default async function Overview() {
-    const { getToken } = await auth()
-
+export default async function Saved() {
+    const { getToken } = await auth();
 
     // Fetch publications using authenticated endpoint
-    let publications = [];
+    let publicationsData = {
+        items: [],
+        total: 0,
+        page: 1,
+        size: 10,
+        pages: 0
+    };
     let fetchError = null;
-    let token = null;
 
     try {
         const token = await getToken();
 
-        const response = await fetch(`${API_BASE_URL}/publications/saved/`, {
+        // Default to page 1 with 10 items per page
+        const response = await fetch(`${API_BASE_URL}/publications/saved/?page=1&size=10`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+            cache: 'no-store' // Ensure we get fresh data
         });
 
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
         }
-        publications = await response.json();
+
+        publicationsData = await response.json();
     } catch (error) {
         fetchError = error.message;
         console.error("Error fetching publications:", error);
     }
 
-    if (fetchError) {
-        return (
-            <section aria-label="Publications Overview">
-                <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
-                    <div className="w-full">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Opgeslagen aanbestedingen</h1>
-                        <p className="text-sm text-red-500">Error: {fetchError}</p>
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
     return (
-        <section aria-label="Publications Overview">
+        <section aria-label="Saved Publications">
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Opgeslagen aanbestedingen</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk de opgeslagen aanbestedingen</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk en monitor aanbestedingsmogelijkheden</p>
                 </div>
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-800 w-full">
                 {fetchError ? (
                     <div className="p-6 text-center">
-                        <p className="text-red-500">Fout bij het laden van publicaties: {fetchError}</p>
+                        <p>Fout bij het laden van publicaties: {fetchError}</p>
+                        <form action="/publications/saved">
+                            <button
+                                type="submit"
+                                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                            >
+                                Probeer opnieuw
+                            </button>
+                        </form>
                     </div>
-                ) : publications.length === 0 ? (
+                ) : publicationsData.items.length === 0 ? (
                     <div className="p-6 text-center">
                         <p className="text-gray-500">Geen aanbestedingen gevonden</p>
                     </div>
                 ) : (
                     <div className="p-4">
-                        <PublicationList publications={publications} />
+                        <PublicationList initialPublications={publicationsData} />
                     </div>
                 )}
             </div>

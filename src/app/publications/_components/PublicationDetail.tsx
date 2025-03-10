@@ -13,11 +13,10 @@ import {
     DownloadIcon,
     EuroIcon,
     FileIcon,
+    Layers,
     MapPinIcon,
-    PlusIcon,
     StarIcon,
-    TagIcon,
-    ThumbsUpIcon
+    TagIcon
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -66,7 +65,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         </div>
                         <Button
                             onClick={() => router.push('/publications')}
-                            className="mt-4 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+                            className="mt-4 flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-2 rounded-md"
                         >
                             <ArrowLeftIcon size={16} />
                             <span>Back to Publications</span>
@@ -99,44 +98,52 @@ export default function PublicationDetail({ publication, timelineEvents }) {
         }
     };
 
+    const isRecommended = publication.is_recommended;
+
     return (
         <section aria-label="Publication Detail">
-            <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
-                <div className="w-full">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbesteding Details</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Gedetailleerde informatie over deze aanbesteding</p>
-                </div>
-            </div>
+            <div className="px-4 sm:px-6 pb-6 pt-6">
+                <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-200 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900`}>
+                    {/* Header with viewed status, active status, recommendation status and time remaining */}
+                    <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 border-b border-slate-200 dark:border-slate-800 ${isRecommended ? 'bg-astral-50 dark:bg-astral-900/20' : ''}`}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {/* Active status */}
+                            <div className={`flex items-center gap-1 ${publication.is_active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
+                                <CheckCircleIcon size={12} />
+                                <span>{publication.is_active ? "Actief" : "Inactief"}</span>
+                            </div>
 
-            <div className="px-4 sm:px-6 pb-6">
-                <div className="w-full max-w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-md bg-white dark:bg-slate-900">
-                    {/* Status banner - Green for active */}
-                    <div className={`w-full py-2 px-4 flex flex-wrap justify-between items-center gap-2 text-xs font-medium text-white ${publication.is_active ? "bg-emerald-500" : "bg-amber-500"}`}>
-                        <div className="flex items-center gap-1">
-                            <CheckCircleIcon size={14} />
-                            <span>{publication.is_active ? "Actieve aanbesteding" : "Inactieve aanbesting"}</span>
+                            {/* Recommendation status */}
+                            {isRecommended && (
+                                <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full text-xs">
+                                    <StarIcon size={12} className="text-amber-500" />
+                                    <span>Aanbevolen</span>
+                                </div>
+                            )}
+
+
+
                         </div>
 
-                        {publication.is_recommended && (
-                            <div className="flex items-center gap-1 bg-white text-emerald-600 px-2 py-1 rounded-full text-xs font-medium">
-                                <ThumbsUpIcon size={12} />
-                                <span>ProcLogic aanbeveling</span>
-                            </div>
-                        )}
+                        {/* Time remaining badge */}
+                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
+                            <ClockIcon size={12} />
+                            <span>{getTimeRemaining(publication.submission_deadline).text}</span>
+                        </div>
                     </div>
 
-                    {/* Enhanced Recommendation banner (if recommended) */}
+                    {/* Enhanced Recommendation banner (if recommended) - Keep this prominent */}
                     {publication.is_recommended && (
-                        <div className="w-full bg-blue-100 dark:bg-blue-900/30 px-4 py-3 border-blue-300 dark:border-blue-700 shadow-xs">
+                        <div className="w-full bg-astral-50 dark:bg-astral-950 px-4 py-3 border-astral-100 dark:border-astral-800 shadow-xs">
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center justify-center bg-amber-500 text-white rounded-full p-2 shrink-0 animate-pulse">
                                     <StarIcon size={18} />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-blue-800 dark:text-blue-100">
+                                    <span className="text-sm font-bold text-astral-700 dark:text-astral-300">
                                         ProcLogic AI beveelt deze publicatie aan voor uw bedrijf!
                                     </span>
-                                    <span className="text-xs text-blue-700 dark:text-blue-200">
+                                    <span className="text-xs text-astral-600 dark:text-astral-400">
                                         Geselecteerd op basis van uw bedrijfsprofiel
                                     </span>
                                 </div>
@@ -149,15 +156,9 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         {/* Header with time remaining badge */}
                         <div className="flex flex-col gap-2 w-full">
                             <div className="flex flex-wrap items-start justify-between gap-4 w-full">
-                                <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words flex-1 min-w-0 text-gray-900 dark:text-white">
+                                <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words flex-1 min-w-0 text-gray-900 dark:text-white line-clamp-2">
                                     {publication.title}
                                 </h2>
-
-                                {/* Time remaining badge */}
-                                <div className={`flex items-center shrink-0 gap-1 px-3 py-1.5 rounded-full text-xs font-medium ${getTimeRemainingStyles(timeRemaining.variant)}`}>
-                                    <ClockIcon size={12} />
-                                    <span>{timeRemaining.text}</span>
-                                </div>
                             </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">ID: {publication.workspace_id}</p>
                         </div>
@@ -171,7 +172,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                     <button
                                         onClick={() => setActiveTab('ai')}
                                         className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${activeTab === 'ai'
-                                            ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                            ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
                                             : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                                             }`}
                                     >
@@ -181,7 +182,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                     <button
                                         onClick={() => setActiveTab('original')}
                                         className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5  ${activeTab === 'original'
-                                            ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400'
+                                            ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
                                             : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                                             }`}
                                     >
@@ -206,10 +207,10 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                     {activeTab === 'ai' && (
                                         <div className="flex flex-col gap-4">
                                             {publication.ai_summary_without_documents && (
-                                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                                                    <h3 className="text-lg font-medium mb-3 text-blue-900 dark:text-blue-200">AI Aankondiging Samenvatting</h3>
+                                                <div className="bg-astral-50 dark:bg-astral-950/50 p-4 rounded-lg">
+                                                    <h3 className="text-lg font-medium mb-3 text-astral-800 dark:text-astral-200">AI Aankondiging Samenvatting</h3>
                                                     <div className="max-h-80 overflow-y-auto">
-                                                        <p className="text-sm text-blue-800 dark:text-blue-200 break-words whitespace-pre-line">
+                                                        <p className="text-sm text-astral-700 dark:text-astral-300 break-words whitespace-pre-line">
                                                             {publication.ai_summary_without_documents}
                                                         </p>
                                                     </div>
@@ -217,17 +218,17 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                             )}
 
                                             {publication.ai_summary_with_documents && (
-                                                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-lg">
-                                                    <h3 className="text-lg font-medium mb-3 text-emerald-900 dark:text-emerald-200">AI Document Samenvatting</h3>
+                                                <div className="bg-astral-50 dark:bg-astral-950/50 p-4 rounded-lg">
+                                                    <h3 className="text-lg font-medium mb-3 text-astral-800 dark:text-astral-200">AI Document Samenvatting</h3>
                                                     <div className="max-h-60 overflow-y-auto">
-                                                        <p className="text-sm text-emerald-800 dark:text-emerald-200 break-words whitespace-pre-line">
+                                                        <p className="text-sm text-astral-700 dark:text-astral-300 break-words whitespace-pre-line">
                                                             {publication.ai_summary_with_documents}
                                                         </p>
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {!publication.ai_notice_summary && !publication.ai_document_summary && (
+                                            {!publication.ai_summary_without_documents && !publication.ai_summary_with_documents && (
                                                 <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
                                                     <p className="text-sm text-gray-700 dark:text-gray-300">
                                                         Geen AI samenvatting beschikbaar voor deze publicatie.
@@ -255,7 +256,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         ${event.status === 'completed'
                                                         ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
                                                         : event.status === 'in-progress'
-                                                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                                                            ? 'bg-astral-100 text-astral-600 dark:bg-astral-900/30 dark:text-astral-400'
                                                             : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                                                     }`}
                                                 >
@@ -283,11 +284,11 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                             </div>
                         </div>
 
-                        {/* Organization and Sector Information - Card style */}
+                        {/* Organization, Sector, Region Information - Card style with consistent layout */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <BuildingIcon size={16} />
+                                    <BuildingIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">Organisatie</h3>
                                 </div>
                                 <p className="text-gray-800 dark:text-gray-200">{publication.organisation}</p>
@@ -295,7 +296,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <TagIcon size={16} />
+                                    <TagIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">Sector</h3>
                                 </div>
                                 <p className="text-gray-800 dark:text-gray-200">{publication.sector}</p>
@@ -309,10 +310,10 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <MapPinIcon size={16} />
+                                    <MapPinIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">Regio</h3>
                                 </div>
-                                <p className="text-gray-800 dark:text-gray-200">
+                                <p className="text-gray-800 dark:text-gray-200 truncate" title={publication.region?.join(", ") || "N/A"}>
                                     {publication.region?.join(", ") || "N/A"}
                                 </p>
                             </div>
@@ -322,7 +323,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <CodeIcon size={16} />
+                                    <CodeIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">CPV Codes</h3>
                                 </div>
                                 <div className="flex flex-col gap-2">
@@ -350,30 +351,49 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-3">
-                                    <EuroIcon size={16} />
+                                    <EuroIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">Aanbestedingswaarde</h3>
                                 </div>
                                 <p className="text-gray-800 dark:text-gray-200 text-lg font-semibold">
-                                    {publication.publication_value || "Niet gespecificeerd"}
+                                    {publication.estimated_value
+                                        ? new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(publication.estimated_value)
+                                        : "Niet gespecificeerd"}
                                 </p>
                             </div>
                         </div>
 
+                        {/* Lots Section */}
+                        {publication.lots && publication.lots.length > 0 && (
+                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Layers size={16} className="text-gray-400" />
+                                    <h3 className="font-medium text-gray-900 dark:text-white">Percelen ({publication.lots.length})</h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                                    {publication.lots.map((lot, idx) => (
+                                        <div key={idx} className="text-sm bg-slate-50 dark:bg-slate-800 rounded p-2 truncate" title={lot}>
+                                            {lot}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Documents Section */}
-                        {publication.documents && publication.documents.length > 0 && (
+                        {publication.documents && Object.keys(publication.documents).length > 0 && (
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <FileIcon size={16} className="text-blue-500" />
+                                    <FileIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">Documenten</h3>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {publication.documents.map((doc, index) => (
+                                    {Object.keys(publication.documents).map((doc, index) => (
                                         <div key={index} className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
                                             <div className="flex items-center gap-2 overflow-hidden">
                                                 <FileIcon size={14} className="text-gray-400 shrink-0" />
                                                 <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{doc}</span>
                                             </div>
-                                            <Button className="flex items-center justify-center bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 p-1.5 rounded-md">
+                                            <Button className="flex items-center justify-center bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-astral-500 dark:text-astral-400 p-1.5 rounded-md">
                                                 <DownloadIcon size={16} />
                                             </Button>
                                         </div>
@@ -386,7 +406,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         {publication.accreditations && Object.keys(publication.accreditations).length > 0 && (
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <CheckCircleIcon size={16} className="text-green-500" />
+                                    <CheckCircleIcon size={16} className="text-gray-400" />
                                     <h3 className="font-medium text-gray-900 dark:text-white">Vereiste Accreditaties</h3>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -402,13 +422,9 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                         {/* Action buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                            <Button className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-3 rounded-md w-full sm:w-auto">
-                                <PlusIcon size={16} />
-                                <span>Opslaan</span>
-                            </Button>
                             <Button
                                 onClick={() => startChat(publication)}
-                                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md w-full sm:w-auto"
+                                className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
                             >
                                 <RiChatSmile2Line className="size-5" />
                                 <span>ProcLogic AI</span>

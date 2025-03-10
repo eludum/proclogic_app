@@ -202,15 +202,12 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     <Sidebar {...props}>
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-3">
-          <span className="flex size-9 items-center justify-center rounded-md bg-white p-1.5 shadow-xs ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-            <Logo className="size-6 text-blue-500 dark:text-blue-500" />
+          <span className="flex size-11 items-center justify-center">
+            <Logo />
           </span>
           <div>
-            <span className="block text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <span className="block text-xl font-semibold text-astral-700 dark:text-gray-50">
               ProcLogic
-            </span>
-            <span className="block text-xs text-gray-900 dark:text-gray-50">
-              Starter Plan
             </span>
           </div>
         </div>
@@ -273,7 +270,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                           ? "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
                           : "hover:bg-gray-200/50 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
                         sectionActive && !item.disabled
-                          ? "bg-gray-200/70 text-blue-600 dark:bg-gray-800 dark:text-blue-400"
+                          ? "bg-gray-200/70 text-astral-600 dark:bg-gray-800 dark:text-astral-400"
                           : "text-gray-900"
                       )}
                       disabled={item.disabled}
@@ -284,7 +281,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                             "size-[18px] shrink-0",
                             item.disabled
                               ? "text-gray-400 dark:text-gray-600"
-                              : sectionActive && "text-blue-500 dark:text-blue-400"
+                              : sectionActive && "text-astral-500 dark:text-astral-400"
                           )}
                           aria-hidden="true"
                         />
@@ -304,7 +301,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                           item.disabled
                             ? "text-gray-400 dark:text-gray-600"
                             : sectionActive
-                              ? "text-blue-500 dark:text-blue-400"
+                              ? "text-astral-500 dark:text-astral-400"
                               : "text-gray-400 dark:text-gray-600"
                         )}
                         aria-hidden="true"
@@ -356,7 +353,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                         "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
                         focusRing,
                         sectionActive
-                          ? "bg-gray-200/70 text-blue-600 dark:bg-gray-800 dark:text-blue-400"
+                          ? "bg-gray-200/70 text-astral-600 dark:bg-gray-800 dark:text-astral-400"
                           : "text-gray-900"
                       )}
                     >
@@ -364,7 +361,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                         <item.icon
                           className={cx(
                             "size-[18px] shrink-0",
-                            sectionActive && "text-blue-500 dark:text-blue-400"
+                            sectionActive && "text-astral-500 dark:text-astral-400"
                           )}
                           aria-hidden="true"
                         />
@@ -377,7 +374,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                             : "-rotate-90",
                           "size-5 shrink-0 transform transition-transform duration-150 ease-in-out",
                           sectionActive
-                            ? "text-blue-500 dark:text-blue-400"
+                            ? "text-astral-500 dark:text-astral-400"
                             : "text-gray-400 dark:text-gray-600"
                         )}
                         aria-hidden="true"

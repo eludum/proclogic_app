@@ -26,6 +26,7 @@ export default async function Overview() {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: 'no-store' // Ensure we get fresh data
     });
 
     if (!response.ok) {
@@ -33,7 +34,6 @@ export default async function Overview() {
     }
 
     publicationsData = await response.json();
-    console.log("Fetched paginated data:", publicationsData);
   } catch (error) {
     fetchError = error.message;
     console.error("Error fetching publications:", error);
@@ -51,7 +51,15 @@ export default async function Overview() {
       <div className="border-t border-gray-200 dark:border-gray-800 w-full">
         {fetchError ? (
           <div className="p-6 text-center">
-            <p className="text-red-500">Fout bij het laden van publicaties: {fetchError}</p>
+            <p>Fout bij het laden van publicaties: {fetchError}</p>
+            <form action="/publications/overview">
+              <button
+                type="submit"
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                Probeer opnieuw
+              </button>
+            </form>
           </div>
         ) : publicationsData.items.length === 0 ? (
           <div className="p-6 text-center">

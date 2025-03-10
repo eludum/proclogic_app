@@ -1,6 +1,7 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
+import { Loader } from "@/components/ui/PageLoad";
 import { formatDate } from "@/lib/publicationUtils";
 import { useAuth } from "@clerk/nextjs";
 import { RiChatSmile2Line } from '@remixicon/react';
@@ -90,10 +91,8 @@ export default function ConversationsList() {
         <>
             <div className="space-y-6">
                 {loading ? (
-                    <div className="text-center py-6">
-                        <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-                        <p className="text-gray-500 dark:text-gray-400">Gesprekken laden...</p>
-                    </div>
+                    <Loader loadingtext={"Laden..."} size={32} />
+
                 ) : error ? (
                     <div className="text-center py-6">
                         <p className="text-red-500">Fout bij het laden van gesprekken: {error}</p>
@@ -119,9 +118,14 @@ export default function ConversationsList() {
                                 {/* Title and time since */}
                                 <div className="flex flex-wrap items-start justify-between gap-2 w-full">
                                     <h3 className="text-base font-semibold leading-tight ">
-                                        {conversation.publication_title.length > 120
-                                            ? `${conversation.publication_title.substring(0, 120)}...`
-                                            : conversation.publication_title || "Gesprek over aanbesteding"}                                    </h3>
+                                        <a
+                                            href={`/publications/detail/${conversation.publication_workspace_id}`}
+                                            target="_blank"
+                                            className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-hidden line-clamp-1"
+                                            title={conversation.publication_title}
+                                        >
+                                            {conversation.publication_title}
+                                        </a></h3>
                                     <div className="flex items-center gap-1 text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">
                                         <MessageCircleIcon size={12} />
                                         <span>{conversation.message_count} berichten</span>
@@ -130,7 +134,14 @@ export default function ConversationsList() {
 
                                 <div className="flex items-center justify-between w-full">
                                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                                        ID: {conversation.publication_workspace_id}
+                                        <a
+                                            href={`/publications/detail/${conversation.publication_workspace_id}`}
+                                            target="_blank"
+                                            className="hover:underline focus:outline-hidden"
+                                            title={conversation.publication_workspace_id}
+                                        >
+                                            ID: {conversation.publication_workspace_id}
+                                        </a>
                                     </div>
                                     <div className="flex items-center shrink-0 gap-1 text-xs text-gray-500 dark:text-gray-400">
                                         <ClockIcon size={12} />
@@ -172,7 +183,7 @@ export default function ConversationsList() {
                         }}
                     />
                 )}
-            </div>
+            </div >
         </>
     );
 }

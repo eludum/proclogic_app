@@ -564,10 +564,10 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-linear-to-r from-blue-50 to-emerald-50 dark:from-slate-800 dark:to-slate-900">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-linear-to-r from-blue-50 to-astral-50 dark:from-slate-800 dark:to-slate-900">
                     <div className="flex items-center gap-2">
                         <div className="bg-white dark:bg-slate-800 p-2 rounded-full shadow-xs">
-                            <RiChatSmile2Line className="size-5 text-emerald-600" />
+                            <RiChatSmile2Line className="size-5 text-astral-600" />
                         </div>
                         <h2 className="text-lg font-semibold text-slate-800 dark:text-white">ProcLogic AI Chat</h2>
                     </div>
@@ -608,7 +608,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 {Object.keys(availableFiles).length > 0 && (
                     <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <span className="font-medium text-blue-700 dark:text-blue-300">Beschikbare documenten:</span>
                             {Object.values(availableFiles).map((file, index) => (
                                 <div key={index} className="flex items-center gap-1 bg-white dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded-full shadow-xs">
                                     <FileTextIcon size={12} />
@@ -628,14 +627,14 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         >
                             <div
                                 className={`max-w-[80%] rounded-xl p-4 shadow-xs ${message.role === "user"
-                                    ? "bg-blue-600 text-white"
+                                    ? "bg-astral-600 text-white"
                                     : "bg-white dark:bg-slate-800 text-gray-800 dark:text-white"
                                     }`}
                             >
                                 <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</div>
 
                                 {/* Citations */}
-                                {message.citations && (
+                                {message.citations && message.citations.length > 0 && (
                                     <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                                         <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Bronnen:</p>
                                         <ul className="space-y-1">
@@ -677,7 +676,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             <div className="max-w-[80%] rounded-xl p-4 shadow-xs bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
                                 <div className="text-sm whitespace-pre-wrap leading-relaxed">
                                     {streamingMessage.content}
-                                    <span className="inline-block w-2 h-4 ml-1 bg-emerald-500 animate-pulse"></span>
+                                    <span className="inline-block w-2 h-4 ml-1 bg-astral-500 animate-pulse"></span>
                                 </div>
                                 <div className="mt-1 text-right">
                                     <span className="text-xs opacity-70">
@@ -692,8 +691,8 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         <div className="flex items-start animate-fadeIn">
                             <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-xs">
                                 <div className="flex items-center gap-2">
-                                    <LoaderIcon size={16} className="animate-spin text-emerald-600" />
-                                    <span className="text-sm text-gray-800 dark:text-gray-200">ProcLogic AI is aan het initialiseren...</span>
+                                    <LoaderIcon size={16} className="animate-spin text-astral-600" />
+                                    <span className="text-sm text-gray-800 dark:text-gray-200">ProcLogic AI is aan het denken...</span>
                                 </div>
                             </div>
                         </div>
@@ -706,7 +705,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     <div className="flex gap-2">
                         <textarea
                             ref={inputRef}
-                            className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:outline-hidden focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white resize-none shadow-xs transition-all"
+                            className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:outline-hidden focus:ring-2 focus:ring-astral-500 dark:bg-slate-800 dark:text-white resize-none shadow-xs transition-all"
                             placeholder="Stel een vraag over deze aanbesteding..."
                             rows={2}
                             value={currentMessage}
@@ -719,7 +718,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             disabled={loading || currentMessage.trim() === ""}
                             className={`h-auto flex items-center justify-center transition-all duration-200 ${loading || currentMessage.trim() === ""
                                 ? "bg-gray-300 dark:bg-gray-700 cursor-not-allowed opacity-70"
-                                : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md hover:shadow-lg"
+                                : "bg-astral-600 hover:bg-astral-700 dark:bg-astral-600 dark:hover:bg-astral-700 shadow-md hover:shadow-lg"
                                 } text-white p-3 rounded-lg`}
                         >
                             <SendIcon size={20} />

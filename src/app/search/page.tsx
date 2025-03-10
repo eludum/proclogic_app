@@ -12,26 +12,41 @@ export default async function PublicSearch({ searchParams }) {
     const { getToken } = await auth();
     const isLoggedIn = !!user;
 
-    // Get search term and filters from URL parameters
+    // Get search term, filters, and pagination params from URL parameters
     const searchTerm = searchParams.q || "";
     const sector = searchParams.sector || "";
     const region = searchParams.region || "";
     const date = searchParams.date || "";
     const cpvCode = searchParams.cpv_code || "";
+    const page = parseInt(searchParams.page || "1", 10);
+    const size = parseInt(searchParams.size || "10", 10);
 
     // Fetch publications - different endpoints for logged in vs anonymous
-    let publications = [];
+    let publicationsData = {
+        items: [],
+        page: page,
+        size: size,
+        total: 0,
+        pages: 0
+    };
     let fetchError = null;
 
     try {
         // Determine API endpoint based on user status
-        let apiUrl = `${API_BASE_URL}/publications/free/search/${searchTerm}`;
+        let apiUrl = `${API_BASE_URL}/publications/free/search/`;
         let headers = {};
         let queryParams = new URLSearchParams();
+
+        // Add search term if present
+        if (searchTerm) queryParams.append("q", searchTerm);
 
         // Add filters if they exist
         if (sector) queryParams.append("sector", sector);
         if (region) queryParams.append("region", region);
+
+        // Add pagination parameters
+        queryParams.append("page", page.toString());
+        queryParams.append("size", size.toString());
 
         // Add the query parameters to the URL
         if (queryParams.toString()) {
@@ -41,7 +56,7 @@ export default async function PublicSearch({ searchParams }) {
         if (isLoggedIn) {
             // For logged in users with proper authentication
             const token = await getToken();
-            apiUrl = `${API_BASE_URL}/publications/search/${searchTerm}`;
+            apiUrl = `${API_BASE_URL}/publications/search/`;
 
             // Add premium filters if logged in
             if (date) queryParams.append("date", date);
@@ -57,13 +72,16 @@ export default async function PublicSearch({ searchParams }) {
             };
         }
 
-        const response = await fetch(apiUrl, { headers });
+        const response = await fetch(apiUrl, {
+            headers,
+            cache: 'no-store'
+        });
 
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
         }
 
-        publications = await response.json();
+        publicationsData = await response.json();
     } catch (error) {
         fetchError = error.message;
         console.error("Error fetching publications:", error);
@@ -79,14 +97,17 @@ export default async function PublicSearch({ searchParams }) {
             </div>
 
             {/* Search Component */}
-            <Search isPremium={isLoggedIn} />
+            <Search
+                isPremium={isLoggedIn}
+                initialSearchParams={searchParams}
+            />
 
             {/* Premium Banner - only show for non-logged in users */}
             {!isLoggedIn && (
-                <div className="mx-4 sm:mx-6 mb-6 p-4 bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg border border-blue-100 dark:border-blue-800 shadow-xs">
+                <div className="mx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-astral-50 to-astral-100 dark:from-astral-900/30 dark:to-astral-800/30 rounded-lg border border-astral-200 dark:border-astral-800 shadow-xs">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
-                            <h3 className="text-base font-semibold text-blue-800 dark:text-blue-300 mb-1">
+                            <h3 className="text-base font-semibold text-astral-800 dark:text-astral-300 mb-1">
                                 Maak een account aan
                             </h3>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -95,7 +116,7 @@ export default async function PublicSearch({ searchParams }) {
                         </div>
                         <a
                             href="/register"
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-astral-600 hover:bg-astral-700 transition-colors duration-200"
                         >
                             Registreren
                         </a>
@@ -108,7 +129,7 @@ export default async function PublicSearch({ searchParams }) {
                     <div className="p-6 text-center">
                         <p className="text-red-500">Fout bij het laden van aanbestedingen: {fetchError}</p>
                     </div>
-                ) : publications.length === 0 ? (
+                ) : publicationsData.items.length === 0 ? (
                     <div className="p-6 text-center">
                         <p className="text-gray-500">Geen aanbestedingen gevonden</p>
                     </div>
@@ -117,12 +138,12 @@ export default async function PublicSearch({ searchParams }) {
                         {isLoggedIn ? (
                             // Logged-in users see the full PublicationList with all features
                             <PublicationList
-                                publications={publications}
+                                initialPublications={publicationsData}
                             />
                         ) : (
                             // Non-logged in users see the limited PublicationList
                             <FreePublicationList
-                                publications={publications}
+                                publications={publicationsData}
                                 isLoggedIn={isLoggedIn}
                             />
                         )}

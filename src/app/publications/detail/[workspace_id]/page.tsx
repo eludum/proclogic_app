@@ -22,7 +22,7 @@ export default async function PublicationDetailPage({ params }: { params: Params
 
     try {
         const token = await getToken();
-
+        // TODO: mark publication as viewed
         const response = await fetch(`${API_BASE_URL}/publications/publication/${workspaceId}/`, {
             headers: {
                 Authorization: `Bearer ${token}`,
