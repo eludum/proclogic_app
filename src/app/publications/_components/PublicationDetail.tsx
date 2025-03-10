@@ -96,9 +96,9 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     return (
         <section aria-label="Publication Detail">
             <div className="px-4 sm:px-6 pb-6 pt-6">
-                <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-200 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden transition-all duration-300 bg-white dark:bg-slate-900`}>
+                <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-300 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden transition-all duration-300 bg-white dark:bg-slate-900`}>
                     {/* Header with viewed status, active status, recommendation status and time remaining */}
-                    <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-200 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
+                    <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-300 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
                         <div className="flex items-center gap-2 flex-wrap">
                             {/* Active status */}
                             <div className={`flex items-center gap-1 border ${publication.is_active ? "bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
@@ -116,7 +116,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                     {/* Enhanced Recommendation banner (if recommended) - Keep this prominent */}
                     {publication.is_recommended && (
-                        <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-200 dark:border-astral-800">
+                        <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-300 dark:border-astral-800">
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center justify-center bg-amber-500 text-white rounded-full p-2 shrink-0 animate-pulse">
                                     <StarIcon size={18} />

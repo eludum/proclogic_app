@@ -33,7 +33,7 @@ function ExpandableText({ text, maxLength }) {
 import { Button } from "@/components/Button";
 import { getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
 import { RiChatSmile2Line } from '@remixicon/react';
-import { Bookmark, BookmarkCheck, BuildingIcon, CheckCircleIcon, ChevronDown, ChevronUp, ClockIcon, CodeIcon, Eye, EyeOff, Layers, MapPinIcon, StarIcon, TagIcon } from 'lucide-react';
+import { BookmarkCheck, BookmarkPlus, BuildingIcon, CheckCircleIcon, ChevronDown, ChevronUp, ClockIcon, CodeIcon, Eye, EyeOff, Layers, MapPinIcon, StarIcon, TagIcon } from 'lucide-react';
 import { useState } from 'react';
 
 export function PublicationCard({
@@ -49,9 +49,9 @@ export function PublicationCard({
     const isViewed = publication.is_viewed;
 
     return (
-        <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-200 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900`}>
+        <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-300 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900`}>
             {/* Header with viewed status, active status, recommendation status and time remaining */}
-            <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-200 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
+            <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-300 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                     {/* Active status */}
                     <div className={`flex items-center gap-1 border ${publication.is_active ? "bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
@@ -84,7 +84,7 @@ export function PublicationCard({
 
             {/* Recommendation banner (if recommended) */}
             {isRecommended && (
-                <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-200 dark:border-astral-800">
+                <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-300 dark:border-astral-800">
                     <div className="flex items-center gap-2">
                         <StarIcon size={22} className="text-amber-500 shrink-0" />
                         <span className="text-xs text-astral-800 dark:text-astral-200">
@@ -182,12 +182,12 @@ export function PublicationCard({
                         >
                             {isSaving ? (
                                 <>
-                                    <Bookmark size={16} />
+                                    <BookmarkPlus size={16} />
                                     <span>Opslaan ...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Bookmark size={16} />
+                                    <BookmarkPlus size={16} />
                                     <span>Opslaan</span>
                                 </>
                             )}
