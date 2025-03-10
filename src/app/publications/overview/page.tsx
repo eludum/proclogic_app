@@ -41,6 +41,12 @@ export default async function Overview() {
 
   return (
     <section aria-label="Publications Overview">
+      <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
+        <div className="w-full">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingen Overzicht</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk alle beschikbare aanbestedingen</p>
+        </div>
+      </div>
 
       <div className="w-full">
         {fetchError ? (
@@ -61,7 +67,10 @@ export default async function Overview() {
           </div>
         ) : (
           <div className="p-4">
-            <PublicationList initialPublications={publicationsData} />
+            <PublicationList
+              initialPublications={publicationsData}
+              isSearchPage={false}
+            />
           </div>
         )}
       </div>

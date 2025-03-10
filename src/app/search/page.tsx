@@ -18,6 +18,10 @@ export default async function PublicSearch({ searchParams }) {
     const region = searchParams.region || "";
     const date = searchParams.date || "";
     const cpvCode = searchParams.cpv_code || "";
+    const active = searchParams.active !== "false"; // Default to true
+    const recommended = searchParams.recommended === "true";
+    const viewed = searchParams.viewed === "true";
+    const saved = searchParams.saved === "true";
     const page = parseInt(searchParams.page || "1", 10);
     const size = parseInt(searchParams.size || "10", 10);
 
@@ -61,6 +65,12 @@ export default async function PublicSearch({ searchParams }) {
             // Add premium filters if logged in
             if (date) queryParams.append("date", date);
             if (cpvCode) queryParams.append("cpv_code", cpvCode);
+
+            // Add boolean filters
+            if (!active) queryParams.append("active", "false");
+            if (recommended) queryParams.append("recommended", "true");
+            if (viewed) queryParams.append("viewed", "true");
+            if (saved) queryParams.append("saved", "true");
 
             // Update URL with all parameters
             if (queryParams.toString()) {
@@ -139,6 +149,7 @@ export default async function PublicSearch({ searchParams }) {
                             // Logged-in users see the full PublicationList with all features
                             <PublicationList
                                 initialPublications={publicationsData}
+                                isSearchPage={true}
                             />
                         ) : (
                             // Non-logged in users see the limited PublicationList

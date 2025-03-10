@@ -1,3 +1,4 @@
+// src/app/publications/_components/PublicationList.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
@@ -13,7 +14,7 @@ import { PublicationCard } from "./PublicationCard";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default function PublicationList({ initialPublications }) {
+export default function PublicationList({ initialPublications, isSearchPage = false }) {
     // State for publications data
     const [activeChatPublication, setActiveChatPublication] = useState(null);
     const [savingPublications, setSavingPublications] = useState({});
@@ -450,21 +451,23 @@ export default function PublicationList({ initialPublications }) {
             {/* Search and filter bar */}
             <div className="mb-6 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
                 <div className="flex flex-col md:flex-row gap-3">
-                    {/* Search input */}
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <SearchIcon size={18} className="text-gray-400" />
-                        </div>
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="block w-full pl-10 py-2 pr-3 border border-gray-300 dark:border-gray-700 rounded-md 
+                    {/* Search input - Only show in search page */}
+                    {isSearchPage && (
+                        <div className="relative flex-1">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <SearchIcon size={18} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="block w-full pl-10 py-2 pr-3 border border-gray-300 dark:border-gray-700 rounded-md 
                                 bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white 
                                 focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
-                            placeholder="Zoek in titel, beschrijving, organisatie..."
-                        />
-                    </div>
+                                placeholder="Zoek in titel, beschrijving, organisatie..."
+                            />
+                        </div>
+                    )}
 
                     {/* Filter toggle button */}
                     <Button
