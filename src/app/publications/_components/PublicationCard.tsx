@@ -51,24 +51,16 @@ export function PublicationCard({
     return (
         <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-200 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900`}>
             {/* Header with viewed status, active status, recommendation status and time remaining */}
-            <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 border-b border-slate-200 dark:border-slate-800 ${isRecommended ? 'bg-astral-50 dark:bg-astral-900/20' : ''}`}>
+            <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-200 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                     {/* Active status */}
-                    <div className={`flex items-center gap-1 ${publication.is_active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
+                    <div className={`flex items-center gap-1 border ${publication.is_active ? "bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
                         <CheckCircleIcon size={12} />
                         <span>{publication.is_active ? "Actief" : "Inactief"}</span>
                     </div>
 
-                    {/* Recommendation status */}
-                    {isRecommended && (
-                        <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full text-xs">
-                            <StarIcon size={12} className="text-amber-500" />
-                            <span>Aanbevolen</span>
-                        </div>
-                    )}
-
                     {/* Viewed status */}
-                    <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
+                    <div className="flex items-center border gap-1 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
                         {isViewed ? (
                             <>
                                 <Eye size={12} />
@@ -81,12 +73,10 @@ export function PublicationCard({
                             </>
                         )}
                     </div>
-
-
                 </div>
 
                 {/* Time remaining badge */}
-                <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
+                <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
                     <ClockIcon size={12} />
                     <span>{getTimeRemaining(publication.submission_deadline).text}</span>
                 </div>
@@ -94,9 +84,9 @@ export function PublicationCard({
 
             {/* Recommendation banner (if recommended) */}
             {isRecommended && (
-                <div className="w-full bg-astral-50 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-100 dark:border-astral-800">
+                <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-200 dark:border-astral-800">
                     <div className="flex items-center gap-2">
-                        <StarIcon size={14} className="text-amber-500 shrink-0" />
+                        <StarIcon size={22} className="text-amber-500 shrink-0" />
                         <span className="text-xs text-astral-800 dark:text-astral-200">
                             <strong>ProcLogic AI beveelt deze publicatie aan voor uw bedrijf</strong> gebaseerd op uw profiel.
                         </span>

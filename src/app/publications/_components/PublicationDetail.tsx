@@ -33,14 +33,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     if (!publication) {
         return (
             <section aria-label="Publication Detail">
-                <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
-                    <div className="w-full">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbesteding Details</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Publication not found</p>
-                    </div>
-                </div>
-
-                <div className="relative min-h-60 w-full flex flex-col justify-center items-center my-6 bg-white shadow-xs border border-slate-200 rounded-lg p-2 dark:bg-[#090E1A]">
+                <div className="relative min-h-60 w-full flex flex-col justify-center items-center my-6 bg-white border border-slate-200 rounded-lg p-2 dark:bg-[#090E1A]">
                     <div className="p-3 text-center">
                         <div className="flex justify-center mb-4">
                             <svg
@@ -103,30 +96,19 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     return (
         <section aria-label="Publication Detail">
             <div className="px-4 sm:px-6 pb-6 pt-6">
-                <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-200 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900`}>
+                <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-200 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden transition-all duration-300 bg-white dark:bg-slate-900`}>
                     {/* Header with viewed status, active status, recommendation status and time remaining */}
-                    <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 border-b border-slate-200 dark:border-slate-800 ${isRecommended ? 'bg-astral-50 dark:bg-astral-900/20' : ''}`}>
+                    <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-200 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
                         <div className="flex items-center gap-2 flex-wrap">
                             {/* Active status */}
-                            <div className={`flex items-center gap-1 ${publication.is_active ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
+                            <div className={`flex items-center gap-1 border ${publication.is_active ? "bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
                                 <CheckCircleIcon size={12} />
                                 <span>{publication.is_active ? "Actief" : "Inactief"}</span>
                             </div>
-
-                            {/* Recommendation status */}
-                            {isRecommended && (
-                                <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-full text-xs">
-                                    <StarIcon size={12} className="text-amber-500" />
-                                    <span>Aanbevolen</span>
-                                </div>
-                            )}
-
-
-
                         </div>
 
                         {/* Time remaining badge */}
-                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
+                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
                             <ClockIcon size={12} />
                             <span>{getTimeRemaining(publication.submission_deadline).text}</span>
                         </div>
@@ -134,7 +116,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
 
                     {/* Enhanced Recommendation banner (if recommended) - Keep this prominent */}
                     {publication.is_recommended && (
-                        <div className="w-full bg-astral-50 dark:bg-astral-950 px-4 py-3 border-astral-100 dark:border-astral-800 shadow-xs">
+                        <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-200 dark:border-astral-800">
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center justify-center bg-amber-500 text-white rounded-full p-2 shrink-0 animate-pulse">
                                     <StarIcon size={18} />
