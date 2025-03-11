@@ -1,7 +1,7 @@
 // src/app/publications/_components/Search.tsx
 "use client"
 import { Button } from "@/components/Button";
-import { BookmarkCheck, CalendarIcon, CheckCircleIcon, CodeIcon, Eye, FilterIcon, LockIcon, MapPinIcon, SearchIcon, StarIcon } from "lucide-react";
+import { BookmarkCheck, CalendarIcon, CheckCircleIcon, CodeIcon, Eye, FilterIcon, LockIcon, MapPinIcon, SearchIcon, StarIcon, TagIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 

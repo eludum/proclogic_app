@@ -114,20 +114,23 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         </div>
                     </div>
 
-                    {/* Enhanced Recommendation banner (if recommended) - Keep this prominent */}
-                    {publication.is_recommended && (
-                        <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-300 dark:border-astral-800">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center justify-center bg-amber-500 text-white rounded-full p-2 shrink-0 animate-pulse">
+                    {/* Enhanced Recommendation banner (if recommended) */}
+                    {isRecommended && (
+                        <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-3 border-b border-astral-300 dark:border-astral-800">
+                            <div className="flex items-start gap-3">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white shrink-0 animate-pulse">
                                     <StarIcon size={18} />
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-bold text-astral-700 dark:text-astral-300">
-                                        ProcLogic AI beveelt deze publicatie aan voor uw bedrijf!
-                                    </span>
-                                    <span className="text-xs text-astral-600 dark:text-astral-400">
-                                        Geselecteerd op basis van uw bedrijfsprofiel
-                                    </span>
+                                <div className="flex-1">
+                                    <p className="text-sm font-semibold text-astral-800 dark:text-astral-200">
+                                        <strong>Deze publieke aanbesteding is je aangeraden</strong> op basis van je profiel.
+                                    </p>
+                                    <div className="flex flex-wrap items-center">
+                                        <div className="flex items-center text-xs">
+                                            <span className="font-medium text-astral-700 dark:text-astral-300">Match score:</span>
+                                            <span className="ml-1 font-bold text-emerald-600 dark:text-emerald-400">{publication.match_percentage.toFixed(0)}%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -276,26 +279,26 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                 <p className="text-gray-800 dark:text-gray-200">{publication.organisation}</p>
                             </div>
 
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                            <div className={`border ${publication.publication_in_your_sector ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} rounded-lg p-4`}>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <TagIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Sector</h3>
+                                    <TagIcon size={16} className={`${publication.publication_in_your_sector ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
+                                    <h3 className={`font-medium ${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
+                                        Sector {publication.publication_in_your_sector && <span className="ml-1 text-sm">• In uw sector</span>}
+                                    </h3>
                                 </div>
-                                <p className="text-gray-800 dark:text-gray-200">{publication.sector}</p>
-                                {publication.publication_in_your_sector && (
-                                    <div className="mt-2 flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                                        <CheckCircleIcon size={12} />
-                                        <span>Matched met uw sector</span>
-                                    </div>
-                                )}
+                                <p className={`${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'}`}>
+                                    {publication.sector}
+                                </p>
                             </div>
 
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                            <div className={`border ${publication.publication_in_your_region ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} rounded-lg p-4`}>
                                 <div className="flex items-center gap-2 mb-3">
-                                    <MapPinIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Regio</h3>
+                                    <MapPinIcon size={16} className={`${publication.publication_in_your_region ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
+                                    <h3 className={`font-medium ${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
+                                        Regio {publication.publication_in_your_region && <span className="ml-1 text-sm">• In uw regio</span>}
+                                    </h3>
                                 </div>
-                                <p className="text-gray-800 dark:text-gray-200 truncate" title={publication.region?.join(", ") || "N/A"}>
+                                <p className={`${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'} truncate`} title={publication.region?.join(", ") || "N/A"}>
                                     {publication.region?.join(", ") || "N/A"}
                                 </p>
                             </div>

@@ -15,10 +15,6 @@ const routeTranslations: Record<string, string> = {
   analytics: "Analyses",
   settings: "Instellingen",
 
-  // Publications subsections
-  overview: "Overzicht",
-  saved: "Opgeslagen",
-
   // Workspaces subsections
   projects: "Projecten",
   documents: "Documenten",

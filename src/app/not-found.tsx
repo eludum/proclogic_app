@@ -35,7 +35,7 @@ export default function NotFound() {
                     </Button>
 
                     <Button className="inline-flex items-center justify-center gap-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <a href="/publications/search" className="inline-flex items-center gap-2">
+                        <a href="/search" className="inline-flex items-center gap-2">
                             Zoek aanbestedingen
                         </a>
                     </Button>

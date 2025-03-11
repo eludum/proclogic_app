@@ -61,17 +61,7 @@ const secondaryNavigation = [
     name: "Aanbestedingen",
     href: "/publications",
     icon: FileText,
-    hasChildren: true, // Added this property to indicate it has children
-    children: [
-      {
-        name: "Overzicht",
-        href: "/publications/overview",
-      },
-      {
-        name: "Opgeslagen",
-        href: "/publications/saved",
-      },
-    ],
+    hasChildren: false, // Added this property to indicate no children
   },
   {
     name: "Analyses",
@@ -173,7 +163,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     // Exact match for main routes
     if (route === currentRoute) return true;
 
-    // For nested routes like /publications/overview when currentRoute is /publications/overview
+    // For nested routes like /settings/notifications when currentRoute is /settings/notifications
     if (route !== '/' && currentRoute.startsWith(route)) return true;
 
     return false;

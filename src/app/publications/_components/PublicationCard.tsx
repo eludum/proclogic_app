@@ -1,3 +1,9 @@
+import { Button } from "@/components/Button";
+import { getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
+import { RiChatSmile2Line } from '@remixicon/react';
+import { BookmarkCheck, BookmarkPlus, BuildingIcon, CheckCircleIcon, ChevronDown, ChevronUp, ClockIcon, CodeIcon, Eye, EyeOff, Layers, MapPinIcon, StarIcon, TagIcon } from 'lucide-react';
+import { useState } from 'react';
+
 // Expandable text component for description
 function ExpandableText({ text, maxLength }) {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -29,12 +35,7 @@ function ExpandableText({ text, maxLength }) {
             )}
         </div>
     );
-}// PublicationCard.jsx
-import { Button } from "@/components/Button";
-import { getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
-import { RiChatSmile2Line } from '@remixicon/react';
-import { BookmarkCheck, BookmarkPlus, BuildingIcon, CheckCircleIcon, ChevronDown, ChevronUp, ClockIcon, CodeIcon, Eye, EyeOff, Layers, MapPinIcon, StarIcon, TagIcon } from 'lucide-react';
-import { useState } from 'react';
+}
 
 export function PublicationCard({
     publication,
@@ -47,6 +48,9 @@ export function PublicationCard({
 }) {
     const isRecommended = publication.is_recommended;
     const isViewed = publication.is_viewed;
+    const matchPercentage = publication.match_percentage || 0;
+    const inYourSector = publication.publication_in_your_sector;
+    const inYourRegion = publication.publication_in_your_region;
 
     return (
         <div className={`w-full max-w-full border ${isRecommended ? 'border-astral-300 dark:border-astral-800' : 'border-slate-200 dark:border-slate-800'} rounded-lg overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900`}>
@@ -82,14 +86,24 @@ export function PublicationCard({
                 </div>
             </div>
 
-            {/* Recommendation banner (if recommended) */}
+            {/* Enhanced Recommendation banner (if recommended) */}
             {isRecommended && (
-                <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-2 border-b border-astral-300 dark:border-astral-800">
-                    <div className="flex items-center gap-2">
-                        <StarIcon size={22} className="text-amber-500 shrink-0" />
-                        <span className="text-xs text-astral-800 dark:text-astral-200">
-                            <strong>ProcLogic AI beveelt deze publicatie aan voor uw bedrijf</strong> gebaseerd op uw profiel.
-                        </span>
+                <div className="w-full bg-astral-100 dark:bg-astral-900/20 px-4 py-3 border-b border-astral-300 dark:border-astral-800">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white shrink-0">
+                            <StarIcon size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-semibold text-astral-800 dark:text-astral-200">
+                                <strong>Deze publieke aanbesteding is je aangeraden</strong> op basis van je profiel.
+                            </p>
+                            <div className="flex flex-wrap items-center">
+                                <div className="flex items-center text-xs">
+                                    <span className="font-medium text-astral-700 dark:text-astral-300">Match score:</span>
+                                    <span className="ml-1 font-bold text-emerald-600 dark:text-emerald-400">{matchPercentage.toFixed(0)}%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -134,7 +148,11 @@ export function PublicationCard({
                     <DetailItem
                         icon={<TagIcon size={14} />}
                         label="Sector"
-                        value={publication.sector}
+                        value={
+                            <span className={`${inYourSector ? 'px-2 py-0.5 rounded-full border border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-medium' : ''}`}>
+                                {publication.sector} {inYourSector && <span className="ml-1">• In uw sector</span>}
+                            </span>
+                        }
                     />
                     <DetailItem
                         icon={<CodeIcon size={14} />}
@@ -144,7 +162,11 @@ export function PublicationCard({
                     <DetailItem
                         icon={<MapPinIcon size={14} />}
                         label="Regio"
-                        value={publication.region?.join(", ") || "N/A"}
+                        value={
+                            <span className={`${inYourRegion ? 'px-2 py-0.5 rounded-full border border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-medium' : ''}`}>
+                                {publication.region?.join(", ") || "N/A"} {inYourRegion && <span className="ml-1">• In uw regio</span>}
+                            </span>
+                        }
                         truncate={true}
                     />
                 </div>

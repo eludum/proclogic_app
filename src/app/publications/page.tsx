@@ -1,11 +1,11 @@
 "use server"
 import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
-import PublicationList from "../_components/PublicationList";
+import PublicationList from "./_components/PublicationList";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default async function Overview() {
+export default async function Publications() {
   const { getToken } = await auth();
 
   // Fetch publications using authenticated endpoint
@@ -40,7 +40,7 @@ export default async function Overview() {
   }
 
   return (
-    <section aria-label="Publications Overview">
+    <section aria-label="Publications">
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
         <div className="w-full">
           <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingen Overzicht</h1>
@@ -52,7 +52,7 @@ export default async function Overview() {
         {fetchError ? (
           <div className="p-6 text-center">
             <p>Fout bij het laden van publicaties: {fetchError}</p>
-            <form action="/publications/overview">
+            <form action="/publications">
               <button
                 type="submit"
                 className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"

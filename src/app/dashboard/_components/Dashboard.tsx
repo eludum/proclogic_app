@@ -16,7 +16,6 @@ import {
     ClockIcon,
     MailOpenIcon,
     MessageSquareIcon,
-    RefreshCcwIcon,
     StarIcon,
     TrashIcon,
     UserIcon
@@ -26,7 +25,7 @@ import { useState } from "react";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-interface Message {
+interface Notification {
     id: string;
     title: string;
     content: string;
@@ -38,39 +37,39 @@ interface Message {
 }
 
 interface InboxListProps {
-    initialMessages: Message[];
+    initialNotifications: Notification[];
     fetchError: string | null;
 }
 
-export default function InboxList({ initialMessages, fetchError }: InboxListProps) {
-    const [messages, setMessages] = useState<Message[]>(initialMessages || []);
+export default function InboxList({ initialNotifications, fetchError }: InboxListProps) {
+    const [notifications, setNotifications] = useState<Notification[]>(initialNotifications || []);
     const [isLoading, setIsLoading] = useState(false);
     const [filter, setFilter] = useState<string>('all');
-    const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
+    const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
     const { getToken } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
 
-    // Filter messages based on current filter
-    const filteredMessages = messages.filter(message => {
+    // Filter notifications based on current filter
+    const filteredNotifications = notifications.filter(notification => {
         if (filter === 'all') return true;
-        if (filter === 'unread') return !message.is_read;
-        return message.type === filter;
+        if (filter === 'unread') return !notification.is_read;
+        return notification.type === filter;
     });
 
     // Calculate stats
     const stats = {
-        all: messages.length,
-        unread: messages.filter(msg => !msg.is_read).length,
-        recommendation: messages.filter(msg => msg.type === 'recommendation').length,
-        deadline: messages.filter(msg => msg.type === 'deadline').length,
-        system: messages.filter(msg => msg.type === 'system').length,
-        forum: messages.filter(msg => msg.type === 'forum').length,
-        account: messages.filter(msg => msg.type === 'account').length
+        all: notifications.length,
+        unread: notifications.filter(msg => !msg.is_read).length,
+        recommendation: notifications.filter(msg => msg.type === 'recommendation').length,
+        deadline: notifications.filter(msg => msg.type === 'deadline').length,
+        system: notifications.filter(msg => msg.type === 'system').length,
+        forum: notifications.filter(msg => msg.type === 'forum').length,
+        account: notifications.filter(msg => msg.type === 'account').length
     };
 
     // Format date for display
-    const formatMessageDate = (dateString: string) => {
+    const formatNotificationDate = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
 
@@ -96,8 +95,8 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
         });
     };
 
-    // Get icon for message type
-    const getMessageIcon = (type: string, isRead: boolean) => {
+    // Get icon for notification type
+    const getNotificationIcon = (type: string, isRead: boolean) => {
         switch (type) {
             case 'recommendation':
                 return <StarIcon size={18} className="text-amber-500" />;
@@ -116,53 +115,51 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
         }
     };
 
-    // Toggle message selection
-    const toggleSelectMessage = (id: string) => {
-        const newSelected = new Set(selectedMessages);
+    // Toggle notification selection
+    const toggleSelectNotification = (id: string) => {
+        const newSelected = new Set(selectedNotifications);
         if (newSelected.has(id)) {
             newSelected.delete(id);
         } else {
             newSelected.add(id);
         }
-        setSelectedMessages(newSelected);
+        setSelectedNotifications(newSelected);
     };
 
-    // Select/deselect all filtered messages
+    // Select/deselect all filtered notifications
     const toggleSelectAll = () => {
-        if (selectedMessages.size === filteredMessages.length) {
+        if (selectedNotifications.size === filteredNotifications.length) {
             // Deselect all
-            setSelectedMessages(new Set());
+            setSelectedNotifications(new Set());
         } else {
-            // Select all filtered messages
+            // Select all filtered notifications
             const newSelected = new Set<string>();
-            filteredMessages.forEach(msg => newSelected.add(msg.id));
-            setSelectedMessages(newSelected);
+            filteredNotifications.forEach(msg => newSelected.add(msg.id));
+            setSelectedNotifications(newSelected);
         }
     };
 
-    // Mark selected messages as read
+    // Mark selected notifications as read
     const markAsRead = async () => {
-        if (selectedMessages.size === 0) return;
+        if (selectedNotifications.size === 0) return;
 
         setIsLoading(true);
         try {
-            // Here you would make API call to mark messages as read
-            // const token = await getToken();
-            // await fetch(`${API_BASE_URL}/messages/mark-read`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'Authorization': `Bearer ${token}`
-            //     },
-            //     body: JSON.stringify({ message_ids: Array.from(selectedMessages) })
-            // });
+            const token = await getToken();
+            await fetch(`${API_BASE_URL}/notifications/mark-read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ notification_ids: Array.from(selectedNotifications) })
+            });
 
-            // For demo purposes, update state directly
-            const updatedMessages = messages.map(msg =>
-                selectedMessages.has(msg.id) ? { ...msg, is_read: true } : msg
+            const updatedNotifications = notifications.map(msg =>
+                selectedNotifications.has(msg.id) ? { ...msg, is_read: true } : msg
             );
-            setMessages(updatedMessages);
-            setSelectedMessages(new Set());
+            setNotifications(updatedNotifications);
+            setSelectedNotifications(new Set());
 
             toast({
                 title: "Berichten gemarkeerd als gelezen",
@@ -179,27 +176,25 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
         }
     };
 
-    // Delete selected messages
-    const deleteMessages = async () => {
-        if (selectedMessages.size === 0) return;
+    // Delete selected notifications
+    const deleteNotifications = async () => {
+        if (selectedNotifications.size === 0) return;
 
         setIsLoading(true);
         try {
-            // Here you would make API call to delete messages
-            // const token = await getToken();
-            // await fetch(`${API_BASE_URL}/messages/delete`, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'Authorization': `Bearer ${token}`
-            //     },
-            //     body: JSON.stringify({ message_ids: Array.from(selectedMessages) })
-            // });
+            const token = await getToken();
+            await fetch(`${API_BASE_URL}/notifications/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ notification_ids: Array.from(selectedNotifications) })
+            });
 
-            // For demo purposes, update state directly
-            const updatedMessages = messages.filter(msg => !selectedMessages.has(msg.id));
-            setMessages(updatedMessages);
-            setSelectedMessages(new Set());
+            const updatedNotifications = notifications.filter(msg => !selectedNotifications.has(msg.id));
+            setNotifications(updatedNotifications);
+            setSelectedNotifications(new Set());
 
             toast({
                 title: "Berichten verwijderd",
@@ -216,63 +211,31 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
         }
     };
 
-    // Handle message click - navigate to link
-    const handleMessageClick = (message: Message) => {
+    // Handle notification click - navigate to link
+    const handleNotificationClick = async (notification: Notification) => {
         // If not already read, mark as read
-        if (!message.is_read) {
-            const updatedMessages = messages.map(msg =>
-                msg.id === message.id ? { ...msg, is_read: true } : msg
-            );
-            setMessages(updatedMessages);
+        if (!notification.is_read) {
+            try {
+                const token = await getToken();
+                await fetch(`${API_BASE_URL}/notifications/${notification.id}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-            // Here you would make API call to mark as read
-            // const markAsRead = async () => {
-            //     const token = await getToken();
-            //     await fetch(`${API_BASE_URL}/messages/${message.id}/read`, {
-            //         method: 'POST',
-            //         headers: {
-            //             'Authorization': `Bearer ${token}`
-            //         }
-            //     });
-            // };
-            // markAsRead().catch(console.error);
+                const updatedNotifications = notifications.map(msg =>
+                    msg.id === notification.id ? { ...msg, is_read: true } : msg
+                );
+                setNotifications(updatedNotifications);
+            } catch (error) {
+                console.error("Error marking notification as read:", error);
+            }
         }
 
         // Navigate to linked resource
-        if (message.link) {
-            router.push(message.link);
-        }
-    };
-
-    // Refresh messages
-    const refreshMessages = async () => {
-        setIsLoading(true);
-        try {
-            // Here you would fetch fresh messages from API
-            // const token = await getToken();
-            // const response = await fetch(`${API_BASE_URL}/messages/`, {
-            //     headers: {
-            //         'Authorization': `Bearer ${token}`
-            //     }
-            // });
-            // const data = await response.json();
-            // setMessages(data.items);
-
-            // For demo purposes, just simulate a refresh
-            setTimeout(() => {
-                toast({
-                    title: "Berichten bijgewerkt",
-                    variant: "success"
-                });
-                setIsLoading(false);
-            }, 1000);
-        } catch (error) {
-            toast({
-                title: "Fout bij vernieuwen",
-                description: "Kon berichten niet ophalen. Probeer het later opnieuw.",
-                variant: "error"
-            });
-            setIsLoading(false);
+        if (notification.link) {
+            router.push(notification.link);
         }
     };
 
@@ -327,17 +290,8 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
                             {/* Bulk actions */}
                             <div className="flex items-center gap-2">
                                 <Button
-                                    onClick={refreshMessages}
-                                    disabled={isLoading}
-                                    variant="ghost"
-                                    className="px-2 py-1.5 text-xs"
-                                >
-                                    <RefreshCcwIcon size={14} className={`mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-                                    Vernieuwen
-                                </Button>
-                                <Button
                                     onClick={markAsRead}
-                                    disabled={isLoading || selectedMessages.size === 0}
+                                    disabled={isLoading || selectedNotifications.size === 0}
                                     variant="ghost"
                                     className="px-2 py-1.5 text-xs"
                                 >
@@ -345,8 +299,8 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
                                     Markeer als gelezen
                                 </Button>
                                 <Button
-                                    onClick={deleteMessages}
-                                    disabled={isLoading || selectedMessages.size === 0}
+                                    onClick={deleteNotifications}
+                                    disabled={isLoading || selectedNotifications.size === 0}
                                     variant="ghost"
                                     className="px-2 py-1.5 text-xs text-red-500 hover:text-red-600"
                                 >
@@ -357,7 +311,7 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
                         </div>
                     </div>
 
-                    {/* Message list */}
+                    {/* Notification list */}
                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
                         {isLoading ? (
                             <div className="py-8">
@@ -369,21 +323,27 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
                                 <h3 className="text-lg font-medium mb-2">Fout bij laden</h3>
                                 <p className="text-gray-500 dark:text-gray-400 mb-4">{fetchError}</p>
                                 <Button
-                                    onClick={refreshMessages}
+                                    onClick={() => router.refresh()}
                                     className="mx-auto"
                                 >
                                     <RefreshCcwIcon size={16} className="mr-2" />
                                     Probeer opnieuw
                                 </Button>
                             </div>
-                        ) : filteredMessages.length === 0 ? (
+                        ) : notifications.length === 0 ? (
                             <div className="p-6 text-center">
                                 <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    {filter === 'all'
-                                        ? 'U heeft geen berichten in uw inbox.'
-                                        : `U heeft geen berichten in de categorie '${filter}'.`}
+                                    U heeft nog geen berichten in uw inbox.
+                                </p>
+                            </div>
+                        ) : filteredNotifications.length === 0 ? (
+                            <div className="p-6 text-center">
+                                <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
+                                <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
+                                <p className="text-gray-500 dark:text-gray-400">
+                                    {`U heeft geen berichten in de categorie '${filter}'.`}
                                 </p>
                             </div>
                         ) : (
@@ -393,64 +353,64 @@ export default function InboxList({ initialMessages, fetchError }: InboxListProp
                                     <div className="w-6 shrink-0">
                                         <input
                                             type="checkbox"
-                                            checked={selectedMessages.size === filteredMessages.length && filteredMessages.length > 0}
+                                            checked={selectedNotifications.size === filteredNotifications.length && filteredNotifications.length > 0}
                                             onChange={toggleSelectAll}
                                             className="h-4 w-4 rounded border-gray-300 text-astral-600"
                                         />
                                     </div>
                                     <div className="ml-3 text-xs font-medium text-gray-500">
-                                        {selectedMessages.size > 0
-                                            ? `${selectedMessages.size} geselecteerd`
+                                        {selectedNotifications.size > 0
+                                            ? `${selectedNotifications.size} geselecteerd`
                                             : 'Selecteer alles'}
                                     </div>
                                 </div>
 
-                                {filteredMessages.map((message) => (
+                                {filteredNotifications.map((notification) => (
                                     <div
-                                        key={message.id}
-                                        className={`flex items-start px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!message.is_read ? 'bg-astral-50 dark:bg-astral-900/10' : ''}`}
+                                        key={notification.id}
+                                        className={`flex items-start px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-astral-50 dark:bg-astral-900/10' : ''}`}
                                     >
                                         <div className="w-6 mt-1 shrink-0">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedMessages.has(message.id)}
-                                                onChange={() => toggleSelectMessage(message.id)}
+                                                checked={selectedNotifications.has(notification.id)}
+                                                onChange={() => toggleSelectNotification(notification.id)}
                                                 onClick={(e) => e.stopPropagation()}
                                                 className="h-4 w-4 rounded border-gray-300 text-astral-600"
                                             />
                                         </div>
                                         <div
                                             className="ml-3 flex-1 min-w-0"
-                                            onClick={() => handleMessageClick(message)}
+                                            onClick={() => handleNotificationClick(notification)}
                                         >
-                                            {/* Message header */}
+                                            {/* Notification header */}
                                             <div className="flex flex-wrap justify-between gap-2 mb-2">
                                                 <div className="flex items-center gap-2">
                                                     {/* Type icon */}
                                                     <div className="shrink-0">
-                                                        {getMessageIcon(message.type, message.is_read)}
+                                                        {getNotificationIcon(notification.type, notification.is_read)}
                                                     </div>
 
                                                     {/* Title */}
-                                                    <h3 className={`text-sm font-medium ${message.is_read ? 'text-gray-900 dark:text-gray-200' : 'text-astral-900 dark:text-astral-100 font-semibold'}`}>
-                                                        {message.title}
+                                                    <h3 className={`text-sm font-medium ${notification.is_read ? 'text-gray-900 dark:text-gray-200' : 'text-astral-900 dark:text-astral-100 font-semibold'}`}>
+                                                        {notification.title}
                                                     </h3>
 
                                                     {/* Unread indicator */}
-                                                    {!message.is_read && (
+                                                    {!notification.is_read && (
                                                         <span className="inline-block w-2 h-2 bg-astral-500 rounded-full"></span>
                                                     )}
                                                 </div>
 
                                                 {/* Date */}
                                                 <div className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
-                                                    {formatMessageDate(message.created_at)}
+                                                    {formatNotificationDate(notification.created_at)}
                                                 </div>
                                             </div>
 
-                                            {/* Message content */}
+                                            {/* Notification content */}
                                             <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                {message.content}
+                                                {notification.content}
                                             </p>
 
                                             {/* Link indicator */}
