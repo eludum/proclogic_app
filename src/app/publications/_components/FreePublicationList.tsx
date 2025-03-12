@@ -1,25 +1,41 @@
 "use client"
+import { siteConfig } from "@/app/siteConfig";
 import { formatDate } from "@/lib/publicationUtils";
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, CodeIcon, MapPinIcon, TagIcon } from 'lucide-react';
 import { useEffect, useState } from "react";
 import FreeFilterCard from "./FreeFilterCard";
 import { Pagination } from "./Pagination";
 
+const API_BASE_URL = siteConfig.api_base_url;
+
 export default function FreePublicationList({ initialPublications }) {
     const [expandedDescriptions, setExpandedDescriptions] = useState({});
-    const [filteredinitialPublications, setFilteredinitialPublications] = useState([]);
+    const [publications, setPublications] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [currentFilters, setCurrentFilters] = useState({
+        searchTerm: "",
+        sectorFilters: [],
+        regionFilters: []
+    });
 
     // Initialize state from initialPublications prop
     useEffect(() => {
         if (initialPublications) {
-            setFilteredinitialPublications(initialPublications.items || []);
+            setPublications(initialPublications.items || []);
             setCurrentPage(initialPublications.page || 1);
             setTotalPages(initialPublications.pages || 1);
             setTotalItems(initialPublications.total || 0);
+
+            // Extract initial filters from URL if available
+            const url = new URL(window.location.href);
+            setCurrentFilters({
+                searchTerm: url.searchParams.get('q') || "",
+                sectorFilters: url.searchParams.getAll('sector') || [],
+                regionFilters: url.searchParams.getAll('region') || []
+            });
         }
     }, [initialPublications]);
 
@@ -31,62 +47,87 @@ export default function FreePublicationList({ initialPublications }) {
         }));
     };
 
-    // Handle page change with URL param update
+    // Load publications with filters and pagination
+    const loadPublications = async (page = 1, filters = currentFilters) => {
+        setIsLoading(true);
+
+        try {
+            const params = new URLSearchParams();
+
+            // Add pagination params
+            params.append('page', page.toString());
+            params.append('size', '10'); // Default page size
+
+            // Add search term if present
+            if (filters.searchTerm) {
+                params.append('q', filters.searchTerm);
+            }
+
+            // Add sector filters
+            filters.sectorFilters.forEach(sector => {
+                params.append('sector', sector);
+            });
+
+            // Add region filters
+            filters.regionFilters.forEach(region => {
+                params.append('region', region);
+            });
+
+            // Fetch data from API
+            const response = await fetch(`${API_BASE_URL}/publications/free/search/?${params.toString()}`);
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Update state with new data
+            setPublications(data.items || []);
+            setCurrentPage(data.page || 1);
+            setTotalPages(data.pages || 1);
+            setTotalItems(data.total || 0);
+
+            // Update URL without page reload (for browser history)
+            const url = new URL(window.location.href);
+
+            // Reset URL params
+            url.search = '';
+
+            // Add current filters to URL
+            if (filters.searchTerm) url.searchParams.set('q', filters.searchTerm);
+            if (page > 1) url.searchParams.set('page', page.toString());
+
+            filters.sectorFilters.forEach(sector => {
+                url.searchParams.append('sector', sector);
+            });
+
+            filters.regionFilters.forEach(region => {
+                url.searchParams.append('region', region);
+            });
+
+            // Update URL without reload
+            window.history.pushState({}, '', url.toString());
+
+        } catch (error) {
+            console.error('Error fetching publications:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages && !isLoading) {
-            setIsLoading(true);
-            // Construct the URL with the new page parameter
-            const url = new URL(window.location.href);
-            url.searchParams.set('page', newPage);
-            window.location.href = url.toString();
+            setCurrentPage(newPage);
+            loadPublications(newPage);
         }
     };
 
     // Handle filter changes
     const handleFiltersChange = (newFilters) => {
-        // Build the URL with filter parameters
-        const url = new URL(window.location.href);
-
-        // Clear existing params except size
-        const size = url.searchParams.get('size') || '10';
-        url.search = '';
-        url.searchParams.set('size', size);
-
-        // Add search term if present
-        if (newFilters.searchTerm) {
-            url.searchParams.set('q', newFilters.searchTerm);
-        }
-
-        // Add sector filters
-        newFilters.sectorFilters.forEach(sector => {
-            url.searchParams.append('sector', sector);
-        });
-
-        // Add region filters
-        newFilters.regionFilters.forEach(region => {
-            url.searchParams.append('region', region);
-        });
-
-        // Reset to page 1 when applying filters
-        url.searchParams.set('page', '1');
-
-        // Navigate to the new URL
-        setIsLoading(true);
-        window.location.href = url.toString();
-    };
-
-    // Parse current URL to get initial filter values
-    const getInitialFilters = () => {
-        if (typeof window === 'undefined') return { searchTerm: "", sectorFilters: [], regionFilters: [] };
-
-        const url = new URL(window.location.href);
-        const searchParams = url.searchParams;
-
-        return {
-            searchTerm: searchParams.get('q') || "",
-            sectorFilters: searchParams.getAll('sector') || [],
-            regionFilters: searchParams.getAll('region') || []
-        };
+        setCurrentFilters(newFilters);
+        loadPublications(1, newFilters);
     };
 
     return (
@@ -94,7 +135,7 @@ export default function FreePublicationList({ initialPublications }) {
             {/* Filter component */}
             <FreeFilterCard
                 onFiltersChange={handleFiltersChange}
-                initialFilters={getInitialFilters()}
+                initialFilters={currentFilters}
             />
 
             {/* Results count */}
@@ -102,14 +143,14 @@ export default function FreePublicationList({ initialPublications }) {
                 {isLoading ? "Aanbestedingen laden..." : `${totalItems} aanbestedingen gevonden`}
             </div>
 
-            {/* initialPublications list */}
+            {/* Publications list */}
             <div className="space-y-6">
-                {filteredinitialPublications.length === 0 ? (
+                {publications.length === 0 ? (
                     <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Geen aanbestedingen gevonden</p>
                     </div>
                 ) : (
-                    filteredinitialPublications.map((publication, index) => (
+                    publications.map((publication, index) => (
                         <div key={index} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
                             {/* Header with status */}
                             <div className={`flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-700`}>
@@ -130,10 +171,12 @@ export default function FreePublicationList({ initialPublications }) {
                                 {/* Title */}
                                 <div className="mb-4">
                                     <a
+                                        target="_blank"
                                         href={`/publications/free/detail/${publication.workspace_id}`}
                                         className="text-lg font-semibold text-astral-600 dark:text-astral-400 hover:underline focus:outline-hidden mb-1 block"
                                     >
-                                        {publication.title}
+                                        <p className="line-clamp-2">                                        {publication.title}
+                                        </p>
                                     </a>
                                     <span className="text-xs text-gray-500 dark:text-gray-400">
                                         ID: {publication.workspace_id}

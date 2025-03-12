@@ -104,7 +104,6 @@ export default async function PublicSearch() {
                             // Non-logged in users see the limited PublicationList
                             <FreePublicationList
                                 initialPublications={publicationsData}
-                                publications={publicationsData}
                             />
                         )}
                     </div>

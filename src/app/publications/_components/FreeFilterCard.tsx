@@ -3,7 +3,6 @@ import { Button } from "@/components/Button";
 import {
     Filter, MapPinIcon, SearchIcon, TagIcon, X
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function FreeFilterCard({
@@ -14,7 +13,6 @@ export default function FreeFilterCard({
         regionFilters: []
     }
 }) {
-    const router = useRouter();
     const [showFilters, setShowFilters] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,44 +23,15 @@ export default function FreeFilterCard({
         regionFilters: initialFilters.regionFilters || []
     });
 
-    // Apply filters to parent component or URL directly
+    // Apply filters to parent component
     const applyFilters = () => {
         setIsSubmitting(true);
+
+        // Always use the callback to trigger data fetching instead of URL navigation
         if (onFiltersChange) {
             onFiltersChange(filters);
             setIsSubmitting(false);
-            return;
         }
-
-        // If no callback, handle navigation directly
-        const url = new URL(window.location.href);
-
-        // Clear existing filter params
-        url.searchParams.delete('q');
-        url.searchParams.delete('sector');
-        url.searchParams.delete('region');
-        url.searchParams.delete('page');
-
-        // Add search term if present
-        if (filters.searchTerm) {
-            url.searchParams.set('q', filters.searchTerm);
-        }
-
-        // Add all sector filters
-        filters.sectorFilters.forEach(sector => {
-            url.searchParams.append('sector', sector);
-        });
-
-        // Add all region filters
-        filters.regionFilters.forEach(region => {
-            url.searchParams.append('region', region);
-        });
-
-        // Reset to page 1
-        url.searchParams.set('page', '1');
-
-        // Navigate to new URL
-        window.location.href = url.toString();
     };
 
     // Update search term
@@ -110,20 +79,10 @@ export default function FreeFilterCard({
         };
         setFilters(defaultFilters);
 
+        // Use the callback to reset data
         if (onFiltersChange) {
             onFiltersChange(defaultFilters);
-            return;
         }
-
-        // If no callback, handle navigation directly - clear all params except size
-        const url = new URL(window.location.href);
-        const size = url.searchParams.get('size') || '10';
-
-        url.search = '';
-        url.searchParams.set('page', '1');
-        url.searchParams.set('size', size);
-
-        window.location.href = url.toString();
     };
 
     // Determine if any filters are active
