@@ -18,6 +18,7 @@ import { cx, focusRing } from "@/lib/utils"
 import { RiArrowDownSFill, RiChatSmile2Line } from "@remixicon/react"
 import {
   BarChart2,
+  BookmarkCheck,
   FileText,
   Home,
   Search,
@@ -58,9 +59,15 @@ const secondaryNavigation = [
     hasChildren: false, // Added this property to indicate no children
   },
   {
-    name: "Aanbestedingen",
+    name: "Aanbevolen",
     href: "/publications",
     icon: FileText,
+    hasChildren: false, // Added this property to indicate no children
+  },
+  {
+    name: "Mijn aanbestedingen",
+    href: "/publications/my-publications",
+    icon: BookmarkCheck,
     hasChildren: false, // Added this property to indicate no children
   },
   {

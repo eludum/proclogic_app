@@ -5,7 +5,7 @@ import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
 import { useAuth } from "@clerk/nextjs";
-import { BookmarkCheck, BookmarkPlus, CalendarIcon, CheckCircleIcon, CodeIcon, Eye, Filter, MapPinIcon, SearchIcon, Star, TagIcon } from "lucide-react";
+import { BookmarkCheck, BookmarkPlus, CalendarIcon, CheckCircleIcon, CodeIcon, Eye, Filter, MapPinIcon, SearchIcon, Star, TagIcon, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import ChatComponent from "./ChatComponent";
 import { Pagination } from "./Pagination";
@@ -59,20 +59,21 @@ export default function PublicationList({
         }
     });
 
-    // Advanced filters for search page
+    // Advanced filters for search page - changed to use arrays for multi-selection
     const [advancedFilters, setAdvancedFilters] = useState({
-        sector: "",
-        region: "",
+        sector: [],
+        region: [],
         date: "",
         cpvCode: ""
     });
 
     const [showFilters, setShowFilters] = useState(true);
+    const [shouldFetch, setShouldFetch] = useState(false);
 
     const { getToken } = useAuth();
     const { toast } = useToast();
 
-    // Create query params for API calls
+    // Update createQueryParams to handle arrays
     const createQueryParams = useCallback(() => {
         const params = new URLSearchParams({
             page: pagination.page.toString(),
@@ -85,28 +86,30 @@ export default function PublicationList({
         if (activeFilters.viewed) params.append('viewed', 'true');
         if (activeFilters.saved) params.append('saved', 'true');
 
-        // Add search term only if on search page
+        // Add search term if present
         if (isSearchPage && searchTerm.trim()) params.append('search_term', searchTerm.trim());
 
-        // Add advanced filters (for all page types, backend will handle them)
-        if (advancedFilters.sector) params.append('sector', advancedFilters.sector);
-        if (advancedFilters.region) params.append('region', advancedFilters.region);
+        // Add advanced filters - handling arrays
+        advancedFilters.sector.forEach(value => {
+            if (value) params.append('sector', value);
+        });
 
-        // Handle date range if needed
+        advancedFilters.region.forEach(value => {
+            if (value) params.append('region', value);
+        });
+
+        // Date handling
         if (advancedFilters.date) {
             const today = new Date();
             if (advancedFilters.date === "7d") {
-                // 7 days ago
                 const dateFrom = new Date(today);
                 dateFrom.setDate(today.getDate() - 7);
                 params.append('date_from', dateFrom.toISOString().split('T')[0]);
             } else if (advancedFilters.date === "30d") {
-                // 30 days ago
                 const dateFrom = new Date(today);
                 dateFrom.setDate(today.getDate() - 30);
                 params.append('date_from', dateFrom.toISOString().split('T')[0]);
             } else if (advancedFilters.date === "90d") {
-                // 90 days ago
                 const dateFrom = new Date(today);
                 dateFrom.setDate(today.getDate() - 90);
                 params.append('date_from', dateFrom.toISOString().split('T')[0]);
@@ -118,8 +121,8 @@ export default function PublicationList({
         return params;
     }, [pagination.page, pagination.size, activeFilters, searchTerm, advancedFilters, isSearchPage]);
 
-    // Fetch publications with filters
-    const fetchPublications = async (page = 1) => {
+    // Update the fetchPublications function
+    const fetchPublications = useCallback(async (page = 1) => {
         setIsLoading(true);
         try {
             const token = await getToken();
@@ -128,10 +131,12 @@ export default function PublicationList({
             const params = createQueryParams();
             params.set('page', page.toString());
 
-            // Now we use the same endpoint for all pages, with different filter combinations
             const endpoint = `${API_BASE_URL}/publications/`;
+            const url = `${endpoint}?${params.toString()}`;
 
-            const response = await fetch(`${endpoint}?${params.toString()}`, {
+            console.log('Fetching publications with URL:', url);
+
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -140,6 +145,7 @@ export default function PublicationList({
 
             if (response.ok) {
                 const data = await response.json();
+                console.log('Received data:', data);
                 setPublicationsList(data.items || []);
                 setPagination({
                     page: data.page || 1,
@@ -148,7 +154,8 @@ export default function PublicationList({
                     pages: data.pages || 0
                 });
             } else {
-                console.error('Failed to fetch publications:', await response.text());
+                const errorText = await response.text();
+                console.error('Failed to fetch publications:', errorText);
                 toast({
                     title: "Fout bij laden",
                     description: "De aanbestedingen konden niet worden geladen. Probeer het later opnieuw.",
@@ -164,10 +171,11 @@ export default function PublicationList({
             });
         } finally {
             setIsLoading(false);
+            setShouldFetch(false);
         }
-    };
+    }, [createQueryParams, getToken, toast]);
 
-    // Debounce function to prevent too many API calls
+    // Debounce function
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -180,34 +188,37 @@ export default function PublicationList({
         };
     }
 
+    // Fixed effect for filter changes - using shouldFetch flag
+    useEffect(() => {
+        if (shouldFetch) {
+            fetchPublications(1);
+        }
+    }, [shouldFetch, fetchPublications]);
+
+    // Effect to set the shouldFetch flag when filters change
+    useEffect(() => {
+        // Skip the initial render
+        if (initialPublications && !shouldFetch) {
+            return;
+        }
+
+        setShouldFetch(true);
+    }, [activeFilters, advancedFilters]);
+
     // Create debounced fetch function for text search
     const debouncedFetch = useCallback(
-        debounce(() => fetchPublications(1), 500),
-        [fetchPublications]
+        debounce(() => {
+            setShouldFetch(true);
+        }, 500),
+        []
     );
 
-    // Effect for search term changes - debounced (only if search page)
+    // Effect for search term changes - debounced
     useEffect(() => {
         if (isSearchPage && searchTerm.trim() !== "") {
             debouncedFetch();
         }
     }, [searchTerm, debouncedFetch, isSearchPage]);
-
-    // Effect for all other filter changes
-    useEffect(() => {
-        // Skip the initial fetch if we already have publications from the server
-        const hasFiltersChanged =
-            Object.values(advancedFilters).some(v => v !== "") ||
-            (isOverviewPage && !activeFilters.recommended) ||
-            (isSavedPage && !activeFilters.saved) ||
-            (activeFilters.viewed || (activeFilters.saved && !isSavedPage)) ||
-            (!activeFilters.active);
-
-        // Only fetch if filters have changed from their defaults
-        if (hasFiltersChanged) {
-            fetchPublications(1); // Reset to page 1 when filters change
-        }
-    }, [activeFilters, advancedFilters]);
 
     // Reset filters based on page type
     const resetFilters = () => {
@@ -217,12 +228,12 @@ export default function PublicationList({
             setActiveFilters({
                 recommended: false,
                 viewed: false,
-                saved: true, // Default for saved page
+                saved: true,
                 active: true
             });
         } else if (isOverviewPage) {
             setActiveFilters({
-                recommended: true, // Default for overview page
+                recommended: true,
                 viewed: false,
                 saved: false,
                 active: true
@@ -238,11 +249,14 @@ export default function PublicationList({
 
         // Reset advanced filters
         setAdvancedFilters({
-            sector: "",
-            region: "",
+            sector: [],
+            region: [],
             date: "",
             cpvCode: ""
         });
+
+        // Trigger fetch with reset filters
+        setShouldFetch(true);
     };
 
     // Toggle a filter
@@ -266,14 +280,42 @@ export default function PublicationList({
         }
     };
 
-    // Advanced filter change handler - trigger fetch on change
+    // Handlers for multi-select filters
+    const handleSectorChange = (value) => {
+        setAdvancedFilters(prev => {
+            if (value === "") {
+                return { ...prev, sector: [] };
+            }
+
+            if (prev.sector.includes(value)) {
+                return { ...prev, sector: prev.sector.filter(item => item !== value) };
+            } else {
+                return { ...prev, sector: [...prev.sector, value] };
+            }
+        });
+    };
+
+    const handleRegionChange = (value) => {
+        setAdvancedFilters(prev => {
+            if (value === "") {
+                return { ...prev, region: [] };
+            }
+
+            if (prev.region.includes(value)) {
+                return { ...prev, region: prev.region.filter(item => item !== value) };
+            } else {
+                return { ...prev, region: [...prev.region, value] };
+            }
+        });
+    };
+
+    // Regular advanced filter change handler
     const handleAdvancedFilterChange = (e) => {
         const { name, value } = e.target;
         setAdvancedFilters(prev => ({
             ...prev,
             [name]: value
         }));
-        // Fetch will be triggered by useEffect when advancedFilters changes
     };
 
     // Start a chat with a publication
@@ -313,7 +355,7 @@ export default function PublicationList({
 
                 // Refresh the list if "saved" filter is active
                 if (activeFilters.saved) {
-                    fetchPublications(pagination.page);
+                    setShouldFetch(true);
                 }
             } else {
                 console.error('Failed to save publication:', await response.text());
@@ -367,7 +409,7 @@ export default function PublicationList({
 
                 // Refresh the list if "saved" filter is active or on saved page
                 if (activeFilters.saved || isSavedPage) {
-                    fetchPublications(pagination.page);
+                    setShouldFetch(true);
                 }
             } else {
                 console.error('Failed to unsave publication:', await response.text());
@@ -413,7 +455,7 @@ export default function PublicationList({
 
                 // Refresh the list if "viewed" filter is active
                 if (activeFilters.viewed) {
-                    fetchPublications(pagination.page);
+                    setShouldFetch(true);
                 }
             }
         } catch (error) {
@@ -472,7 +514,7 @@ export default function PublicationList({
 
                     {/* Reset filters button - only show if filters are active */}
                     {(isSearchPage && searchTerm ||
-                        (isSearchPage && Object.values(advancedFilters).some(f => f)) ||
+                        (isSearchPage && (advancedFilters.sector.length > 0 || advancedFilters.region.length > 0 || advancedFilters.date || advancedFilters.cpvCode)) ||
                         Object.entries(activeFilters).some(([key, value]) =>
                             // Only consider it active if it's different from default
                             (isSavedPage && key === 'saved' && value === true) ? false :
@@ -538,49 +580,81 @@ export default function PublicationList({
                         {/* Advanced filters only for search page */}
                         {isSearchPage && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                                {/* Sector filter */}
+                                {/* Sector filter - modified for multi-select */}
                                 <div>
-                                    <label htmlFor="sector" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
                                         <TagIcon size={12} />
                                         <span>Sector</span>
                                     </label>
-                                    <select
-                                        id="sector"
-                                        name="sector"
-                                        value={advancedFilters.sector}
-                                        onChange={handleAdvancedFilterChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
-                                    >
-                                        <option value="">Alle sectoren</option>
-                                        <option value="45000000">Bouwwerkzaamheden</option>
-                                        <option value="72000000">IT & Technologie</option>
-                                        <option value="85000000">Gezondheidszorg</option>
-                                        <option value="80000000">Onderwijs</option>
-                                        <option value="71000000">Architectuur en Engineering</option>
-                                    </select>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {[
+                                            { value: "45000000", label: "Bouwwerkzaamheden" },
+                                            { value: "72000000", label: "IT & Technologie" },
+                                            { value: "85000000", label: "Gezondheidszorg" },
+                                            { value: "80000000", label: "Onderwijs" },
+                                            { value: "71000000", label: "Architectuur en Engineering" }
+                                        ].map(sector => (
+                                            <Button
+                                                key={sector.value}
+                                                type="button"
+                                                onClick={() => handleSectorChange(sector.value)}
+                                                variant={advancedFilters.sector.includes(sector.value) ? "default" : "secondary"}
+                                                className="flex items-center gap-1 text-xs py-1 px-2"
+                                            >
+                                                {sector.label}
+                                            </Button>
+                                        ))}
+                                        {advancedFilters.sector.length > 0 && (
+                                            <Button
+                                                type="button"
+                                                onClick={() => setAdvancedFilters(prev => ({ ...prev, sector: [] }))}
+                                                variant="destructive"
+                                                className="flex items-center gap-1 text-xs py-1 px-2"
+                                            >
+                                                <X size={12} />
+                                                <span>Wis selectie</span>
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
-                                {/* Region filter */}
+                                {/* Region filter - modified for multi-select */}
                                 <div>
-                                    <label htmlFor="region" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
                                         <MapPinIcon size={12} />
                                         <span>Regio</span>
                                     </label>
-                                    <select
-                                        id="region"
-                                        name="region"
-                                        value={advancedFilters.region}
-                                        onChange={handleAdvancedFilterChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
-                                    >
-                                        <option value="">Alle regio's</option>
-                                        <option value="BE21">Antwerpen</option>
-                                        <option value="BE10">Brussel</option>
-                                        <option value="BE22">Limburg</option>
-                                        <option value="BE23">Oost-Vlaanderen</option>
-                                        <option value="BE24">Vlaams-Brabant</option>
-                                        <option value="BE25">West-Vlaanderen</option>
-                                    </select>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {[
+                                            { value: "BE21", label: "Antwerpen" },
+                                            { value: "BE10", label: "Brussel" },
+                                            { value: "BE22", label: "Limburg" },
+                                            { value: "BE23", label: "Oost-Vlaanderen" },
+                                            { value: "BE24", label: "Vlaams-Brabant" },
+                                            { value: "BE25", label: "West-Vlaanderen" }
+                                        ].map(region => (
+                                            <Button
+                                                key={region.value}
+                                                type="button"
+                                                onClick={() => handleRegionChange(region.value)}
+                                                variant={advancedFilters.region.includes(region.value) ? "default" : "secondary"}
+                                                className="flex items-center gap-1 text-xs py-1 px-2"
+                                            >
+                                                {region.label}
+                                            </Button>
+                                        ))}
+                                        {advancedFilters.region.length > 0 && (
+                                            <Button
+                                                type="button"
+                                                onClick={() => setAdvancedFilters(prev => ({ ...prev, region: [] }))}
+                                                variant="destructive"
+                                                className="flex items-center gap-1 text-xs py-1 px-2"
+                                            >
+                                                <X size={12} />
+                                                <span>Wis selectie</span>
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Date filter */}
@@ -643,7 +717,7 @@ export default function PublicationList({
                     <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Geen aanbestedingen gevonden</p>
                         {(isSearchPage && searchTerm ||
-                            (isSearchPage && Object.values(advancedFilters).some(f => f)) ||
+                            (isSearchPage && (advancedFilters.sector.length > 0 || advancedFilters.region.length > 0 || advancedFilters.date || advancedFilters.cpvCode)) ||
                             Object.values(activeFilters).some(f => f && f !== activeFilters.active)
                         ) && (
                                 <Button
