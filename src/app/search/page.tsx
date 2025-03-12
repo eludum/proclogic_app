@@ -3,7 +3,6 @@ import { siteConfig } from "@/app/siteConfig";
 import { auth, currentUser } from '@clerk/nextjs/server';
 import FreePublicationList from "../publications/_components/FreePublicationList";
 import PublicationList from "../publications/_components/PublicationList";
-import Search from "../publications/_components/Search";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
@@ -105,12 +104,6 @@ export default async function PublicSearch({ searchParams }) {
                     <p className="text-sm text-gray-500 dark:text-gray-400">Vind relevante aanbestedingsmogelijkheden voor uw bedrijf</p>
                 </div>
             </div>
-
-            {/* Search Component */}
-            <Search
-                isPremium={isLoggedIn}
-                initialSearchParams={searchParams}
-            />
 
             {/* Premium Banner - only show for non-logged in users */}
             {!isLoggedIn && (
