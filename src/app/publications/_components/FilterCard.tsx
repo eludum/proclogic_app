@@ -235,7 +235,7 @@ export default function FilterCard({
             {/* Filter options */}
             {showFilters && (
                 <div className="mt-3 space-y-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                    {/* Boolean filters */}
+                    {/* Boolean filters - always shown on all pages */}
                     <div className="flex flex-wrap gap-2">
                         <Button
                             type="button"
@@ -276,107 +276,109 @@ export default function FilterCard({
                         </Button>
                     </div>
 
-                    {/* Advanced filters - show on all pages but with different options */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-                        {/* Sector filter */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
-                                <TagIcon size={12} />
-                                <span>Sector</span>
-                            </label>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {sectorOptions.map(sector => (
-                                    <Button
-                                        key={sector.value}
-                                        type="button"
-                                        onClick={() => handleSectorChange(sector.value)}
-                                        variant={filters.sectorFilters.includes(sector.value) ? "default" : "secondary"}
-                                        className="flex items-center gap-1 text-xs py-1 px-2"
-                                    >
-                                        {sector.label}
-                                    </Button>
-                                ))}
-                                {filters.sectorFilters.length > 0 && (
-                                    <Button
-                                        type="button"
-                                        onClick={() => setFilters(prev => ({ ...prev, sectorFilters: [] }))}
-                                        variant="destructive"
-                                        className="flex items-center gap-1 text-xs py-1 px-2"
-                                    >
-                                        <X size={12} />
-                                        <span>Wis</span>
-                                    </Button>
-                                )}
+                    {/* Advanced filters - only on search page */}
+                    {isSearchPage && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                            {/* Sector filter */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                    <TagIcon size={12} />
+                                    <span>Sector</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {sectorOptions.map(sector => (
+                                        <Button
+                                            key={sector.value}
+                                            type="button"
+                                            onClick={() => handleSectorChange(sector.value)}
+                                            variant={filters.sectorFilters.includes(sector.value) ? "default" : "secondary"}
+                                            className="flex items-center gap-1 text-xs py-1 px-2"
+                                        >
+                                            {sector.label}
+                                        </Button>
+                                    ))}
+                                    {filters.sectorFilters.length > 0 && (
+                                        <Button
+                                            type="button"
+                                            onClick={() => setFilters(prev => ({ ...prev, sectorFilters: [] }))}
+                                            variant="destructive"
+                                            className="flex items-center gap-1 text-xs py-1 px-2"
+                                        >
+                                            <X size={12} />
+                                            <span>Wis</span>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Region filter */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                    <MapPinIcon size={12} />
+                                    <span>Regio</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {regionOptions.map(region => (
+                                        <Button
+                                            key={region.value}
+                                            type="button"
+                                            onClick={() => handleRegionChange(region.value)}
+                                            variant={filters.regionFilters.includes(region.value) ? "default" : "secondary"}
+                                            className="flex items-center gap-1 text-xs py-1 px-2"
+                                        >
+                                            {region.label}
+                                        </Button>
+                                    ))}
+                                    {filters.regionFilters.length > 0 && (
+                                        <Button
+                                            type="button"
+                                            onClick={() => setFilters(prev => ({ ...prev, regionFilters: [] }))}
+                                            variant="destructive"
+                                            className="flex items-center gap-1 text-xs py-1 px-2"
+                                        >
+                                            <X size={12} />
+                                            <span>Wis</span>
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Date filter */}
+                            <div>
+                                <label htmlFor="date" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                    <CalendarIcon size={12} />
+                                    <span>Datum</span>
+                                </label>
+                                <select
+                                    id="date"
+                                    value={filters.dateFilter}
+                                    onChange={(e) => handleDateChange(e.target.value)}
+                                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
+                                >
+                                    <option value="">Alle datums</option>
+                                    <option value="7d">Afgelopen 7 dagen</option>
+                                    <option value="30d">Afgelopen 30 dagen</option>
+                                    <option value="90d">Afgelopen 90 dagen</option>
+                                </select>
+                            </div>
+
+                            {/* CPV Code filter */}
+                            <div>
+                                <label htmlFor="cpvCode" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                    <CodeIcon size={12} />
+                                    <span>CPV Code</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    id="cpvCode"
+                                    value={filters.cpvCodeFilter}
+                                    onChange={(e) => handleCpvCodeChange(e.target.value)}
+                                    placeholder="Bijv. 72000000"
+                                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
+                                />
                             </div>
                         </div>
-
-                        {/* Region filter */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
-                                <MapPinIcon size={12} />
-                                <span>Regio</span>
-                            </label>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {regionOptions.map(region => (
-                                    <Button
-                                        key={region.value}
-                                        type="button"
-                                        onClick={() => handleRegionChange(region.value)}
-                                        variant={filters.regionFilters.includes(region.value) ? "default" : "secondary"}
-                                        className="flex items-center gap-1 text-xs py-1 px-2"
-                                    >
-                                        {region.label}
-                                    </Button>
-                                ))}
-                                {filters.regionFilters.length > 0 && (
-                                    <Button
-                                        type="button"
-                                        onClick={() => setFilters(prev => ({ ...prev, regionFilters: [] }))}
-                                        variant="destructive"
-                                        className="flex items-center gap-1 text-xs py-1 px-2"
-                                    >
-                                        <X size={12} />
-                                        <span>Wis</span>
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Date filter */}
-                        <div>
-                            <label htmlFor="date" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
-                                <CalendarIcon size={12} />
-                                <span>Datum</span>
-                            </label>
-                            <select
-                                id="date"
-                                value={filters.dateFilter}
-                                onChange={(e) => handleDateChange(e.target.value)}
-                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
-                            >
-                                <option value="">Alle datums</option>
-                                <option value="7d">Afgelopen 7 dagen</option>
-                                <option value="30d">Afgelopen 30 dagen</option>
-                                <option value="90d">Afgelopen 90 dagen</option>
-                            </select>
-                        </div>
-
-                        {/* CPV Code filter */}
-                        <div>
-                            <label htmlFor="cpvCode" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
-                                <CodeIcon size={12} />
-                                <span>CPV Code</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="cpvCode"
-                                value={filters.cpvCodeFilter}
-                                onChange={(e) => handleCpvCodeChange(e.target.value)}
-                                placeholder="Bijv. 72000000"
-                                className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
-                            />
-                        </div>
-                    </div>
+                    )}
 
                     {/* Apply Filters Button */}
                     <div className="flex justify-end pt-3">

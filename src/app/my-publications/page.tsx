@@ -1,7 +1,7 @@
 "use server"
 import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
-import PublicationList from "../_components/PublicationList";
+import PublicationList from "../publications/_components/PublicationList";
 
 const API_BASE_URL = siteConfig.api_base_url;
 

@@ -6,21 +6,12 @@ import PublicationList from "../publications/_components/PublicationList";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default async function PublicSearch({ searchParams }) {
+export default async function PublicSearch() {
     const user = await currentUser();
     const { getToken } = await auth();
     const isLoggedIn = !!user;
 
-    // Get search term, filters, and pagination params from URL parameters
-    const searchTerm = searchParams.q || "";
-    const sector = searchParams.sector || "";
-    const region = searchParams.region || "";
-    const date = searchParams.date || "";
-    const cpvCode = searchParams.cpv_code || "";
-    const active = searchParams.active !== "false"; // Default to true
-    const recommended = searchParams.recommended === "true";
-    const viewed = searchParams.viewed === "true";
-    const saved = searchParams.saved === "true";
+    // Get pagination params from URL parameters
     const page = parseInt(searchParams.page || "1", 10);
     const size = parseInt(searchParams.size || "10", 10);
 
@@ -35,62 +26,37 @@ export default async function PublicSearch({ searchParams }) {
     let fetchError = null;
 
     try {
-        // Determine API endpoint based on user status
-        let apiUrl = `${API_BASE_URL}/publications/free/search/`;
-        let headers = {};
-        let queryParams = new URLSearchParams();
-
-        // Add search term if present
-        if (searchTerm) queryParams.append("q", searchTerm);
-
-        // Add filters if they exist
-        if (sector) queryParams.append("sector", sector);
-        if (region) queryParams.append("region", region);
-
-        // Add pagination parameters
-        queryParams.append("page", page.toString());
-        queryParams.append("size", size.toString());
-
-        // Add the query parameters to the URL
-        if (queryParams.toString()) {
-            apiUrl += `?${queryParams.toString()}`;
-        }
-
         if (isLoggedIn) {
             // For logged in users with proper authentication
             const token = await getToken();
-            apiUrl = `${API_BASE_URL}/publications/`;
+            const apiUrl = `${API_BASE_URL}/publications/?page=${page}&size=${size}&active=true`;
 
-            // Add premium filters if logged in
-            if (date) queryParams.append("date", date);
-            if (cpvCode) queryParams.append("cpv_code", cpvCode);
+            const response = await fetch(apiUrl, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                cache: 'no-store'
+            });
 
-            // Add boolean filters
-            if (!active) queryParams.append("active", "false");
-            if (recommended) queryParams.append("recommended", "true");
-            if (viewed) queryParams.append("viewed", "true");
-            if (saved) queryParams.append("saved", "true");
-
-            // Update URL with all parameters
-            if (queryParams.toString()) {
-                apiUrl += `?${queryParams.toString()}`;
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
             }
 
-            headers = {
-                Authorization: `Bearer ${token}`,
-            };
+            publicationsData = await response.json();
+        } else {
+            // For anonymous users
+            let apiUrl = `${API_BASE_URL}/publications/free/search/?page=${page}&size=${size}`;
+
+            const response = await fetch(apiUrl, {
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            publicationsData = await response.json();
         }
-
-        const response = await fetch(apiUrl, {
-            headers,
-            cache: 'no-store'
-        });
-
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-        }
-
-        publicationsData = await response.json();
     } catch (error) {
         fetchError = error.message;
         console.error("Error fetching publications:", error);
@@ -147,8 +113,8 @@ export default async function PublicSearch({ searchParams }) {
                         ) : (
                             // Non-logged in users see the limited PublicationList
                             <FreePublicationList
+                                initialPublications={publicationsData}
                                 publications={publicationsData}
-                                isLoggedIn={isLoggedIn}
                             />
                         )}
                     </div>

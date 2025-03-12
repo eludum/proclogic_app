@@ -66,7 +66,7 @@ const secondaryNavigation = [
   },
   {
     name: "Mijn aanbestedingen",
-    href: "/publications/my-publications",
+    href: "/my-publications",
     icon: BookmarkCheck,
     hasChildren: false, // Added this property to indicate no children
   },
