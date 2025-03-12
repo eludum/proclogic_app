@@ -22,7 +22,7 @@ export default async function Publications() {
     const token = await getToken();
 
     // For overview page, we want recommended=true by default
-    const response = await fetch(`${API_BASE_URL}/publications/?page=1&size=10&recommended=true&active=true`, {
+    const response = await fetch(`${API_BASE_URL}/publications/?page=${publicationsData.page}&size=${publicationsData.size}&recommended=true&active=true`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
