@@ -1,4 +1,3 @@
-// src/app/publications/_components/PublicationList.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
@@ -14,7 +13,7 @@ import { PublicationCard } from "./PublicationCard";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default function PublicationList({ initialPublications, isSearchPage = false }) {
+export default function PublicationList({ initialPublications, isSearchPage = false, isSavedPage = false }) {
     // State for publications data
     const [activeChatPublication, setActiveChatPublication] = useState(null);
     const [savingPublications, setSavingPublications] = useState({});
@@ -39,7 +38,7 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
     // State for filters
     const [searchTerm, setSearchTerm] = useState("");
     const [activeFilters, setActiveFilters] = useState({
-        recommended: false,
+        recommended: true, // Set recommended filter to true by default
         viewed: false,
         saved: false,
         active: true // Active filter on by default
@@ -49,12 +48,12 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
     const { getToken } = useAuth();
     const { toast } = useToast();
 
-    const applyFilters = useCallback((publications = allPublications) => {
+    const applyFilters = useCallback((publications = allPublications, search = searchTerm, filters = activeFilters) => {
         let filteredList = [...publications];
 
         // Apply text search filter
-        if (searchTerm.trim()) {
-            const searchLower = searchTerm.toLowerCase();
+        if (search.trim()) {
+            const searchLower = search.toLowerCase();
             filteredList = filteredList.filter(pub =>
                 pub.title?.toLowerCase().includes(searchLower) ||
                 pub.original_description?.toLowerCase().includes(searchLower) ||
@@ -64,61 +63,93 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
         }
 
         // Apply other filters
-        if (activeFilters.recommended) {
+        if (filters.recommended) {
             filteredList = filteredList.filter(pub => pub.is_recommended);
         }
 
-        if (activeFilters.viewed) {
+        if (filters.viewed) {
             filteredList = filteredList.filter(pub => pub.is_viewed);
         }
 
-        if (activeFilters.saved) {
+        if (filters.saved) {
             filteredList = filteredList.filter(pub => pub.is_saved);
         }
 
-        if (activeFilters.active) {
+        if (filters.active) {
             filteredList = filteredList.filter(pub => pub.is_active);
         }
 
-        // Set the filtered list but DON'T apply pagination here
         return filteredList;
-    }, [searchTerm, activeFilters, allPublications]);
+    }, [allPublications]);
 
+    // Apply pagination to filtered list
+    const applyPagination = useCallback((filteredList, page = localPagination.page, pageSize = localPagination.size) => {
+        const total = filteredList.length;
+        const pages = Math.ceil(total / pageSize) || 1; // Ensure at least 1 page
+
+        // Update local pagination info
+        setLocalPagination(prev => ({
+            ...prev,
+            total,
+            pages,
+            page: page > pages ? 1 : page // Make sure page is valid
+        }));
+
+        // Apply pagination
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return filteredList.slice(startIndex, endIndex);
+    }, []);
 
     useEffect(() => {
         // Determine if we should use server or client pagination
-        const hasNonActiveFilter = searchTerm.trim() || Object.entries(activeFilters).some(([key, value]) => value && key !== 'active');
-        setIsServerPaginated(!hasNonActiveFilter);
+        const hasNonActiveFilter = searchTerm.trim() ||
+            activeFilters.recommended ||
+            activeFilters.viewed ||
+            activeFilters.saved ||
+            !activeFilters.active;
 
-        // If any non-active filter is active and we haven't loaded all publications yet, fetch them all
+        const shouldUseServerPagination = !hasNonActiveFilter;
+        setIsServerPaginated(shouldUseServerPagination);
+
+        // If any filter is active and we haven't loaded all publications yet, fetch them all
         if (hasNonActiveFilter && allPublications.length <= pagination.size) {
             fetchAllPublications();
         } else {
-            // Get the filtered list
-            const filteredList = applyFilters();
+            // Get the filtered list - passing current search term and filters explicitly
+            const filteredList = applyFilters(allPublications, searchTerm, activeFilters);
 
-            // Update pagination info
-            if (!isServerPaginated) {
+            // Update pagination info for client-side filtering
+            if (!shouldUseServerPagination) {
                 const total = filteredList.length;
-                const pages = Math.ceil(total / localPagination.size);
+                const pages = Math.ceil(total / localPagination.size) || 1;
 
+                // Update local pagination with new totals but keep current page if possible
                 setLocalPagination(prev => ({
                     ...prev,
-                    page: 1, // Reset to page 1 when filters change
                     total,
-                    pages
+                    pages,
+                    // Reset to page 1 if current page would be out of bounds
+                    page: prev.page > pages ? 1 : prev.page
                 }));
 
-                // Apply pagination separately
-                const startIndex = 0; // Start from page 1
-                const endIndex = localPagination.size;
-                setPublicationsList(filteredList.slice(startIndex, endIndex));
+                // Apply pagination
+                // Use applyPagination to get paginated list
+                const paginatedList = applyPagination(filteredList);
+                setPublicationsList(paginatedList);
             } else {
+                // For server-side pagination, use the whole filtered list from current server page
                 setPublicationsList(filteredList);
             }
         }
-    }, [searchTerm, activeFilters, applyFilters, isServerPaginated]);
-
+    }, [
+        searchTerm,
+        activeFilters,
+        applyFilters,
+        applyPagination,
+        localPagination.page, // Re-apply pagination when page changes
+        allPublications // Re-run when allPublications changes
+    ]);
 
     // Fetch publications for a specific page
     const fetchPublications = async (page = 1) => {
@@ -141,9 +172,7 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                     total: data.total || 0,
                     pages: data.pages || 0
                 });
-
-                // Apply the current filters to the new data
-                applyFilters(data.items);
+                setPublicationsList(data.items || []);
             } else {
                 console.error('Failed to fetch publications:', await response.text());
                 toast({
@@ -213,16 +242,12 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
             // Update state with all items
             setAllPublications(allItems);
 
-            // Update local pagination info
-            setLocalPagination({
-                page: 1,
-                size: 10,
-                total: allItems.length,
-                pages: Math.ceil(allItems.length / 10)
-            });
+            // Apply filters to get filtered list
+            const filteredList = applyFilters(allItems, searchTerm, activeFilters);
 
-            // Apply filters to the complete dataset
-            applyFilters(allItems);
+            // Set up pagination and update publications list
+            const paginatedList = applyPagination(filteredList, 1, localPagination.size);
+            setPublicationsList(paginatedList);
 
         } catch (error) {
             console.error('Error fetching all publications:', error);
@@ -238,39 +263,99 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
 
     // Reset filters
     const resetFilters = () => {
+        // Reset search term
         setSearchTerm("");
-        setActiveFilters({
-            recommended: false,
+
+        // Reset filters with recommended true by default
+        const newFilters = {
+            recommended: true,
             viewed: false,
             saved: false,
-            active: true  // Keep active filter enabled by default
-        });
+            active: true
+        };
+        setActiveFilters(newFilters);
+
+        // Update to server pagination
         setIsServerPaginated(true);
+
+        // Apply the filters
+        const filteredList = applyFilters(allPublications, "", newFilters);
+        const total = filteredList.length;
+        const pages = Math.ceil(total / 10) || 1;
+
+        // Reset local pagination
         setLocalPagination({
             page: 1,
             size: 10,
-            total: allPublications.length,
-            pages: Math.ceil(allPublications.length / 10)
+            total: total,
+            pages: pages
         });
+
+        // Fetch publications from first page
+        fetchPublications(1);
     };
 
     // Toggle a filter and fetch all publications if needed
     const toggleFilter = (filter) => {
         const newValue = !activeFilters[filter];
-        setActiveFilters(prev => ({
-            ...prev,
-            [filter]: newValue
-        }));
 
-        // If turning on a non-active filter and we don't have all publications yet, fetch them
-        if (newValue && filter !== 'active' && allPublications.length <= pagination.size) {
+        // Update filters state
+        const newFilters = {
+            ...activeFilters,
+            [filter]: newValue
+        };
+        setActiveFilters(newFilters);
+
+        // Determine if we need to use server or client pagination after this change
+        const willHaveNonActiveFilter = searchTerm.trim() ||
+            newFilters.recommended ||
+            newFilters.viewed ||
+            newFilters.saved ||
+            !newFilters.active;
+
+        const willUseServerPagination = !willHaveNonActiveFilter;
+
+        // If turning on any filter or turning off the only active filter, fetch all publications
+        if ((newValue || !willHaveNonActiveFilter) && allPublications.length <= pagination.size) {
             fetchAllPublications();
+        } else {
+            // Apply filters with the new filter state
+            const filteredList = applyFilters(allPublications, searchTerm, newFilters);
+
+            // Update pagination info
+            if (!willUseServerPagination) {
+                const total = filteredList.length;
+                const pages = Math.ceil(total / localPagination.size) || 1;
+
+                setLocalPagination(prev => ({
+                    ...prev,
+                    page: 1,
+                    total,
+                    pages
+                }));
+
+                // Apply pagination for client-side
+                const startIndex = 0; // page 1
+                const endIndex = localPagination.size;
+                setPublicationsList(filteredList.slice(startIndex, endIndex));
+            } else {
+                // For server pagination, fetch first page
+                fetchPublications(1);
+            }
         }
     };
 
     // Handle page change - choose between server and client pagination
     const handlePageChange = (newPage) => {
-        if (isServerPaginated) {
+        const hasNonActiveFilter = searchTerm.trim() ||
+            activeFilters.recommended ||
+            activeFilters.viewed ||
+            activeFilters.saved ||
+            !activeFilters.active;
+
+        const useServerPagination = !hasNonActiveFilter;
+
+        if (useServerPagination) {
             // Server-side pagination
             if (newPage >= 1 && newPage <= pagination.pages) {
                 fetchPublications(newPage);
@@ -283,7 +368,7 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                     page: newPage
                 }));
 
-                // Apply pagination with the new page
+                // Apply pagination immediately to prevent UI lag
                 const filteredList = applyFilters();
                 const startIndex = (newPage - 1) * localPagination.size;
                 const endIndex = startIndex + localPagination.size;
@@ -330,7 +415,10 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                 });
 
                 // Reapply filters if necessary
-                applyFilters();
+                const filteredList = applyFilters(updatePublication(allPublications));
+                if (!isServerPaginated) {
+                    setPublicationsList(applyPagination(filteredList));
+                }
             } else {
                 console.error('Failed to save publication:', await response.text());
                 toast({
@@ -384,7 +472,10 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                 });
 
                 // Reapply filters if necessary
-                applyFilters();
+                const filteredList = applyFilters(updatePublication(allPublications));
+                if (!isServerPaginated) {
+                    setPublicationsList(applyPagination(filteredList));
+                }
             } else {
                 console.error('Failed to unsave publication:', await response.text());
                 toast({
@@ -430,7 +521,10 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                 setAllPublications(updatePublication(allPublications));
 
                 // Reapply filters if necessary
-                applyFilters();
+                const filteredList = applyFilters(updatePublication(allPublications));
+                if (!isServerPaginated) {
+                    setPublicationsList(applyPagination(filteredList));
+                }
             }
         } catch (error) {
             console.error('Error marking publication as viewed:', error);
@@ -591,7 +685,7 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                             />
                         ))}
 
-                        {/* Pagination Controls - Show the appropriate pagination */}
+                        {/* Pagination Controls - Always show pagination (server or client) */}
                         {isServerPaginated ? (
                             pagination.pages > 1 && (
                                 <Pagination
