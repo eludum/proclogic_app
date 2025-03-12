@@ -21,8 +21,8 @@ export default async function Publications() {
   try {
     const token = await getToken();
 
-    // Default to page 1 with 10 items per page
-    const response = await fetch(`${API_BASE_URL}/publications/?page=1&size=10`, {
+    // For overview page, we want recommended=true by default
+    const response = await fetch(`${API_BASE_URL}/publications/?page=1&size=10&recommended=true&active=true`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -44,14 +44,14 @@ export default async function Publications() {
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
         <div className="w-full">
           <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingen Overzicht</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk alle beschikbare aanbestedingen</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk aanbevolen aanbestedingen voor uw bedrijf</p>
         </div>
       </div>
 
       <div className="w-full">
         {fetchError ? (
           <div className="p-6 text-center">
-            <p>Fout bij het laden van publicaties: {fetchError}</p>
+            <p>Fout bij het laden van aanbestedingen: {fetchError}</p>
             <form action="/publications">
               <button
                 type="submit"
@@ -62,14 +62,17 @@ export default async function Publications() {
             </form>
           </div>
         ) : publicationsData.items.length === 0 ? (
-          <div className="p-6 text-center">
-            <p className="text-gray-500">Geen aanbestedingen gevonden</p>
+          <div className="p-6 text-center bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+            <p className="text-gray-600 dark:text-gray-300 mb-3">Geen aanbevolen aanbestedingen gevonden</p>
+            <a href="/publications/search" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+              Zoek alle aanbestedingen
+            </a>
           </div>
         ) : (
           <div className="p-4">
             <PublicationList
               initialPublications={publicationsData}
-              isSearchPage={false}
+              isOverviewPage={true}
             />
           </div>
         )}

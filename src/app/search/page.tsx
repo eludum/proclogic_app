@@ -60,7 +60,7 @@ export default async function PublicSearch({ searchParams }) {
         if (isLoggedIn) {
             // For logged in users with proper authentication
             const token = await getToken();
-            apiUrl = `${API_BASE_URL}/publications/search/`;
+            apiUrl = `${API_BASE_URL}/publications/`;
 
             // Add premium filters if logged in
             if (date) queryParams.append("date", date);

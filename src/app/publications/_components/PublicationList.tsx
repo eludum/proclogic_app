@@ -1,4 +1,3 @@
-// src/app/publications/_components/PublicationList.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
@@ -6,40 +5,118 @@ import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
 import { useAuth } from "@clerk/nextjs";
-import { BookmarkCheck, BookmarkPlus, CheckCircleIcon, Eye, Filter, SearchIcon, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { BookmarkCheck, BookmarkPlus, CalendarIcon, CheckCircleIcon, CodeIcon, Eye, Filter, MapPinIcon, SearchIcon, Star, TagIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import ChatComponent from "./ChatComponent";
 import { Pagination } from "./Pagination";
 import { PublicationCard } from "./PublicationCard";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default function PublicationList({ initialPublications, isSearchPage = false }) {
+export default function PublicationList({
+    initialPublications,
+    isSearchPage = false,
+    isSavedPage = false,
+    isOverviewPage = false
+}) {
     // State for publications data
     const [activeChatPublication, setActiveChatPublication] = useState(null);
     const [savingPublications, setSavingPublications] = useState({});
     const [unsavingPublications, setUnsavingPublications] = useState({});
-    const [publicationsList, setPublicationsList] = useState(initialPublications.items || []);
+    const [publicationsList, setPublicationsList] = useState(initialPublications?.items || []);
     const [pagination, setPagination] = useState({
-        page: initialPublications.page || 1,
-        size: initialPublications.size || 10,
-        total: initialPublications.total || 0,
-        pages: initialPublications.pages || 0
+        page: initialPublications?.page || 1,
+        size: initialPublications?.size || 10,
+        total: initialPublications?.total || 0,
+        pages: initialPublications?.pages || 0
     });
     const [isLoading, setIsLoading] = useState(false);
 
-    // State for filters
+    // State for filters - set defaults based on page type
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeFilters, setActiveFilters] = useState({
-        recommended: true, // Set recommended filter to true by default
-        viewed: false,
-        saved: false,
-        active: true // Active filter on by default
+    const [activeFilters, setActiveFilters] = useState(() => {
+        if (isSavedPage) {
+            return {
+                recommended: false,
+                viewed: false,
+                saved: true, // Default for saved page
+                active: true
+            };
+        } else if (isOverviewPage) {
+            return {
+                recommended: true, // Default for overview page
+                viewed: false,
+                saved: false,
+                active: true
+            };
+        } else {
+            return {
+                recommended: false,
+                viewed: false,
+                saved: false,
+                active: true
+            };
+        }
     });
+
+    // Advanced filters for search page
+    const [advancedFilters, setAdvancedFilters] = useState({
+        sector: "",
+        region: "",
+        date: "",
+        cpvCode: ""
+    });
+
     const [showFilters, setShowFilters] = useState(true);
 
     const { getToken } = useAuth();
     const { toast } = useToast();
+
+    // Create query params for API calls
+    const createQueryParams = useCallback(() => {
+        const params = new URLSearchParams({
+            page: pagination.page.toString(),
+            size: pagination.size.toString()
+        });
+
+        // Add boolean filters
+        if (activeFilters.active !== undefined) params.append('active', activeFilters.active.toString());
+        if (activeFilters.recommended) params.append('recommended', 'true');
+        if (activeFilters.viewed) params.append('viewed', 'true');
+        if (activeFilters.saved) params.append('saved', 'true');
+
+        // Add search term only if on search page
+        if (isSearchPage && searchTerm.trim()) params.append('search_term', searchTerm.trim());
+
+        // Add advanced filters (for all page types, backend will handle them)
+        if (advancedFilters.sector) params.append('sector', advancedFilters.sector);
+        if (advancedFilters.region) params.append('region', advancedFilters.region);
+
+        // Handle date range if needed
+        if (advancedFilters.date) {
+            const today = new Date();
+            if (advancedFilters.date === "7d") {
+                // 7 days ago
+                const dateFrom = new Date(today);
+                dateFrom.setDate(today.getDate() - 7);
+                params.append('date_from', dateFrom.toISOString().split('T')[0]);
+            } else if (advancedFilters.date === "30d") {
+                // 30 days ago
+                const dateFrom = new Date(today);
+                dateFrom.setDate(today.getDate() - 30);
+                params.append('date_from', dateFrom.toISOString().split('T')[0]);
+            } else if (advancedFilters.date === "90d") {
+                // 90 days ago
+                const dateFrom = new Date(today);
+                dateFrom.setDate(today.getDate() - 90);
+                params.append('date_from', dateFrom.toISOString().split('T')[0]);
+            }
+        }
+
+        if (advancedFilters.cpvCode) params.append('cpv_code', advancedFilters.cpvCode);
+
+        return params;
+    }, [pagination.page, pagination.size, activeFilters, searchTerm, advancedFilters, isSearchPage]);
 
     // Fetch publications with filters
     const fetchPublications = async (page = 1) => {
@@ -47,20 +124,14 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
         try {
             const token = await getToken();
 
-            // Build query parameters
-            const params = new URLSearchParams({
-                page: page.toString(),
-                size: pagination.size.toString(),
-                active: activeFilters.active.toString()
-            });
+            // Update page in query params
+            const params = createQueryParams();
+            params.set('page', page.toString());
 
-            // Add optional filters
-            if (activeFilters.recommended) params.append('recommended', 'true');
-            if (activeFilters.viewed) params.append('viewed', 'true');
-            if (activeFilters.saved) params.append('saved', 'true');
-            if (searchTerm.trim()) params.append('search_term', searchTerm.trim());
+            // Now we use the same endpoint for all pages, with different filter combinations
+            const endpoint = `${API_BASE_URL}/publications/`;
 
-            const response = await fetch(`${API_BASE_URL}/publications/?${params.toString()}`, {
+            const response = await fetch(`${endpoint}?${params.toString()}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -96,24 +167,92 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
         }
     };
 
-    // Fetch publications when filters change
-    useEffect(() => {
-        fetchPublications(1); // Reset to page 1 when filters change
-    }, [searchTerm, activeFilters]);
+    // Debounce function to prevent too many API calls
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
-    // Reset filters
+    // Create debounced fetch function for text search
+    const debouncedFetch = useCallback(
+        debounce(() => fetchPublications(1), 500),
+        [fetchPublications]
+    );
+
+    // Effect for search term changes - debounced (only if search page)
+    useEffect(() => {
+        if (isSearchPage && searchTerm.trim() !== "") {
+            debouncedFetch();
+        }
+    }, [searchTerm, debouncedFetch, isSearchPage]);
+
+    // Effect for all other filter changes
+    useEffect(() => {
+        // Skip the initial fetch if we already have publications from the server
+        const hasFiltersChanged =
+            Object.values(advancedFilters).some(v => v !== "") ||
+            (isOverviewPage && !activeFilters.recommended) ||
+            (isSavedPage && !activeFilters.saved) ||
+            (activeFilters.viewed || (activeFilters.saved && !isSavedPage)) ||
+            (!activeFilters.active);
+
+        // Only fetch if filters have changed from their defaults
+        if (hasFiltersChanged) {
+            fetchPublications(1); // Reset to page 1 when filters change
+        }
+    }, [activeFilters, advancedFilters]);
+
+    // Reset filters based on page type
     const resetFilters = () => {
         setSearchTerm("");
-        setActiveFilters({
-            recommended: true,  // Keep recommended filter enabled by default
-            viewed: false,
-            saved: false,
-            active: true  // Keep active filter enabled by default
+
+        if (isSavedPage) {
+            setActiveFilters({
+                recommended: false,
+                viewed: false,
+                saved: true, // Default for saved page
+                active: true
+            });
+        } else if (isOverviewPage) {
+            setActiveFilters({
+                recommended: true, // Default for overview page
+                viewed: false,
+                saved: false,
+                active: true
+            });
+        } else {
+            setActiveFilters({
+                recommended: false,
+                viewed: false,
+                saved: false,
+                active: true
+            });
+        }
+
+        // Reset advanced filters
+        setAdvancedFilters({
+            sector: "",
+            region: "",
+            date: "",
+            cpvCode: ""
         });
     };
 
     // Toggle a filter
     const toggleFilter = (filter) => {
+        // Special case for saved page
+        if (isSavedPage && filter === 'saved') {
+            // Don't allow turning off the saved filter on the saved page
+            return;
+        }
+
         setActiveFilters(prev => ({
             ...prev,
             [filter]: !prev[filter]
@@ -125,6 +264,16 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
         if (newPage >= 1 && newPage <= pagination.pages) {
             fetchPublications(newPage);
         }
+    };
+
+    // Advanced filter change handler - trigger fetch on change
+    const handleAdvancedFilterChange = (e) => {
+        const { name, value } = e.target;
+        setAdvancedFilters(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        // Fetch will be triggered by useEffect when advancedFilters changes
     };
 
     // Start a chat with a publication
@@ -216,8 +365,8 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                     variant: "info"
                 });
 
-                // Refresh the list if "saved" filter is active
-                if (activeFilters.saved) {
+                // Refresh the list if "saved" filter is active or on saved page
+                if (activeFilters.saved || isSavedPage) {
                     fetchPublications(pagination.page);
                 }
             } else {
@@ -286,21 +435,26 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
             {/* Search and filter bar */}
             <div className="mb-6 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
                 <div className="flex flex-col md:flex-row gap-3">
-                    {/* Search input - Always show */}
-                    <div className="relative flex-1">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <SearchIcon size={18} className="text-gray-400" />
+                    {/* Search input - Only shown on search page */}
+                    {isSearchPage && (
+                        <div className="relative flex-1">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <SearchIcon size={18} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="block w-full pl-10 py-2 pr-3 border border-gray-300 dark:border-gray-700 rounded-md 
+                                bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white 
+                                focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
+                                placeholder="Zoek in titel, beschrijving, organisatie..."
+                            />
                         </div>
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="block w-full pl-10 py-2 pr-3 border border-gray-300 dark:border-gray-700 rounded-md 
-                            bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white 
-                            focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
-                            placeholder="Zoek in titel, beschrijving, organisatie..."
-                        />
-                    </div>
+                    )}
+
+                    {/* Flex-1 div to take up space when no search bar */}
+                    {!isSearchPage && <div className="flex-1"></div>}
 
                     {/* Filter toggle button */}
                     <Button
@@ -317,52 +471,156 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                     </Button>
 
                     {/* Reset filters button - only show if filters are active */}
-                    {(searchTerm || Object.values(activeFilters).some(f => f && f !== activeFilters.active)) && (
-                        <Button
-                            onClick={resetFilters}
-                            variant="secondary"
-                            className="text-sm"
-                        >
-                            Reset filters
-                        </Button>
-                    )}
+                    {(isSearchPage && searchTerm ||
+                        (isSearchPage && Object.values(advancedFilters).some(f => f)) ||
+                        Object.entries(activeFilters).some(([key, value]) =>
+                            // Only consider it active if it's different from default
+                            (isSavedPage && key === 'saved' && value === true) ? false :
+                                (isOverviewPage && key === 'recommended' && value === true) ? false :
+                                    (key === 'active' && value === true) ? false :
+                                        value
+                        )
+                    ) && (
+                            <Button
+                                onClick={resetFilters}
+                                variant="secondary"
+                                className="text-sm"
+                            >
+                                Reset filters
+                            </Button>
+                        )}
                 </div>
 
                 {/* Filter options - conditionally rendered */}
                 {showFilters && (
-                    <div className="mt-3 flex flex-wrap gap-2 pt-3 border-t border-gray-200 dark:border-gray-800">
-                        <Button
-                            onClick={() => toggleFilter('active')}
-                            variant={activeFilters.active ? "default" : "secondary"}
-                            className="flex items-center gap-1.5 text-sm"
-                        >
-                            <CheckCircleIcon size={14} />
-                            <span>Alleen actieve</span>
-                        </Button>
-                        <Button
-                            onClick={() => toggleFilter('recommended')}
-                            variant={activeFilters.recommended ? "default" : "secondary"}
-                            className="flex items-center gap-1.5 text-sm"
-                        >
-                            <Star size={14} className={activeFilters.recommended ? "text-amber-300" : ""} />
-                            <span>Aanbevolen</span>
-                        </Button>
-                        <Button
-                            onClick={() => toggleFilter('viewed')}
-                            variant={activeFilters.viewed ? "default" : "secondary"}
-                            className="flex items-center gap-1.5 text-sm"
-                        >
-                            <Eye size={14} />
-                            <span>Bekeken</span>
-                        </Button>
-                        <Button
-                            onClick={() => toggleFilter('saved')}
-                            variant={activeFilters.saved ? "default" : "secondary"}
-                            className="flex items-center gap-1.5 text-sm"
-                        >
-                            {activeFilters.saved ? <BookmarkCheck size={14} /> : <BookmarkPlus size={14} />}
-                            <span>Opgeslagen</span>
-                        </Button>
+                    <div className="mt-3 space-y-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                        {/* Always show these general filters */}
+                        <div className="flex flex-wrap gap-2">
+                            <Button
+                                type="button"
+                                onClick={() => toggleFilter('active')}
+                                variant={activeFilters.active ? "default" : "secondary"}
+                                className="flex items-center gap-1.5 text-sm"
+                            >
+                                <CheckCircleIcon size={14} />
+                                <span>Alleen actieve</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => toggleFilter('recommended')}
+                                variant={activeFilters.recommended ? "default" : "secondary"}
+                                className="flex items-center gap-1.5 text-sm"
+                            >
+                                <Star size={14} className={activeFilters.recommended ? "text-amber-300" : ""} />
+                                <span>Aanbevolen</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => toggleFilter('viewed')}
+                                variant={activeFilters.viewed ? "default" : "secondary"}
+                                className="flex items-center gap-1.5 text-sm"
+                            >
+                                <Eye size={14} />
+                                <span>Bekeken</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => toggleFilter('saved')}
+                                variant={activeFilters.saved ? "default" : "secondary"}
+                                disabled={isSavedPage} // Disable on saved page
+                                className={`flex items-center gap-1.5 text-sm ${isSavedPage ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                {activeFilters.saved ? <BookmarkCheck size={14} /> : <BookmarkPlus size={14} />}
+                                <span>Opgeslagen</span>
+                            </Button>
+                        </div>
+
+                        {/* Advanced filters only for search page */}
+                        {isSearchPage && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                                {/* Sector filter */}
+                                <div>
+                                    <label htmlFor="sector" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                        <TagIcon size={12} />
+                                        <span>Sector</span>
+                                    </label>
+                                    <select
+                                        id="sector"
+                                        name="sector"
+                                        value={advancedFilters.sector}
+                                        onChange={handleAdvancedFilterChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
+                                    >
+                                        <option value="">Alle sectoren</option>
+                                        <option value="45000000">Bouwwerkzaamheden</option>
+                                        <option value="72000000">IT & Technologie</option>
+                                        <option value="85000000">Gezondheidszorg</option>
+                                        <option value="80000000">Onderwijs</option>
+                                        <option value="71000000">Architectuur en Engineering</option>
+                                    </select>
+                                </div>
+
+                                {/* Region filter */}
+                                <div>
+                                    <label htmlFor="region" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                        <MapPinIcon size={12} />
+                                        <span>Regio</span>
+                                    </label>
+                                    <select
+                                        id="region"
+                                        name="region"
+                                        value={advancedFilters.region}
+                                        onChange={handleAdvancedFilterChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
+                                    >
+                                        <option value="">Alle regio's</option>
+                                        <option value="BE21">Antwerpen</option>
+                                        <option value="BE10">Brussel</option>
+                                        <option value="BE22">Limburg</option>
+                                        <option value="BE23">Oost-Vlaanderen</option>
+                                        <option value="BE24">Vlaams-Brabant</option>
+                                        <option value="BE25">West-Vlaanderen</option>
+                                    </select>
+                                </div>
+
+                                {/* Date filter */}
+                                <div>
+                                    <label htmlFor="date" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                        <CalendarIcon size={12} />
+                                        <span>Datum</span>
+                                    </label>
+                                    <select
+                                        id="date"
+                                        name="date"
+                                        value={advancedFilters.date}
+                                        onChange={handleAdvancedFilterChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
+                                    >
+                                        <option value="">Alle datums</option>
+                                        <option value="7d">Afgelopen 7 dagen</option>
+                                        <option value="30d">Afgelopen 30 dagen</option>
+                                        <option value="90d">Afgelopen 90 dagen</option>
+                                    </select>
+                                </div>
+
+                                {/* CPV Code filter */}
+                                <div>
+                                    <label htmlFor="cpvCode" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                                        <CodeIcon size={12} />
+                                        <span>CPV Code</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="cpvCode"
+                                        name="cpvCode"
+                                        value={advancedFilters.cpvCode}
+                                        onChange={handleAdvancedFilterChange}
+                                        placeholder="Bijv. 72000000"
+                                        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-sm text-gray-900 dark:text-white"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -372,22 +630,7 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                 {isLoading ?
                     "Aanbestedingen laden..." : (
                         <>
-                            {`${pagination.total} aanbestedingen gevonden${searchTerm ? ` voor "${searchTerm}"` : ''}`}
-
-                            {(Object.entries(activeFilters).some(([key, value]) => value && key !== 'active') ||
-                                (activeFilters.active && Object.values(activeFilters).filter(Boolean).length === 1)) && (
-                                    <span> (Gefilterd op: {Object.entries(activeFilters)
-                                        .filter(([key, value]) => value)
-                                        .map(([key]) =>
-                                            key === 'recommended' ? 'aanbevolen' :
-                                                key === 'viewed' ? 'bekeken' :
-                                                    key === 'saved' ? 'opgeslagen' :
-                                                        key === 'active' ? 'alleen actieve' : ''
-                                        )
-                                        .filter(text => text) // Remove any empty strings
-                                        .join(', ')})
-                                    </span>
-                                )}
+                            {`${pagination.total} aanbestedingen gevonden${isSearchPage && searchTerm ? ` voor "${searchTerm}"` : ''}`}
                         </>
                     )
                 }
@@ -399,15 +642,18 @@ export default function PublicationList({ initialPublications, isSearchPage = fa
                 ) : sortedPublications.length === 0 ? (
                     <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Geen aanbestedingen gevonden</p>
-                        {(searchTerm || Object.values(activeFilters).some(f => f && f !== activeFilters.active)) && (
-                            <Button
-                                onClick={resetFilters}
-                                variant="secondary"
-                                className="mt-2"
-                            >
-                                Filters wissen
-                            </Button>
-                        )}
+                        {(isSearchPage && searchTerm ||
+                            (isSearchPage && Object.values(advancedFilters).some(f => f)) ||
+                            Object.values(activeFilters).some(f => f && f !== activeFilters.active)
+                        ) && (
+                                <Button
+                                    onClick={resetFilters}
+                                    variant="secondary"
+                                    className="mt-2"
+                                >
+                                    Filters wissen
+                                </Button>
+                            )}
                     </div>
                 ) : (
                     <>
