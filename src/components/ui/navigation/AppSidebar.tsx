@@ -1,6 +1,11 @@
 "use client"
 import { Divider } from "@/components/Divider"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/Popover"
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -12,6 +17,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarSubLink,
+  useSidebar
 } from "@/components/Sidebar"
 import { SafeUser } from '@/lib/clerkUserUtils'
 import { cx, focusRing } from "@/lib/utils"
@@ -25,7 +31,6 @@ import {
   Settings,
   Users
 } from "lucide-react"
-
 import * as React from "react"
 import { Logo } from "../../../../public/Logo"
 import { UserProfile } from "./UserProfile"
@@ -42,12 +47,6 @@ const mainNavigation = [
     icon: Search,
     notifications: false,
   },
-  // {
-  //   name: "Mijn Alerts",
-  //   href: "/alerts",
-  //   icon: Bell,
-  //   notifications: 3,
-  // },
 ] as const
 
 const secondaryNavigation = [
@@ -56,49 +55,49 @@ const secondaryNavigation = [
     href: "/dashboard",
     icon: Home,
     notifications: false,
-    hasChildren: false, // Added this property to indicate no children
+    hasChildren: false,
   },
   {
     name: "Aanbevolen",
     href: "/publications",
     icon: FileText,
-    hasChildren: false, // Added this property to indicate no children
+    hasChildren: false,
   },
   {
     name: "Mijn aanbestedingen",
     href: "/my-publications",
     icon: BookmarkCheck,
-    hasChildren: false, // Added this property to indicate no children
+    hasChildren: false,
   },
   {
     name: "Analyses",
     href: "/analytics",
     icon: BarChart2,
-    hasChildren: false, // Added this property to indicate it has children
+    hasChildren: false,
   },
   {
     name: "Proclogic AI",
     href: "/proclogic-ai",
     icon: RiChatSmile2Line,
     notifications: false,
-    hasChildren: false, // Added this property to indicate no children
+    hasChildren: false,
   },
   {
     name: "Werkruimtes",
-    href: "#", // Changed from "/workspaces" to "#" to prevent navigation
+    href: "#",
     icon: Users,
-    disabled: true, // Added disabled property
-    hasChildren: true, // Added this property to indicate it has children
+    disabled: true,
+    hasChildren: true,
     children: [
       {
         name: "Projecten",
-        href: "#", // Changed from actual path to "#"
-        disabled: true, // Added disabled property
+        href: "#",
+        disabled: true,
       },
       {
         name: "Documenten",
-        href: "#", // Changed from actual path to "#"
-        disabled: true, // Added disabled property
+        href: "#",
+        disabled: true,
       },
     ],
   },
@@ -109,7 +108,7 @@ const adminNavigation = [
     name: "Instellingen",
     href: "/settings",
     icon: Settings,
-    hasChildren: true, // Added this property to indicate it has children
+    hasChildren: true,
     children: [
       {
         name: "Bedrijfsprofiel",
@@ -129,6 +128,8 @@ const adminNavigation = [
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const [isLoading, setIsLoading] = React.useState(true);
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   React.useEffect(() => {
     // Set loading to false once component mounts
@@ -151,13 +152,13 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       // Extract pathname from either localhost:3000 or app.proclogic.be
       const pathname = window.location.pathname;
       setCurrentRoute(pathname);
-
-      // We don't need to auto-expand since all menus are open by default
-      // This useEffect just sets the current route
     }
   }, []);
 
   const toggleMenu = (name: string) => {
+    // Don't toggle menus when collapsed
+    if (isCollapsed) return;
+
     setOpenMenus(prev =>
       prev.includes(name)
         ? prev.filter(item => item !== name)
@@ -195,18 +196,174 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
   // CSS class for blurred items - lighter blur so text remains readable
   const blurredClass = "filter blur-[0.8px] pointer-events-none opacity-70";
 
+  // Render function for sidebar items with children
+  const renderItemWithChildren = (item: any) => {
+    const sectionActive = isChildActive(item.children);
+
+    // For collapsed view, use a popover instead of expanding in-place
+    if (isCollapsed) {
+      return (
+        <SidebarMenuItem key={item.name}>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className={cx(
+                  "flex w-full items-center justify-center rounded-md p-2 text-base transition",
+                  focusRing,
+                  item.disabled
+                    ? "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
+                    : "hover:bg-gray-200/50 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
+                  sectionActive && !item.disabled
+                    ? "bg-gray-200/70 text-astral-600 dark:bg-gray-800 dark:text-astral-400"
+                    : "text-gray-900"
+                )}
+                disabled={item.disabled}
+              >
+                <item.icon
+                  className={cx(
+                    "size-[18px] shrink-0",
+                    item.disabled
+                      ? "text-gray-400 dark:text-gray-600"
+                      : sectionActive && "text-astral-500 dark:text-astral-400"
+                  )}
+                  aria-hidden="true"
+                />
+                {item.disabled && <span className="absolute -top-1 -right-1 text-xs text-red-500">•</span>}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="right" align="start" className="p-1 w-44">
+              <div className="py-1 text-sm">
+                <div className="px-2 py-1.5 font-medium text-gray-900 dark:text-gray-100">
+                  {item.name}
+                  {item.disabled && (
+                    <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-400">
+                      (Binnenkort)
+                    </span>
+                  )}
+                </div>
+                {item.children.map((child) => (
+                  <a
+                    key={child.name}
+                    href={child.disabled ? "#" : child.href}
+                    className={cx(
+                      "block px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded",
+                      isRouteActive(child.href) && "bg-gray-100 text-astral-600 dark:bg-gray-800 dark:text-astral-400",
+                      child.disabled && "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
+                    )}
+                    onClick={child.disabled ? (e) => e.preventDefault() : undefined}
+                  >
+                    {child.name}
+                    {child.disabled && (
+                      <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-400">
+                        (Binnenkort)
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </SidebarMenuItem>
+      );
+    }
+
+    // For expanded view, use the dropdown menu pattern - but with a button instead of a link
+    return (
+      <SidebarMenuItem key={item.name}>
+        <button
+          onClick={() => toggleMenu(item.name)}
+          className={cx(
+            "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition sm:text-sm",
+            focusRing,
+            item.disabled
+              ? "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
+              : "hover:bg-gray-200/50 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
+            sectionActive && !item.disabled
+              ? "bg-gray-200/70 text-astral-600 dark:bg-gray-800 dark:text-astral-400"
+              : "text-gray-900"
+          )}
+          disabled={item.disabled}
+        >
+          <div className="flex items-center gap-2.5">
+            <item.icon
+              className={cx(
+                "size-[18px] shrink-0",
+                item.disabled
+                  ? "text-gray-400 dark:text-gray-600"
+                  : sectionActive && "text-astral-500 dark:text-astral-400"
+              )}
+              aria-hidden="true"
+            />
+            {item.name}
+            {item.disabled && (
+              <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-500">
+                (Binnenkort)
+              </span>
+            )}
+          </div>
+          <RiArrowDownSFill
+            className={cx(
+              openMenus.includes(item.name)
+                ? "rotate-0"
+                : "-rotate-90",
+              "size-5 shrink-0 transform transition-transform duration-150 ease-in-out",
+              item.disabled
+                ? "text-gray-400 dark:text-gray-600"
+                : sectionActive
+                  ? "text-astral-500 dark:text-astral-400"
+                  : "text-gray-400 dark:text-gray-600"
+            )}
+            aria-hidden="true"
+          />
+        </button>
+        {item.children && openMenus.includes(item.name) && (
+          <SidebarMenuSub>
+            <div className="absolute inset-y-0 left-4 w-px bg-gray-300 dark:bg-gray-800" />
+            {item.children.map((child) => (
+              <SidebarMenuItem key={child.name}>
+                <SidebarSubLink
+                  href={child.disabled ? "#" : child.href}
+                  isActive={isRouteActive(child.href)}
+                  className={cx(
+                    child.disabled && "cursor-not-allowed opacity-60 pointer-events-none text-gray-500 dark:text-gray-500 hover:bg-transparent"
+                  )}
+                  onClick={child.disabled ? (e) => e.preventDefault() : undefined}
+                >
+                  {child.name}
+                  {child.disabled && (
+                    <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-500">
+                      (Binnenkort)
+                    </span>
+                  )}
+                </SidebarSubLink>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenuSub>
+        )}
+      </SidebarMenuItem>
+    );
+  };
+
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="px-3 py-4">
-        <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center">
+      <SidebarHeader className={isCollapsed ? "py-4" : "px-3 py-4"}>
+        <div className={cx(
+          "flex items-center",
+          isCollapsed ? "justify-center" : "gap-3"
+        )}>
+          <span className={cx(
+            "flex items-center justify-center",
+            isCollapsed ? "size-8" : "size-11"
+          )}>
             <Logo />
           </span>
-          <div>
-            <span className="block text-xl font-semibold text-astral-700 dark:text-gray-50">
-              ProcLogic
-            </span>
-          </div>
+          {!isCollapsed && (
+            <div>
+              <span className="block text-xl font-semibold text-astral-700 dark:text-gray-50">
+                ProcLogic
+              </span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -233,104 +390,32 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         </div>
         <SidebarGroup className={!user ? blurredClass : ""}>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-4">
-              {secondaryNavigation.map((item) => {
-                const sectionActive = isChildActive(item.children);
-                // For Dashboard, render SidebarLink instead of button with dropdown arrow
-                if (!item.hasChildren) {
-                  return (
+            <SidebarMenu className={isCollapsed ? "space-y-4" : "space-y-4"}>
+              {secondaryNavigation.map((item) => (
+                item.hasChildren
+                  ? renderItemWithChildren(item)
+                  : (
                     <SidebarMenuItem key={item.name}>
                       <SidebarLink
-                        href={item.href}
+                        href={item.disabled ? "#" : item.href}
                         isActive={isRouteActive(item.href)}
                         icon={item.icon}
                         notifications={item.notifications}
                         className={cx(
                           item.disabled && "cursor-not-allowed opacity-60 pointer-events-none"
                         )}
+                        onClick={item.disabled ? (e) => e.preventDefault() : undefined}
                       >
-                        {item.name}
-                      </SidebarLink>
-                    </SidebarMenuItem>
-                  );
-                }
-
-                // For other items with children, keep the original dropdown behavior
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <button
-                      onClick={() => toggleMenu(item.name)}
-                      className={cx(
-                        "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition sm:text-sm",
-                        focusRing,
-                        item.disabled
-                          ? "cursor-not-allowed opacity-60 text-gray-500 dark:text-gray-500"
-                          : "hover:bg-gray-200/50 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
-                        sectionActive && !item.disabled
-                          ? "bg-gray-200/70 text-astral-600 dark:bg-gray-800 dark:text-astral-400"
-                          : "text-gray-900"
-                      )}
-                      disabled={item.disabled}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <item.icon
-                          className={cx(
-                            "size-[18px] shrink-0",
-                            item.disabled
-                              ? "text-gray-400 dark:text-gray-600"
-                              : sectionActive && "text-astral-500 dark:text-astral-400"
-                          )}
-                          aria-hidden="true"
-                        />
                         {item.name}
                         {item.disabled && (
                           <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-500">
                             (Binnenkort)
                           </span>
                         )}
-                      </div>
-                      <RiArrowDownSFill
-                        className={cx(
-                          openMenus.includes(item.name)
-                            ? "rotate-0"
-                            : "-rotate-90",
-                          "size-5 shrink-0 transform transition-transform duration-150 ease-in-out",
-                          item.disabled
-                            ? "text-gray-400 dark:text-gray-600"
-                            : sectionActive
-                              ? "text-astral-500 dark:text-astral-400"
-                              : "text-gray-400 dark:text-gray-600"
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-                    {item.children && openMenus.includes(item.name) && (
-                      <SidebarMenuSub>
-                        <div className="absolute inset-y-0 left-4 w-px bg-gray-300 dark:bg-gray-800" />
-                        {item.children.map((child) => (
-                          <SidebarMenuItem key={child.name}>
-                            <SidebarSubLink
-                              href={child.href}
-                              isActive={isRouteActive(child.href)}
-                              className={cx(
-                                child.disabled && "cursor-not-allowed opacity-60 pointer-events-none text-gray-500 dark:text-gray-500 hover:bg-transparent"
-                              )}
-                              onClick={child.disabled ? (e) => e.preventDefault() : undefined}
-                            >
-                              {child.name}
-                              {child.disabled && (
-                                <span className="ml-1 text-xs italic text-gray-500 dark:text-gray-500">
-                                  (Binnenkort)
-                                </span>
-                              )}
-                            </SidebarSubLink>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                )
-              })}
+                      </SidebarLink>
+                    </SidebarMenuItem>
+                  )
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -340,61 +425,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarGroup className={!user ? blurredClass : ""}>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-4">
-              {adminNavigation.map((item) => {
-                const sectionActive = isChildActive(item.children);
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <button
-                      onClick={() => toggleMenu(item.name)}
-                      className={cx(
-                        "flex w-full items-center justify-between gap-x-2.5 rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-50",
-                        focusRing,
-                        sectionActive
-                          ? "bg-gray-200/70 text-astral-600 dark:bg-gray-800 dark:text-astral-400"
-                          : "text-gray-900"
-                      )}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <item.icon
-                          className={cx(
-                            "size-[18px] shrink-0",
-                            sectionActive && "text-astral-500 dark:text-astral-400"
-                          )}
-                          aria-hidden="true"
-                        />
-                        {item.name}
-                      </div>
-                      <RiArrowDownSFill
-                        className={cx(
-                          openMenus.includes(item.name)
-                            ? "rotate-0"
-                            : "-rotate-90",
-                          "size-5 shrink-0 transform transition-transform duration-150 ease-in-out",
-                          sectionActive
-                            ? "text-astral-500 dark:text-astral-400"
-                            : "text-gray-400 dark:text-gray-600"
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-                    {item.children && openMenus.includes(item.name) && (
-                      <SidebarMenuSub>
-                        <div className="absolute inset-y-0 left-4 w-px bg-gray-300 dark:bg-gray-800" />
-                        {item.children.map((child) => (
-                          <SidebarMenuItem key={child.name}>
-                            <SidebarSubLink
-                              href={child.href}
-                              isActive={isRouteActive(child.href)}
-                            >
-                              {child.name}
-                            </SidebarSubLink>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenuSub>
-                    )}
-                  </SidebarMenuItem>
-                )
-              })}
+              {adminNavigation.map(item => renderItemWithChildren(item))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -402,8 +433,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       <SidebarFooter>
         <div className="border-t border-gray-200 dark:border-gray-800" />
         <UserProfile user={user} loading={isLoading} />
-
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

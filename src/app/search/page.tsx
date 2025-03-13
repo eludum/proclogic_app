@@ -59,11 +59,11 @@ export default async function PublicSearch() {
     }
 
     return (
-        <section aria-label="Publications Search" className="pt-6">
+        <section aria-label="Publications Search">
 
             {/* Premium Banner - only show for non-logged in users */}
             {!isLoggedIn && (
-                <div className="ptmx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-astral-50 to-astral-100 dark:from-astral-900/30 dark:to-astral-800/30 rounded-lg border border-astral-200 dark:border-astral-800 shadow-xs">
+                <div className="mx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-astral-50 to-astral-100 dark:from-astral-900/30 dark:to-astral-800/30 rounded-lg border border-astral-200 dark:border-astral-800 shadow-xs">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex-1">
                             <h3 className="text-base font-semibold text-astral-800 dark:text-astral-300 mb-1">
@@ -83,7 +83,7 @@ export default async function PublicSearch() {
                 </div>
             )}
 
-            <div className="border-t border-gray-200 dark:border-gray-800 w-full">
+            <div className="w-full">
                 {fetchError ? (
                     <div className="p-6 text-center">
                         <p className="text-red-500">Fout bij het laden van aanbestedingen: {fetchError}</p>

@@ -8,7 +8,6 @@ import { currentUser } from '@clerk/nextjs/server'
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
 import localFont from "next/font/local"
-import { cookies } from "next/headers"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
 
@@ -50,9 +49,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
-  const defaultOpen = cookieStore.get("sidebar:state")?.value
-
   // Fetch user data with a Promise to handle potential delay
   const user = await currentUser();
 
@@ -70,7 +66,7 @@ export default async function RootLayout({
             disableTransitionOnChange
             attribute="class"
           >
-            <SidebarProvider defaultOpen={defaultOpen}>
+            <SidebarProvider>
               <AppSidebar user={safeUser} />
               <div className="w-full">
                 <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-950">

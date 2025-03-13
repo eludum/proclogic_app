@@ -19,6 +19,7 @@ import { Button } from "./Button"
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_COLLAPSED_WIDTH = "4rem" // Width when collapsed
 
 type SidebarContext = {
   state: "expanded" | "collapsed"
@@ -51,7 +52,7 @@ const SidebarProvider = React.forwardRef<
 >(
   (
     {
-      defaultOpen = true,
+      defaultOpen = false,
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -115,6 +116,7 @@ const SidebarProvider = React.forwardRef<
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH,
+              "--sidebar-collapsed-width": SIDEBAR_COLLAPSED_WIDTH,
               ...style,
             } as React.CSSProperties
           }
@@ -138,8 +140,6 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
       return (
         <Drawer open={openMobile} onOpenChange={setOpenMobile} {...props}>
           <DrawerContent
-            // data-sidebar="sidebar"
-            // data-mobile="true"
             className="bg-gray-50 p-0 text-gray-900"
           >
             <VisuallyHidden.Root>
@@ -171,15 +171,18 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
         {/* This is what handles the sidebar gap on desktop */}
         <div
           className={cx(
-            "relative h-svh w-(--sidebar-width) bg-transparent transition-[width] duration-150 ease-in-out will-change-transform",
-            "group-data-[collapsible=true]:w-0",
+            "relative h-svh transition-[width] duration-150 ease-in-out will-change-transform",
+            "group-data-[state=expanded]:w-(--sidebar-width)",
+            "group-data-[state=collapsed]:w-(--sidebar-collapsed-width)",
           )}
         />
         <div
           className={cx(
-            "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-150 ease-in-out will-change-transform md:flex",
-            "left-0 group-data-[collapsible=true]:left-[calc(var(--sidebar-width)*-1)]",
+            "fixed inset-y-0 z-10 hidden h-svh transition-[width] duration-150 ease-in-out will-change-transform md:flex",
+            "left-0",
             "border-r border-gray-200 dark:border-gray-800",
+            "group-data-[state=expanded]:w-(--sidebar-width)",
+            "group-data-[state=collapsed]:w-(--sidebar-collapsed-width)",
             className,
           )}
           {...props}
@@ -231,11 +234,16 @@ const SidebarFooter = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
   return (
     <div
       ref={ref}
       data-sidebar="footer"
-      className={cx("flex flex-col gap-2 p-3", className)}
+      className={cx(
+        "flex flex-col gap-2 p-3",
+        state === "collapsed" && "items-center p-2",
+        className
+      )}
       {...props}
     />
   )
@@ -264,11 +272,16 @@ const SidebarHeader = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
   return (
     <div
       ref={ref}
       data-sidebar="header"
-      className={cx("flex flex-col gap-2 p-2", className)}
+      className={cx(
+        "flex flex-col gap-2",
+        state === "expanded" ? "p-2" : "p-2 items-center",
+        className
+      )}
       {...props}
     />
   )
@@ -284,6 +297,7 @@ const SidebarLink = React.forwardRef<
     notifications?: number | boolean
   }
 >(({ children, isActive, icon, notifications, className, ...props }, ref) => {
+  const { state } = useSidebar()
   const Icon = icon
   return (
     <a
@@ -291,21 +305,31 @@ const SidebarLink = React.forwardRef<
       aria-current={isActive ? "page" : undefined}
       data-active={isActive}
       className={cx(
-        "flex items-center justify-between rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm dark:hover:bg-gray-900",
+        "flex items-center transition hover:bg-gray-200/50 sm:text-sm dark:hover:bg-gray-900",
         "text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
         "data-[active=true]:text-astral-600 dark:data-[active=true]:text-astral-500",
+        state === "expanded"
+          ? "justify-between rounded-md p-2 text-base"
+          : "justify-center rounded-md p-2 text-base",
         focusRing,
+        className
       )}
       {...props}
     >
-      <span className="flex items-center gap-x-2.5">
+      <span className={cx(
+        "flex items-center",
+        state === "expanded" ? "gap-x-2.5" : "justify-center"
+      )}>
         {Icon && <Icon className="size-[18px] shrink-0" aria-hidden="true" />}
-        {children}
+        {state === "expanded" && children}
       </span>
-      {notifications && (
+      {notifications && state === "expanded" && (
         <span className="inline-flex size-5 items-center justify-center rounded-sm bg-astral-100 text-sm font-medium text-astral-600 sm:text-xs dark:bg-astral-500/10 dark:text-astral-500">
           {notifications}
         </span>
+      )}
+      {notifications && state === "collapsed" && (
+        <span className="absolute top-0 right-0 inline-flex size-3 items-center justify-center rounded-full bg-astral-500"></span>
       )}
     </a>
   )
@@ -316,11 +340,16 @@ const SidebarGroup = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
   return (
     <div
       ref={ref}
       data-sidebar="group"
-      className={cx("relative flex w-full min-w-0 flex-col p-3", className)}
+      className={cx(
+        "relative flex w-full min-w-0 flex-col",
+        state === "expanded" ? "p-3" : "p-2",
+        className
+      )}
       {...props}
     />
   )
@@ -330,33 +359,59 @@ SidebarGroup.displayName = "SidebarGroup"
 const SidebarGroupContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    data-sidebar="group-content"
-    className={cx("w-full text-sm", className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
+  return (
+    <div
+      ref={ref}
+      data-sidebar="group-content"
+      className={cx(
+        "w-full text-sm",
+        state === "collapsed" && "flex flex-col items-center",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 SidebarGroupContent.displayName = "SidebarGroupContent"
 
 const SidebarMenu = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    data-sidebar="menu"
-    className={cx("flex w-full min-w-0 flex-col gap-1", className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
+  return (
+    <ul
+      ref={ref}
+      data-sidebar="menu"
+      className={cx(
+        "flex w-full min-w-0 flex-col gap-1",
+        state === "collapsed" && "items-center",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 SidebarMenu.displayName = "SidebarMenu"
 
 const SidebarMenuItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentProps<"li">
->(({ ...props }, ref) => <li ref={ref} {...props} />)
+>(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
+  return (
+    <li
+      ref={ref}
+      className={cx(
+        state === "collapsed" && "w-full flex justify-center",
+        className
+      )}
+      {...props}
+    />
+  )
+})
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const SidebarSubLink = React.forwardRef<
@@ -366,6 +421,11 @@ const SidebarSubLink = React.forwardRef<
     isActive?: boolean
   }
 >(({ isActive, children, className, ...props }, ref) => {
+  const { state } = useSidebar()
+
+  // Don't render sub-links when sidebar is collapsed
+  if (state === "collapsed") return null;
+
   return (
     <a
       ref={ref}
@@ -376,6 +436,7 @@ const SidebarSubLink = React.forwardRef<
         "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
         "data-[active=true]:rounded-sm data-[active=true]:bg-white data-[active=true]:text-astral-600 data-[active=true]:shadow-sm data-[active=true]:ring-1 data-[active=true]:ring-gray-200 dark:data-[active=true]:bg-gray-900 dark:data-[active=true]:text-astral-500 dark:data-[active=true]:ring-gray-800",
         focusRing,
+        className
       )}
       {...props}
     >
@@ -394,14 +455,21 @@ SidebarSubLink.displayName = "SidebarSubLink"
 const SidebarMenuSub = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
->(({ className, ...props }, ref) => (
-  <ul
-    ref={ref}
-    data-sidebar="menu-sub"
-    className={cx("relative space-y-1 border-l border-transparent", className)}
-    {...props}
-  />
-))
+>(({ className, ...props }, ref) => {
+  const { state } = useSidebar()
+
+  // Don't render sub-menu when sidebar is collapsed
+  if (state === "collapsed") return null;
+
+  return (
+    <ul
+      ref={ref}
+      data-sidebar="menu-sub"
+      className={cx("relative space-y-1 border-l border-transparent", className)}
+      {...props}
+    />
+  )
+})
 SidebarMenuSub.displayName = "SidebarMenuSub"
 
 export {
@@ -420,4 +488,3 @@ export {
   SidebarTrigger,
   useSidebar
 }
-
