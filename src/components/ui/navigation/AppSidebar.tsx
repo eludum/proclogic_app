@@ -352,10 +352,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           isCollapsed ? "justify-center" : "gap-3"
         )}>
           <span className={cx(
-            "flex items-center justify-center",
-            isCollapsed ? "size-8" : "size-11"
+            "flex items-center justify-center transition-all duration-400",
+            isCollapsed ? "size-8" : "size-11 rotate-360",
+            // Adding a transform animation for the logo
           )}>
-            <Logo />
+            <Logo className="transform transition-transform duration-300" />
           </span>
           {!isCollapsed && (
             <div>
