@@ -1,20 +1,12 @@
 "use client"
 
 import { Button } from "@/components/Button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/DropdownMenu";
 import { useSidebar } from "@/components/Sidebar";
 import { SafeUser } from '@/lib/clerkUserUtils';
 import { cx, focusRing } from "@/lib/utils";
 import { SignInButton, SignOutButton, useClerk } from '@clerk/nextjs';
-import { RiLoginBoxLine, RiSettingsFill } from "@remixicon/react";
-import { ChevronsUpDown, LogOut } from "lucide-react";
-import Link from "next/link";
+import { RiLoginBoxLine } from "@remixicon/react";
+import { ChevronsUpDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ArrowAnimated } from "../ArrowAnimated";
 import { DropdownUserProfile } from "./DropdownUserProfile";
@@ -94,8 +86,34 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
     const userInitials = user.fullName?.match(/(^\S\S?|\s\S)?/g)?.map(v => v?.trim())?.join("")?.match(/(^\S|\S$)?/g)?.join("")?.toLocaleUpperCase() || '';
 
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+      <div className="flex flex-col items-center gap-2">
+        {/* Add logout button above profile when collapsed */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-9 rounded-full text-gray-700 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
+          onClick={() => signOut()}
+          aria-label="Uitloggen"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </Button>
+
+        {/* User profile dropdown */}
+        <DropdownUserProfile user={user} align="center">
           <Button
             size="icon"
             variant="ghost"
@@ -108,21 +126,8 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
               {userInitials}
             </span>
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="center" forceMount>
-          <DropdownMenuItem asChild>
-            <Link href="/settings/my-profile">
-              <RiSettingsFill className="mr-2 size-4" />
-              Mijn Profiel
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => signOut()} className="text-red-500 dark:text-red-400">
-            <LogOut className="mr-2 size-4" />
-            Uitloggen
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </DropdownUserProfile>
+      </div>
     )
   }
 
