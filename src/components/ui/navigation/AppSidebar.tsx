@@ -26,6 +26,7 @@ import {
   BarChart2,
   BookmarkCheck,
   FileText,
+  FolderKanban,
   Home,
   Search,
   Settings,
@@ -67,6 +68,12 @@ const secondaryNavigation = [
     name: "Mijn aanbestedingen",
     href: "/my-publications",
     icon: BookmarkCheck,
+    hasChildren: false,
+  },
+  {
+    name: "Bord",
+    href: "/board",
+    icon: FolderKanban,
     hasChildren: false,
   },
   {
