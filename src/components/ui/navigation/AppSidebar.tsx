@@ -125,10 +125,11 @@ const adminNavigation = [
         name: "Gebruikersbeheer",
         href: "/settings/users",
       },
-      {
-        name: "Notificatie-instellingen",
-        href: "/settings/notifications",
-      },
+      // TODO: implement notification settings
+      // {
+      //   name: "Notificatie-instellingen",
+      //   href: "/settings/notifications",
+      // },
     ],
   },
 ] as const
