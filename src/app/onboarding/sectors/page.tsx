@@ -1,4 +1,3 @@
-// src/app/onboarding/sectors/page.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig"
 import { Button } from "@/components/Button"
@@ -7,10 +6,11 @@ import { Input } from "@/components/Input"
 import { Label } from "@/components/Label"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, useSession } from "@clerk/nextjs"
 import { ArrowRight, ChevronDown, ChevronUp, InfoIcon, Loader2, SearchIcon, TagIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { updateSectorsInfo } from "../_actions/onboarding"
 
 // Available sectors based on CPV codes
 const availableSectors = [
@@ -127,6 +127,13 @@ const SectorItem = ({ sector, isExpanded, onToggle, onExpand, onCustomCodesChang
                                 ({sector.value})
                             </span>
                         </Label>
+
+                        {/* Hidden input to store the sector name for form submission */}
+                        <input
+                            type="hidden"
+                            name={`sector-name-${sector.value}`}
+                            value={sector.label}
+                        />
                     </div>
 
                     <Button
@@ -161,6 +168,7 @@ const SectorItem = ({ sector, isExpanded, onToggle, onExpand, onCustomCodesChang
                                 value={sector.customCpvCodes}
                                 onChange={(e) => onCustomCodesChange(sector.value, e.target.value)}
                                 className="text-sm"
+                                name={`custom-cpv-${sector.value}`}
                             />
                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Voeg specifieke CPV-codes toe, gescheiden door komma's
@@ -176,6 +184,7 @@ const SectorItem = ({ sector, isExpanded, onToggle, onExpand, onCustomCodesChang
 export default function SectorsPage() {
     const router = useRouter()
     const { getToken } = useAuth()
+    const { session } = useSession()
     const { toast } = useToast()
     const [formSubmitting, setFormSubmitting] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -277,70 +286,36 @@ export default function SectorsPage() {
         setSectors(sectors.map(sector => ({ ...sector, selected: false, customCpvCodes: "" })))
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-
-        // Check if at least one sector is selected
-        const selectedSectors = sectors.filter(s => s.selected)
-        if (selectedSectors.length === 0) {
-            toast({
-                title: "Ontbrekende informatie",
-                description: "Selecteer ten minste één sector.",
-                variant: "error",
-            })
-            return
-        }
-
         setFormSubmitting(true)
 
         try {
-            const token = await getToken()
+            // Get form data from the form element
+            const formData = new FormData(e.currentTarget)
 
-            // Format data for API
-            const interestedSectors = selectedSectors.map(sector => {
-                // Create array with main CPV code and any custom codes
-                const cpvCodes = [sector.value]
-
-                if (sector.customCpvCodes.trim()) {
-                    // Split custom codes by comma and trim whitespace
-                    const customCodes = sector.customCpvCodes.split(',')
-                        .map(code => code.trim())
-                        .filter(code => code !== "")
-
-                    cpvCodes.push(...customCodes)
-                }
-
-                return {
-                    sector: sector.label,
-                    cpv_codes: cpvCodes
-                }
-            })
-
-            // Fetch current company data to update only sectors
-            const fetchResponse = await fetch(`${siteConfig.api_base_url}/company/`, {
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                },
-            })
-
-            if (!fetchResponse.ok && fetchResponse.status !== 404) {
-                throw new Error("Failed to fetch company data")
+            // Check if at least one sector is selected
+            const selectedSectors = sectors.filter(s => s.selected)
+            if (selectedSectors.length === 0) {
+                toast({
+                    title: "Ontbrekende informatie",
+                    description: "Selecteer ten minste één sector.",
+                    variant: "error",
+                })
+                setFormSubmitting(false)
+                return
             }
 
-            // Update company with new sectors
-            const response = await fetch(`${siteConfig.api_base_url}/company/`, {
-                method: "PATCH",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    interested_sectors: interestedSectors
-                }),
+            // Add checked state for selected sectors
+            selectedSectors.forEach(sector => {
+                formData.append(`sector-${sector.value}`, 'on')
             })
 
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`)
+            // Call the server action
+            const result = await updateSectorsInfo(formData)
+
+            if (result.error) {
+                throw new Error(result.error)
             }
 
             toast({
@@ -348,6 +323,11 @@ export default function SectorsPage() {
                 description: "Je sectoren zijn succesvol opgeslagen.",
                 variant: "success",
             })
+
+            // Reload session to get updated metadata
+            if (session) {
+                await session.reload()
+            }
 
             router.push("/onboarding/regions")
         } catch (error) {

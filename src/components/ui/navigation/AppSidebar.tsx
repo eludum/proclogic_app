@@ -25,11 +25,11 @@ import { RiArrowDownSFill, RiChatSmile2Line } from "@remixicon/react"
 import {
   BarChart2,
   BookmarkCheck,
-  FileText,
   FolderKanban,
   Home,
   Search,
   Settings,
+  Sparkles,
   Users
 } from "lucide-react"
 import * as React from "react"
@@ -61,7 +61,7 @@ const secondaryNavigation = [
   {
     name: "Aanbevolen",
     href: "/publications",
-    icon: FileText,
+    icon: Sparkles,
     hasChildren: false,
   },
   {

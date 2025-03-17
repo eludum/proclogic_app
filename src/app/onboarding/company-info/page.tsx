@@ -1,4 +1,3 @@
-// src/app/onboarding/company-info/page.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig"
 import { Button } from "@/components/Button"
@@ -6,10 +5,11 @@ import { Input } from "@/components/Input"
 import { Textarea } from "@/components/Textarea"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, useSession } from "@clerk/nextjs"
 import { ArrowRight, BuildingIcon, EuroIcon, Loader2, MailIcon, TextIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { updateCompanyInfo } from "../_actions/onboarding"
 
 interface CompanyFormData {
     vat_number: string;
@@ -22,6 +22,7 @@ interface CompanyFormData {
 export default function CompanyInfoPage() {
     const router = useRouter()
     const { getToken } = useAuth()
+    const { session, isLoaded } = useSession()
     const { toast } = useToast()
     const [formSubmitting, setFormSubmitting] = useState(false)
     const [formData, setFormData] = useState<CompanyFormData>({
@@ -79,8 +80,11 @@ export default function CompanyInfoPage() {
             }
         }
 
-        fetchCompanyData()
-    }, [getToken, toast])
+        // We need both auth token and session data
+        if (isLoaded) {
+            fetchCompanyData()
+        }
+    }, [getToken, toast, isLoaded])
 
     const handleEmailChange = (index: number, value: string) => {
         const updatedEmails = [...formData.emails]
@@ -114,63 +118,25 @@ export default function CompanyInfoPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-
-        // Basic validation
-        if (!formData.name.trim()) {
-            toast({
-                title: "Ontbrekende informatie",
-                description: "Voer een bedrijfsnaam in.",
-                variant: "error",
-            })
-            return
-        }
-
-        if (!formData.summary_activities.trim()) {
-            toast({
-                title: "Ontbrekende informatie",
-                description: "Voer een omschrijving van je bedrijfsactiviteiten in.",
-                variant: "error",
-            })
-            return
-        }
-
-        // Filter out empty emails
-        const validEmails = formData.emails.filter(email => email.trim() !== "")
-        if (validEmails.length === 0) {
-            toast({
-                title: "Ontbrekende informatie",
-                description: "Voer minstens één e-mailadres in.",
-                variant: "error",
-            })
-            return
-        }
-
         setFormSubmitting(true)
 
         try {
-            const token = await getToken()
+            // Create a FormData object from the form data
+            const formDataObj = new FormData()
+            formDataObj.append('name', formData.name)
+            formDataObj.append('vat_number', formData.vat_number)
+            formDataObj.append('email', formData.emails[0]) // Use first email
+            formDataObj.append('summary_activities', formData.summary_activities)
 
-            // Prepare data with valid emails
-            const dataToSubmit = {
-                ...formData,
-                emails: validEmails,
-                subscription: "premium", // Default for now
+            if (formData.max_publication_value) {
+                formDataObj.append('max_publication_value', formData.max_publication_value.toString())
             }
 
-            // Use POST for new company, PATCH for existing
-            const method = existingCompany ? "PATCH" : "POST"
+            // Use the server action
+            const result = await updateCompanyInfo(formDataObj)
 
-            const response = await fetch(`${siteConfig.api_base_url}/company/`, {
-                method,
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(dataToSubmit),
-            })
-
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`)
+            if (result.error) {
+                throw new Error(result.error)
             }
 
             toast({
@@ -178,6 +144,11 @@ export default function CompanyInfoPage() {
                 description: "Je bedrijfsinformatie is succesvol opgeslagen.",
                 variant: "success",
             })
+
+            // Reload session to get updated metadata
+            if (session) {
+                await session.reload()
+            }
 
             router.push("/onboarding/sectors")
         } catch (error) {

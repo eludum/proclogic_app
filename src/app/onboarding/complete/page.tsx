@@ -1,22 +1,28 @@
-// src/app/onboarding/complete/page.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig"
 import { Button } from "@/components/Button"
-import { useAuth } from "@clerk/nextjs"
-import { BarChart3, CheckCircle2, Clock, SearchIcon, Sparkles } from "lucide-react"
+import { useToast } from "@/lib/useToast"
+import { useAuth, useSession } from "@clerk/nextjs"
+import { BarChart3, CheckCircle2, Clock, Loader2, SearchIcon, Sparkles } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { completeOnboarding } from "../_actions/onboarding"
 
 export default function CompletePage() {
     const router = useRouter()
     const { getToken } = useAuth()
+    const { session } = useSession()
+    const { toast } = useToast()
     const [companyName, setCompanyName] = useState("Uw bedrijf")
+    const [isCompleting, setIsCompleting] = useState(false)
+    const [isCompletingAutomatically, setIsCompletingAutomatically] = useState(false)
 
-    // Get company name if available
+    // Get company name if available and complete onboarding automatically
     useEffect(() => {
-        async function fetchCompanyName() {
+        async function fetchCompanyAndComplete() {
             try {
+                // Fetch company data to get the name
                 const token = await getToken()
                 const response = await fetch(`${siteConfig.api_base_url}/company/`, {
                     headers: {
@@ -29,17 +35,64 @@ export default function CompletePage() {
                     if (data.name) {
                         setCompanyName(data.name)
                     }
+
+                    // Check if onboarding is already marked as complete
+                    if (!session?.user?.publicMetadata?.onboardingComplete) {
+                        // Auto-complete onboarding after a short delay
+                        setIsCompletingAutomatically(true)
+
+                        // Complete onboarding after 2 seconds to allow user to read the page
+                        setTimeout(async () => {
+                            try {
+                                await completeOnboarding()
+                                // Reload session after completion
+                                await session?.reload()
+                                setIsCompletingAutomatically(false)
+                            } catch (error) {
+                                console.error("Error auto-completing onboarding:", error)
+                                setIsCompletingAutomatically(false)
+                            }
+                        }, 2000)
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching company data:", error)
+                setIsCompletingAutomatically(false)
             }
         }
 
-        fetchCompanyName()
-    }, [getToken])
+        if (session) {
+            fetchCompanyAndComplete()
+        }
+    }, [getToken, session])
 
-    const handleGoToDashboard = () => {
-        router.push("/dashboard")
+    const handleGoToDashboard = async () => {
+        setIsCompleting(true)
+
+        try {
+            // Make sure onboarding is complete
+            if (!session?.user?.publicMetadata?.onboardingComplete) {
+                const result = await completeOnboarding()
+
+                if (result.error) {
+                    throw new Error(result.error)
+                }
+
+                // Reload session
+                await session?.reload()
+            }
+
+            // Redirect to dashboard
+            router.push("/dashboard")
+        } catch (error) {
+            console.error("Error completing onboarding:", error)
+            toast({
+                title: "Fout",
+                description: "Er is een fout opgetreden bij het afronden van de onboarding.",
+                variant: "error",
+            })
+            setIsCompleting(false)
+        }
     }
 
     return (
@@ -114,8 +167,16 @@ export default function CompletePage() {
                 <Button
                     onClick={handleGoToDashboard}
                     className="w-full py-6 text-lg"
+                    disabled={isCompleting || isCompletingAutomatically}
                 >
-                    Naar het Dashboard
+                    {isCompleting || isCompletingAutomatically ? (
+                        <>
+                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                            {isCompletingAutomatically ? "Onboarding wordt afgerond..." : "Naar het Dashboard"}
+                        </>
+                    ) : (
+                        "Naar het Dashboard"
+                    )}
                 </Button>
             </div>
         </div>

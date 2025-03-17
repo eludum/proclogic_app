@@ -2,7 +2,7 @@
 import { siteConfig } from "@/app/siteConfig"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, useSession } from "@clerk/nextjs"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -21,14 +21,20 @@ export default function OnboardingLayout({
   children: React.ReactNode
 }) {
   const { getToken } = useAuth()
+  const { session } = useSession()
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
-  const [onboardingNeeded, setOnboardingNeeded] = useState(true)
 
   useEffect(() => {
-    // Check if onboarding is completed on initial load
+    // If onboarding is already complete, redirect to dashboard
+    if (session?.user?.publicMetadata?.onboardingComplete === true) {
+      router.push("/dashboard")
+      return
+    }
+
+    // Check current onboarding status on initial load
     async function checkOnboardingStatus() {
       try {
         setLoading(true)
@@ -40,43 +46,33 @@ export default function OnboardingLayout({
         })
 
         if (response.status === 404) {
-          // Company not found, onboarding is needed
-          setOnboardingNeeded(true)
-          // If not on the welcome page, redirect
-          if (pathname !== "/onboarding/welcome") {
+          // Company not found, start at welcome page
+          if (pathname !== "/onboarding/welcome" && pathname !== "/onboarding/company-info") {
             router.push("/onboarding/welcome")
           }
         } else if (response.ok) {
-          // Company exists, check if full onboarding is completed
+          // Company exists, check progress
           const data = await response.json()
-          const isComplete = Boolean(
-            data.name &&
-            data.summary_activities &&
-            data.interested_sectors?.length > 0 &&
-            data.operating_regions?.length > 0
-          )
+          const hasCompanyInfo = Boolean(data.name && data.summary_activities)
+          const hasSectors = Boolean(data.interested_sectors?.length > 0)
+          const hasRegions = Boolean(data.operating_regions?.length > 0)
 
-          if (isComplete) {
-            // Onboarding is complete, redirect to dashboard
-            setOnboardingNeeded(false)
-            router.push("/dashboard")
-          } else {
-            // Partial onboarding, keep in onboarding flow
-            setOnboardingNeeded(true)
-            // Determine the next incomplete step and redirect if needed
-            if (!data.name || !data.summary_activities) {
-              if (pathname !== "/onboarding/company-info") {
-                router.push("/onboarding/company-info")
-              }
-            } else if (!data.interested_sectors?.length) {
-              if (pathname !== "/onboarding/sectors") {
-                router.push("/onboarding/sectors")
-              }
-            } else if (!data.operating_regions?.length) {
-              if (pathname !== "/onboarding/regions") {
-                router.push("/onboarding/regions")
-              }
+          // Determine which step to show based on completion
+          if (!hasCompanyInfo) {
+            if (pathname !== "/onboarding/welcome" && pathname !== "/onboarding/company-info") {
+              router.push("/onboarding/company-info")
             }
+          } else if (!hasSectors) {
+            if (pathname !== "/onboarding/sectors") {
+              router.push("/onboarding/sectors")
+            }
+          } else if (!hasRegions) {
+            if (pathname !== "/onboarding/regions") {
+              router.push("/onboarding/regions")
+            }
+          } else if (pathname !== "/onboarding/complete") {
+            // All steps completed, show completion page
+            router.push("/onboarding/complete")
           }
         } else {
           // Some other error
@@ -98,22 +94,13 @@ export default function OnboardingLayout({
       }
     }
 
-    checkOnboardingStatus()
-  }, [pathname, getToken, router, toast])
+    // checkOnboardingStatus()
+  }, [pathname, getToken, router, toast, session])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader loadingtext="Even geduld..." size={32} />
-      </div>
-    )
-  }
-
-  if (!onboardingNeeded) {
-    // This would generally not show as we'd redirect, but good fallback
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader loadingtext="Redirecting to dashboard..." size={32} />
       </div>
     )
   }

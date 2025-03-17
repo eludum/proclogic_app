@@ -337,8 +337,8 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                         </div>
 
                         {/* Source information with more prominence */}
-                        <div className="dark:border-slate-800">
-                            <h3 className="font-medium text-base mb-2 text-gray-900 dark:text-white">Bronnen</h3>
+                        {/* <div className="dark:border-slate-800">
+                            <h3 className="font-medium text-base mb-2 text-gray-900 dark:text-white">Indienen</h3>
                             <div className="flex items-center text-gray-500 dark:text-gray-400">
                                 <a
                                     href={`https://www.publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`}
@@ -349,7 +349,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                                     publicprocurement.be
                                 </a>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

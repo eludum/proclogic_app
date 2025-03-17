@@ -1,4 +1,3 @@
-// src/app/onboarding/regions/page.tsx
 "use client"
 import { siteConfig } from "@/app/siteConfig"
 import { Button } from "@/components/Button"
@@ -8,10 +7,11 @@ import { Label } from "@/components/Label"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
 import { cx } from "@/lib/utils"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, useSession } from "@clerk/nextjs"
 import { ArrowRight, CheckCircleIcon, InfoIcon, Loader2, MapPinIcon, SearchIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { updateRegionsInfo } from "../_actions/onboarding"
 
 // Available regions based on NUTS codes for Belgium
 const availableRegions = [
@@ -127,6 +127,7 @@ const RegionItem = ({ region, checked, onCheckedChange }: RegionItemProps) => {
                     checked={checked}
                     onCheckedChange={() => { }}
                     className="h-4 w-4"
+                    name={`region-${region.value}`}
                 />
             </div>
             <div className="flex items-center ml-3">
@@ -148,6 +149,7 @@ const RegionItem = ({ region, checked, onCheckedChange }: RegionItemProps) => {
 export default function RegionsPage() {
     const router = useRouter();
     const { getToken } = useAuth();
+    const { session } = useSession();
     const { toast } = useToast();
     const [formSubmitting, setFormSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -238,22 +240,19 @@ export default function RegionsPage() {
         setFormSubmitting(true);
 
         try {
-            const token = await getToken();
+            // Create FormData from the form
+            const formData = new FormData();
 
-            // Update company with new regions
-            const response = await fetch(`${siteConfig.api_base_url}/company/`, {
-                method: "PATCH",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    operating_regions: selectedRegions
-                }),
+            // Add selected regions
+            selectedRegions.forEach(region => {
+                formData.append(`region-${region}`, 'on');
             });
 
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+            // Use the server action
+            const result = await updateRegionsInfo(formData);
+
+            if (result.error) {
+                throw new Error(result.error);
             }
 
             toast({
@@ -261,6 +260,11 @@ export default function RegionsPage() {
                 description: "Je regio's zijn succesvol opgeslagen.",
                 variant: "success",
             });
+
+            // Reload session to get updated metadata
+            if (session) {
+                await session.reload();
+            }
 
             router.push("/onboarding/complete");
         } catch (error) {
