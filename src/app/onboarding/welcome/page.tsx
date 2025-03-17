@@ -13,10 +13,16 @@ export default function WelcomePage() {
     const [selectedOption, setSelectedOption] = useState<"ai" | "manual" | null>(null)
 
     const handleContinue = () => {
+        // Log the selected option for debugging
+        console.log("Selected option:", selectedOption)
+
         if (selectedOption === "ai") {
-            router.push("/onboarding/website-parser")
+            console.log("Navigating to website parser")
+            // Use replace instead of push to avoid back button issues
+            router.replace("/onboarding/website-parser")
         } else {
-            router.push("/onboarding/company-info")
+            console.log("Navigating to company info")
+            router.replace("/onboarding/company-info")
         }
     }
 
@@ -54,8 +60,8 @@ export default function WelcomePage() {
             <div className="w-full max-w-xl grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Card
                     className={`p-6 border-2 transition-all cursor-pointer hover:border-astral-300 dark:hover:border-astral-600 hover:shadow-md ${selectedOption === "ai"
-                            ? "border-astral-500 dark:border-astral-500 bg-astral-50 dark:bg-astral-900/20"
-                            : "border-gray-200 dark:border-gray-800"
+                        ? "border-astral-500 dark:border-astral-500 bg-astral-50 dark:bg-astral-900/20"
+                        : "border-gray-200 dark:border-gray-800"
                         }`}
                     onClick={() => setSelectedOption("ai")}
                 >
@@ -74,8 +80,8 @@ export default function WelcomePage() {
 
                 <Card
                     className={`p-6 border-2 transition-all cursor-pointer hover:border-astral-300 dark:hover:border-astral-600 hover:shadow-md ${selectedOption === "manual"
-                            ? "border-astral-500 dark:border-astral-500 bg-astral-50 dark:bg-astral-900/20"
-                            : "border-gray-200 dark:border-gray-800"
+                        ? "border-astral-500 dark:border-astral-500 bg-astral-50 dark:bg-astral-900/20"
+                        : "border-gray-200 dark:border-gray-800"
                         }`}
                     onClick={() => setSelectedOption("manual")}
                 >
