@@ -29,7 +29,7 @@ export default function OnboardingLayout({
 
   useEffect(() => {
     // If onboarding is already complete, redirect to dashboard
-    if (session?.user?.publicMetadata?.onboardingComplete === true) {
+    if (session?.publicMetadata?.onboardingComplete === true) {
       router.push("/dashboard")
       return
     }
@@ -94,7 +94,7 @@ export default function OnboardingLayout({
       }
     }
 
-    // checkOnboardingStatus()
+    checkOnboardingStatus()
   }, [pathname, getToken, router, toast, session])
 
   if (loading) {

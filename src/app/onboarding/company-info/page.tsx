@@ -6,7 +6,7 @@ import { Textarea } from "@/components/Textarea"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
 import { useAuth, useSession } from "@clerk/nextjs"
-import { ArrowRight, BuildingIcon, EuroIcon, Loader2, MailIcon, TextIcon } from "lucide-react"
+import { ArrowRight, BuildingIcon, EuroIcon, Loader2, MailIcon, TextIcon, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { updateCompanyInfo } from "../_actions/onboarding"
@@ -17,6 +17,7 @@ interface CompanyFormData {
     emails: string[];
     summary_activities: string;
     max_publication_value: number | null;
+    number_of_employees: number;
 }
 
 export default function CompanyInfoPage() {
@@ -31,8 +32,10 @@ export default function CompanyInfoPage() {
         emails: [""],
         summary_activities: "",
         max_publication_value: null,
+        number_of_employees: 1,
     })
     const [maxValueInput, setMaxValueInput] = useState("")
+    const [employeesInput, setEmployeesInput] = useState("1")
     const [loading, setLoading] = useState(true)
     const [existingCompany, setExistingCompany] = useState(false)
 
@@ -59,10 +62,15 @@ export default function CompanyInfoPage() {
                         emails: data.emails && data.emails.length > 0 ? data.emails : [""],
                         summary_activities: data.summary_activities || "",
                         max_publication_value: data.max_publication_value,
+                        number_of_employees: data.number_of_employees || 1,
                     })
 
                     if (data.max_publication_value) {
                         setMaxValueInput(data.max_publication_value.toString())
+                    }
+
+                    if (data.number_of_employees) {
+                        setEmployeesInput(data.number_of_employees.toString())
                     }
                 } else if (response.status !== 404) {
                     // Only show error if it's not a 404 (company not found is expected)
@@ -116,6 +124,19 @@ export default function CompanyInfoPage() {
         }
     }
 
+    const handleEmployeesChange = (value: string) => {
+        setEmployeesInput(value)
+
+        if (value === "") {
+            setFormData({ ...formData, number_of_employees: 1 })
+        } else {
+            const numValue = parseInt(value, 10)
+            if (!isNaN(numValue) && numValue > 0) {
+                setFormData({ ...formData, number_of_employees: numValue })
+            }
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setFormSubmitting(true)
@@ -127,6 +148,7 @@ export default function CompanyInfoPage() {
             formDataObj.append('vat_number', formData.vat_number)
             formDataObj.append('email', formData.emails[0]) // Use first email
             formDataObj.append('summary_activities', formData.summary_activities)
+            formDataObj.append('number_of_employees', formData.number_of_employees.toString())
 
             if (formData.max_publication_value) {
                 formDataObj.append('max_publication_value', formData.max_publication_value.toString())
@@ -228,6 +250,31 @@ export default function CompanyInfoPage() {
                         </p>
                     </div>
 
+                    {/* Number of Employees */}
+                    <div className="mb-6">
+                        <label htmlFor="number_of_employees" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Aantal Medewerkers <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <Users className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                            </div>
+                            <Input
+                                id="number_of_employees"
+                                type="number"
+                                className="pl-10"
+                                placeholder="1"
+                                value={employeesInput}
+                                onChange={(e) => handleEmployeesChange(e.target.value)}
+                                min="1"
+                                required
+                            />
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Geef hier het aantal medewerkers in je bedrijf op.
+                        </p>
+                    </div>
+
                     {/* Max Publication Value */}
                     <div className="mb-6">
                         <label htmlFor="max_publication_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -324,5 +371,5 @@ export default function CompanyInfoPage() {
                 </div>
             </form>
         </div>
-    )
+    );
 }

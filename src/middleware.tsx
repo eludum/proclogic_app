@@ -21,10 +21,11 @@ export default clerkMiddleware(async (auth, req) => {
         return NextResponse.next()
     }
 
-    // If the user isn't signed in and the route is private, redirect to sign-in
-    if (!userId && !isPublicRoute(req)) return redirectToSignIn({ returnBackUrl: req.url })
+    // For users visiting onboarding pages, don't redirect them away
+    if (userId && isOnboardingRoute(req)) {
+        return NextResponse.next()
+    }
 
-    // If user is authenticated but hasn't completed onboarding, redirect to onboarding
     if (userId && !sessionClaims?.metadata?.onboardingComplete) {
         // Determine which onboarding step they need
         let redirectPath = '/onboarding/welcome'

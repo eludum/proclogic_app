@@ -11,7 +11,7 @@ export const updateCompanyInfo = async (formData: FormData) => {
     }
 
     try {
-        const token = getToken()
+        const token = await getToken()
 
         // First create/update the company via your API
         const apiFormData = {
@@ -19,15 +19,29 @@ export const updateCompanyInfo = async (formData: FormData) => {
             vat_number: formData.get('vat_number') || "BE0000000000",
             emails: [formData.get('email')],
             summary_activities: formData.get('summary_activities'),
-            subscription: "premium",
+            subscription: "starter", // TODO: get this from attributes
+            number_of_employees: parseInt(formData.get('number_of_employees') as string) || 1,
             max_publication_value: formData.get('max_publication_value')
                 ? parseInt(formData.get('max_publication_value') as string)
                 : null
         }
 
-        // Send to your API
+        // Check if company exists first to determine method
+        let companyExists = false
+        try {
+            const checkResponse = await fetch(`${siteConfig.api_base_url}/company/`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                },
+            })
+            companyExists = checkResponse.status === 200
+        } catch (error) {
+            console.error("Error checking company existence:", error)
+        }
+
+        // Send to your API - use PATCH if company exists, otherwise POST
         const response = await fetch(`${siteConfig.api_base_url}/company/`, {
-            method: "POST", // Or PATCH if the company already exists
+            method: companyExists ? "PATCH" : "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json",
@@ -36,7 +50,7 @@ export const updateCompanyInfo = async (formData: FormData) => {
         })
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`)
+            throw new Error(`API error: ${response.status} - ${await response.text()}`)
         }
 
         const companyData = await response.json()
@@ -54,7 +68,7 @@ export const updateCompanyInfo = async (formData: FormData) => {
         return { success: true, message: "Company information saved successfully" }
     } catch (error) {
         console.error("Error saving company data:", error)
-        return { error: "Failed to save company information" }
+        return { error: error instanceof Error ? error.message : "Failed to save company information" }
     }
 }
 
@@ -66,7 +80,7 @@ export const updateSectorsInfo = async (formData: FormData) => {
     }
 
     try {
-        const token = getToken()
+        const token = await getToken()
 
         // Process formData to get selected sectors
         const sectors = []
@@ -77,6 +91,21 @@ export const updateSectorsInfo = async (formData: FormData) => {
                     sector: formData.get(`sector-name-${sectorCode}`),
                     cpv_codes: [sectorCode]
                 })
+            }
+        }
+
+        // Add any custom CPV codes to the sectors
+        for (const sector of sectors) {
+            const sectorCode = sector.cpv_codes[0]
+            const customCpvCodes = formData.get(`custom-cpv-${sectorCode}`)
+            if (customCpvCodes) {
+                const additionalCodes = (customCpvCodes as string)
+                    .split(',')
+                    .map(code => code.trim())
+                    .filter(code => code.length > 0)
+
+                // Add additional codes to the sector
+                sector.cpv_codes.push(...additionalCodes)
             }
         }
 
@@ -93,7 +122,7 @@ export const updateSectorsInfo = async (formData: FormData) => {
         })
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`)
+            throw new Error(`API error: ${response.status} - ${await response.text()}`)
         }
 
         // Update Clerk metadata
@@ -107,7 +136,7 @@ export const updateSectorsInfo = async (formData: FormData) => {
         return { success: true, message: "Sectors information saved successfully" }
     } catch (error) {
         console.error("Error saving sectors data:", error)
-        return { error: "Failed to save sectors information" }
+        return { error: error instanceof Error ? error.message : "Failed to save sectors information" }
     }
 }
 
@@ -119,7 +148,7 @@ export const updateRegionsInfo = async (formData: FormData) => {
     }
 
     try {
-        const token = getToken()
+        const token = await getToken()
 
         // Process formData to get selected regions
         const regions = []
@@ -142,7 +171,7 @@ export const updateRegionsInfo = async (formData: FormData) => {
         })
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`)
+            throw new Error(`API error: ${response.status} - ${await response.text()}`)
         }
 
         // Update Clerk metadata
@@ -156,7 +185,7 @@ export const updateRegionsInfo = async (formData: FormData) => {
         return { success: true, message: "Regions information saved successfully" }
     } catch (error) {
         console.error("Error saving regions data:", error)
-        return { error: "Failed to save regions information" }
+        return { error: error instanceof Error ? error.message : "Failed to save regions information" }
     }
 }
 
@@ -179,6 +208,6 @@ export const completeOnboarding = async () => {
         return { success: true, message: "Onboarding completed successfully" }
     } catch (error) {
         console.error("Error completing onboarding:", error)
-        return { error: "Failed to complete onboarding" }
+        return { error: error instanceof Error ? error.message : "Failed to complete onboarding" }
     }
 }
