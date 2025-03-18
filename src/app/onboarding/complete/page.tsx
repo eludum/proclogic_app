@@ -16,6 +16,7 @@ export default function CompletePage() {
     const { toast } = useToast()
     const [companyName, setCompanyName] = useState("Uw bedrijf")
     const [isCompleting, setIsCompleting] = useState(false)
+    const [isProcessingRecommendations, setIsProcessingRecommendations] = useState(false)
     const [isCompletingAutomatically, setIsCompletingAutomatically] = useState(false)
 
     // Get company name if available and complete onboarding automatically
@@ -68,6 +69,7 @@ export default function CompletePage() {
 
     const handleGoToDashboard = async () => {
         setIsCompleting(true)
+        setIsProcessingRecommendations(true)
 
         try {
             // Make sure onboarding is complete
@@ -82,6 +84,9 @@ export default function CompletePage() {
                 await session?.reload()
             }
 
+            // Add a brief delay to show the processing message
+            await new Promise(resolve => setTimeout(resolve, 2000))
+
             // Redirect to dashboard
             router.push("/dashboard")
         } catch (error) {
@@ -92,6 +97,7 @@ export default function CompletePage() {
                 variant: "error",
             })
             setIsCompleting(false)
+            setIsProcessingRecommendations(false)
         }
     }
 
@@ -111,6 +117,24 @@ export default function CompletePage() {
             <p className="text-lg text-gray-700 dark:text-gray-300 max-w-lg">
                 Gefeliciteerd! {companyName} is nu klaar om van ProcLogic gebruik te maken.
             </p>
+
+            {isProcessingRecommendations && (
+                <div className="w-full max-w-lg p-4 rounded-lg bg-astral-50 dark:bg-astral-900/20 border border-astral-100 dark:border-astral-800">
+                    <div className="flex items-center">
+                        <div className="mr-3">
+                            <Loader2 className="h-5 w-5 text-astral-600 dark:text-astral-400 animate-spin" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="font-medium text-astral-800 dark:text-astral-300">
+                                Aanbevelingen worden gegenereerd
+                            </h3>
+                            <p className="text-sm text-astral-600 dark:text-astral-400">
+                                We verwerken je bedrijfsgegevens om passende aanbestedingen te vinden.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="w-full max-w-lg mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col items-center p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
@@ -178,6 +202,9 @@ export default function CompletePage() {
                         "Naar het Dashboard"
                     )}
                 </Button>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Je aanbevelingen worden in de achtergrond gegenereerd. Je kunt al beginnen met het verkennen van het platform.
+                </p>
             </div>
         </div>
     )

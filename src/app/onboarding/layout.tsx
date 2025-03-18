@@ -1,8 +1,10 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig"
+import { Button } from "@/components/Button"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
 import { useAuth, useSession } from "@clerk/nextjs"
+import { ChevronLeft } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -12,6 +14,7 @@ const ONBOARDING_STEPS = [
   { id: "company-info", path: "/onboarding/company-info", title: "Bedrijfsinformatie" },
   { id: "sectors", path: "/onboarding/sectors", title: "Sectoren" },
   { id: "regions", path: "/onboarding/regions", title: "Regio's" },
+  { id: "accreditations", path: "/onboarding/accreditations", title: "Accreditaties" },
   { id: "complete", path: "/onboarding/complete", title: "Voltooid" },
 ]
 
@@ -22,6 +25,7 @@ const ALL_STEPS = [
   { id: "company-info", path: "/onboarding/company-info", title: "Bedrijfsinformatie" },
   { id: "sectors", path: "/onboarding/sectors", title: "Sectoren" },
   { id: "regions", path: "/onboarding/regions", title: "Regio's" },
+  { id: "accreditations", path: "/onboarding/accreditations", title: "Accreditaties" },
   { id: "complete", path: "/onboarding/complete", title: "Voltooid" },
 ]
 
@@ -37,6 +41,14 @@ export default function OnboardingLayout({
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
 
+  // Get current step and previous step for back button
+  const currentStepIndex = ALL_STEPS.findIndex((step) => pathname.startsWith(step.path))
+  const previousStep = currentStepIndex > 0 ? ALL_STEPS[currentStepIndex - 1].path : null
+
+  // If we're on website-parser, map to company-info for the progress bar
+  // This keeps the steps display consistent while allowing the parser as a special step
+  const displayStepIndex = currentStepIndex === 1 ? 1 : currentStepIndex
+
   useEffect(() => {
     // If onboarding is already complete, redirect to dashboard
     if (session?.user?.publicMetadata?.onboardingComplete === true) {
@@ -44,9 +56,9 @@ export default function OnboardingLayout({
       return
     }
 
-    // Only run the checks if we're not on the welcome or website-parser pages
-    // This allows users to freely access these initial pages
-    if (pathname === "/onboarding/welcome" || pathname === "/onboarding/website-parser") {
+    // Only run the checks if we're not on the welcome page
+    // This allows users to freely access the initial page
+    if (pathname === "/onboarding/welcome") {
       setLoading(false)
       return
     }
@@ -62,47 +74,8 @@ export default function OnboardingLayout({
           },
         })
 
-        if (response.status === 404) {
-          // Company not found, determine the proper redirect
-          if (pathname !== "/onboarding/welcome" &&
-            pathname !== "/onboarding/website-parser" &&
-            pathname !== "/onboarding/company-info") {
-            router.push("/onboarding/welcome")
-          }
-        } else if (response.ok) {
-          // Company exists, check progress
-          const data = await response.json()
-          const hasCompanyInfo = Boolean(data.name && data.summary_activities)
-          const hasSectors = Boolean(data.interested_sectors?.length > 0)
-          const hasRegions = Boolean(data.operating_regions?.length > 0)
-
-          // Determine which step to show based on completion
-          if (!hasCompanyInfo) {
-            if (pathname !== "/onboarding/welcome" &&
-              pathname !== "/onboarding/website-parser" &&
-              pathname !== "/onboarding/company-info") {
-              router.push("/onboarding/company-info")
-            }
-          } else if (!hasSectors) {
-            if (pathname !== "/onboarding/sectors") {
-              router.push("/onboarding/sectors")
-            }
-          } else if (!hasRegions) {
-            if (pathname !== "/onboarding/regions") {
-              router.push("/onboarding/regions")
-            }
-          } else if (pathname !== "/onboarding/complete") {
-            // All steps completed, show completion page
-            router.push("/onboarding/complete")
-          }
-        } else {
-          // Some other error
-          toast({
-            title: "Fout",
-            description: "Er is een fout opgetreden bij het controleren van uw bedrijfsgegevens.",
-            variant: "error",
-          })
-        }
+        // We'll no longer force redirects here - allow the user to move freely between steps
+        setLoading(false)
       } catch (error) {
         console.error("Error checking onboarding status:", error)
         toast({
@@ -110,13 +83,19 @@ export default function OnboardingLayout({
           description: "Er is een fout opgetreden bij het controleren van uw onboarding status.",
           variant: "error",
         })
-      } finally {
         setLoading(false)
       }
     }
 
     checkOnboardingStatus()
   }, [pathname, getToken, router, toast, session])
+
+  // Handle back button navigation
+  const handleBack = () => {
+    if (previousStep) {
+      router.push(previousStep)
+    }
+  }
 
   if (loading) {
     return (
@@ -126,26 +105,36 @@ export default function OnboardingLayout({
     )
   }
 
-  // Get current step index, including website-parser in the mapping
-  let currentStepIndex = ALL_STEPS.findIndex((step) => pathname.startsWith(step.path))
-
-  // If we're on website-parser, map to company-info for the progress bar
-  // This keeps the steps display consistent while allowing the parser as a special step
-  const displayStepIndex = currentStepIndex === 1 ? 1 : currentStepIndex
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex flex-col">
       {/* Progress bar */}
       <div className="bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-800">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col items-center">
-            <div className="w-full max-w-md mb-4">
-              <h2 className="text-center text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                {currentStepIndex >= 0 ? ALL_STEPS[currentStepIndex].title : "Onboarding"}
-              </h2>
-              <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-                Stap {displayStepIndex + 1} van {ONBOARDING_STEPS.length}
-              </p>
+            <div className="w-full max-w-md mb-4 flex items-center justify-between">
+              {/* Back button */}
+              {previousStep && displayStepIndex > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  className="mr-auto flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  <span className="text-sm">Terug</span>
+                </Button>
+              )}
+              <div className="text-center flex-grow">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                  {currentStepIndex >= 0 ? ALL_STEPS[currentStepIndex].title : "Onboarding"}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Stap {displayStepIndex + 1} van {ONBOARDING_STEPS.length}
+                </p>
+              </div>
+              <div className="ml-auto w-20">
+                {/* This is a spacer to keep the title centered */}
+              </div>
             </div>
             <div className="w-full max-w-md bg-gray-200 dark:bg-gray-700 rounded-full h-1 mb-2">
               <div
@@ -156,14 +145,15 @@ export default function OnboardingLayout({
               ></div>
             </div>
 
-            <div className="w-full max-w-md grid grid-cols-5 gap-2 mt-2">
+            {/* Step indicators */}
+            <div className="w-full max-w-md grid grid-cols-6 gap-2 mt-2">
               {ONBOARDING_STEPS.map((step, idx) => (
                 <div key={step.id} className="flex flex-col items-center">
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full ${idx < displayStepIndex
-                    ? "bg-astral-100 text-astral-600 dark:bg-astral-900/30 dark:text-astral-400 border border-astral-200 dark:border-astral-800"
-                    : idx === displayStepIndex
-                      ? "bg-astral-500 text-white dark:bg-astral-400 dark:text-slate-900"
-                      : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+                      ? "bg-astral-100 text-astral-600 dark:bg-astral-900/30 dark:text-astral-400 border border-astral-200 dark:border-astral-800"
+                      : idx === displayStepIndex
+                        ? "bg-astral-500 text-white dark:bg-astral-400 dark:text-slate-900"
+                        : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
                     } text-sm font-medium`}>
                     {idx < displayStepIndex ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

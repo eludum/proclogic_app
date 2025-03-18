@@ -189,6 +189,71 @@ export const updateRegionsInfo = async (formData: FormData) => {
     }
 }
 
+export const updateAccreditationsInfo = async (formData: FormData) => {
+    const { userId, getToken } = await auth()
+
+    if (!userId) {
+        return { error: "No authenticated user found" }
+    }
+
+    try {
+        const token = await getToken()
+
+        // Process formData to get selected accreditations
+        const accreditations = {}
+        for (const [key, value] of formData.entries()) {
+            if (key.startsWith('accreditation-') && value === 'on') {
+                const accreditationCode = key.replace('accreditation-', '')
+
+                // Get the levels if they exist
+                const levelsKey = `levels-${accreditationCode}`
+                const levels = formData.get(levelsKey)
+
+                if (levels) {
+                    // Parse levels as array of numbers
+                    const levelValues = (levels as string)
+                        .split(',')
+                        .map(level => parseInt(level.trim()))
+                        .filter(level => !isNaN(level))
+
+                    accreditations[accreditationCode] = levelValues
+                } else {
+                    accreditations[accreditationCode] = []
+                }
+            }
+        }
+
+        // Send accreditations to your API
+        const response = await fetch(`${siteConfig.api_base_url}/company/`, {
+            method: "PATCH",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                accreditations: accreditations
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status} - ${await response.text()}`)
+        }
+
+        // Update Clerk metadata
+        const clerk = await clerkClient()
+        await clerk.users.updateUser(userId, {
+            publicMetadata: {
+                hasAccreditations: true
+            }
+        })
+
+        return { success: true, message: "Accreditations information saved successfully" }
+    } catch (error) {
+        console.error("Error saving accreditations data:", error)
+        return { error: error instanceof Error ? error.message : "Failed to save accreditations information" }
+    }
+}
+
 export const completeOnboarding = async () => {
     const { userId } = await auth()
 

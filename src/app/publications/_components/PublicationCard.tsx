@@ -2,7 +2,6 @@ import { Button } from "@/components/Button";
 import { getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
 import { RiChatSmile2Line } from '@remixicon/react';
 import { BookmarkCheck, BookmarkPlus, BuildingIcon, CheckCircleIcon, ChevronDown, ChevronUp, ClockIcon, CodeIcon, Eye, EyeOff, Layers, MapPinIcon, StarIcon, TagIcon } from 'lucide-react';
-import Link from "next/link";
 import { useState } from 'react';
 
 // Expandable text component for description
@@ -222,11 +221,6 @@ export function PublicationCard({
                     >
                         <RiChatSmile2Line className="size-5" />
                         <span>ProcLogic AI</span>
-                    </Button>
-                    <Button>
-                        <Link href={`publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`}>
-                            <span>Indienen</span>
-                        </Link>
                     </Button>
                 </div>
             </div>

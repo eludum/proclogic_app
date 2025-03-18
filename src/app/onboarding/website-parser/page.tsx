@@ -2,10 +2,11 @@
 import { siteConfig } from "@/app/siteConfig"
 import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
+import { Textarea } from "@/components/Textarea"
 import { Loader } from "@/components/ui/PageLoad"
 import { useToast } from "@/lib/useToast"
 import { useAuth } from "@clerk/nextjs"
-import { ArrowRight, CheckIcon, Globe, Loader2, XIcon } from "lucide-react"
+import { ArrowRight, CheckIcon, ChevronDown, ChevronUp, Globe, Loader2, XIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -26,7 +27,19 @@ export default function WebsiteParserPage() {
     const [isUrlValid, setIsUrlValid] = useState<boolean | null>(null)
     const [isScraping, setIsScraping] = useState(false)
     const [isCreatingCompany, setIsCreatingCompany] = useState(false)
+    const [showEditForm, setShowEditForm] = useState(false)
     const [scrapingResult, setScrapingResult] = useState<WebsiteScrapingResult | null>(null)
+
+    // Editable form data (initialized from scraping result)
+    const [editFormData, setEditFormData] = useState<{
+        name: string;
+        summary_activities: string;
+        employee_count: number;
+    }>({
+        name: "",
+        summary_activities: "",
+        employee_count: 1
+    })
 
     // Basic URL validation
     useEffect(() => {
@@ -49,6 +62,17 @@ export default function WebsiteParserPage() {
             setIsUrlValid(false)
         }
     }, [websiteUrl])
+
+    // Update form data when scraping result changes
+    useEffect(() => {
+        if (scrapingResult) {
+            setEditFormData({
+                name: scrapingResult.name || "",
+                summary_activities: scrapingResult.summary_activities || "",
+                employee_count: scrapingResult.employee_count || 1
+            })
+        }
+    }, [scrapingResult])
 
     const handleScrapeWebsite = async () => {
         if (!isUrlValid) return
@@ -92,7 +116,7 @@ export default function WebsiteParserPage() {
     }
 
     const handleCreateCompany = async () => {
-        if (!scrapingResult) return
+        if (!scrapingResult && !editFormData) return
 
         setIsCreatingCompany(true)
         try {
@@ -111,25 +135,29 @@ export default function WebsiteParserPage() {
                 vatNumber = userData.vat_number || vatNumber
             }
 
-            // Create company with scraped data
+            // Use either edited data or original scraping result
+            const finalData = {
+                vat_number: vatNumber,
+                name: editFormData.name || "Mijn Bedrijf",
+                emails: [scrapingResult?.activity_keywords?.[0] || "info@example.com"],
+                subscription: "premium",
+                summary_activities: editFormData.summary_activities || "",
+                interested_sectors: scrapingResult?.interested_sectors || [],
+                operating_regions: scrapingResult?.operating_regions || [],
+                activity_keywords: scrapingResult?.activity_keywords || [],
+                max_publication_value: null,
+                number_of_employees: editFormData.employee_count || 1,
+                accreditations: null
+            }
+
+            // Create company with data
             const response = await fetch(`${siteConfig.api_base_url}/company/`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    vat_number: vatNumber,
-                    name: scrapingResult.name || "Mijn Bedrijf",
-                    emails: [scrapingResult.activity_keywords?.[0] || "info@example.com"],
-                    subscription: "premium",
-                    summary_activities: scrapingResult.summary_activities || "",
-                    interested_sectors: scrapingResult.interested_sectors || [],
-                    operating_regions: scrapingResult.operating_regions || [],
-                    activity_keywords: scrapingResult.activity_keywords || [],
-                    max_publication_value: null,
-                    accreditations: null
-                }),
+                body: JSON.stringify(finalData),
             })
 
             if (!response.ok) {
@@ -141,14 +169,7 @@ export default function WebsiteParserPage() {
                             "Authorization": `Bearer ${token}`,
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({
-                            vat_number: vatNumber,
-                            name: scrapingResult.name || "Mijn Bedrijf",
-                            summary_activities: scrapingResult.summary_activities || "",
-                            interested_sectors: scrapingResult.interested_sectors || [],
-                            operating_regions: scrapingResult.operating_regions || [],
-                            activity_keywords: scrapingResult.activity_keywords || [],
-                        }),
+                        body: JSON.stringify(finalData),
                     })
 
                     if (!updateResponse.ok) {
@@ -165,14 +186,8 @@ export default function WebsiteParserPage() {
                 variant: "success",
             })
 
-            // Determine next step based on what data was found
-            if (!scrapingResult.interested_sectors?.length) {
-                router.push("/onboarding/sectors")
-            } else if (!scrapingResult.operating_regions?.length) {
-                router.push("/onboarding/regions")
-            } else {
-                router.push("/onboarding/complete")
-            }
+            // Proceed to sectors page
+            router.push("/onboarding/sectors")
 
         } catch (error) {
             console.error("Error creating company:", error)
@@ -181,10 +196,19 @@ export default function WebsiteParserPage() {
                 description: "Er is een fout opgetreden bij het aanmaken van je bedrijfsprofiel.",
                 variant: "error",
             })
+            // Redirect to manual entry if AI fails
             router.push("/onboarding/company-info")
         } finally {
             setIsCreatingCompany(false)
         }
+    }
+
+    const handleEditToggle = () => {
+        setShowEditForm(!showEditForm)
+    }
+
+    const handleManualEntry = () => {
+        router.push("/onboarding/company-info")
     }
 
     return (
@@ -251,62 +275,142 @@ export default function WebsiteParserPage() {
 
                 {scrapingResult && !isScraping && (
                     <div className="mt-6 border-t border-gray-200 dark:border-gray-800 pt-6">
-                        <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                            Gevonden informatie
-                        </h2>
-
-                        <div className="space-y-4">
-                            <div>
-                                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Bedrijfsnaam</h3>
-                                <p className="mt-1 text-base text-gray-900 dark:text-white">
-                                    {scrapingResult.name || "Niet gevonden"}
-                                </p>
-                            </div>
-
-                            <div>
-                                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Activiteiten</h3>
-                                <p className="mt-1 text-base text-gray-900 dark:text-white">
-                                    {scrapingResult.summary_activities || "Niet gevonden"}
-                                </p>
-                            </div>
-
-                            {scrapingResult.interested_sectors?.length > 0 && (
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Sectoren</h3>
-                                    <div className="mt-1 flex flex-wrap gap-2">
-                                        {scrapingResult.interested_sectors.map((sector, index) => (
-                                            <span
-                                                key={index}
-                                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-astral-100 text-astral-800 dark:bg-astral-900/40 dark:text-astral-300"
-                                            >
-                                                {sector.sector}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {scrapingResult.operating_regions?.length > 0 && (
-                                <div>
-                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Regio's</h3>
-                                    <div className="mt-1 flex flex-wrap gap-2">
-                                        {scrapingResult.operating_regions.map((region, index) => (
-                                            <span
-                                                key={index}
-                                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                                            >
-                                                {region}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                                Gevonden informatie
+                            </h2>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={handleEditToggle}
+                                className="flex items-center gap-1"
+                            >
+                                {showEditForm ? (
+                                    <>
+                                        <ChevronUp className="h-4 w-4" />
+                                        <span>Verberg bewerken</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown className="h-4 w-4" />
+                                        <span>Bewerken</span>
+                                    </>
+                                )}
+                            </Button>
                         </div>
+
+                        {/* Display view (non-editable) */}
+                        {!showEditForm && (
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Bedrijfsnaam</h3>
+                                    <p className="mt-1 text-base text-gray-900 dark:text-white">
+                                        {editFormData.name || "Niet gevonden"}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Activiteiten</h3>
+                                    <p className="mt-1 text-base text-gray-900 dark:text-white">
+                                        {editFormData.summary_activities || "Niet gevonden"}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Aantal Medewerkers</h3>
+                                    <p className="mt-1 text-base text-gray-900 dark:text-white">
+                                        {editFormData.employee_count || 1}
+                                    </p>
+                                </div>
+
+                                {scrapingResult.interested_sectors?.length > 0 && (
+                                    <div>
+                                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Sectoren</h3>
+                                        <div className="mt-1 flex flex-wrap gap-2">
+                                            {scrapingResult.interested_sectors.map((sector, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-astral-100 text-astral-800 dark:bg-astral-900/40 dark:text-astral-300"
+                                                >
+                                                    {sector.sector}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {scrapingResult.operating_regions?.length > 0 && (
+                                    <div>
+                                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Regio's</h3>
+                                        <div className="mt-1 flex flex-wrap gap-2">
+                                            {scrapingResult.operating_regions.map((region, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                                                >
+                                                    {region}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Edit form (editable) */}
+                        {showEditForm && (
+                            <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Bedrijfsnaam
+                                    </label>
+                                    <Input
+                                        id="name"
+                                        value={editFormData.name}
+                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                        placeholder="Bedrijfsnaam"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="summary_activities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Activiteiten
+                                    </label>
+                                    <Textarea
+                                        id="summary_activities"
+                                        value={editFormData.summary_activities}
+                                        onChange={(e) => setEditFormData({ ...editFormData, summary_activities: e.target.value })}
+                                        placeholder="Beschrijf de activiteiten van uw bedrijf..."
+                                        rows={5}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="employee_count" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Aantal Medewerkers
+                                    </label>
+                                    <Input
+                                        id="employee_count"
+                                        type="number"
+                                        min="1"
+                                        value={editFormData.employee_count}
+                                        onChange={(e) => setEditFormData({
+                                            ...editFormData,
+                                            employee_count: parseInt(e.target.value) || 1
+                                        })}
+                                    />
+                                </div>
+
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Sectoren en regio's kunnen op de volgende pagina's worden aangepast.
+                                </p>
+                            </div>
+                        )}
 
                         <div className="mt-8 flex justify-between">
                             <Button
                                 variant="ghost"
-                                onClick={() => router.push("/onboarding/company-info")}
+                                onClick={handleManualEntry}
                                 disabled={isCreatingCompany}
                             >
                                 Handmatig invullen

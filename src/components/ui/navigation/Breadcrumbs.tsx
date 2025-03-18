@@ -7,13 +7,15 @@ import { useMemo } from "react"
 // Translation map for converting route segments to display names
 const routeTranslations: Record<string, string> = {
   // Main sections
+  // TODO: add new sections and add metadata everywhere
   dashboard: "Dashboard",
   search: "Zoeken",
-  // alerts: "Mijn Alerts",
+
   publications: "Aanbestedingen",
   workspaces: "Werkruimtes",
   analytics: "Analyses",
   settings: "Instellingen",
+
 
   // Workspaces subsections
   projects: "Projecten",

@@ -34,10 +34,10 @@ export default async function Conversations() {
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
                     <div className="flex items-center gap-3 mb-3">
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ProcLogic AI Gesprekken</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gesprekken met Procy</h1>
                     </div>
                     <p className="text-base text-gray-600 dark:text-gray-300">
-                        Bekijk uw eerdere gesprekken met ProcLogic AI en ga verder waar u gebleven was
+                        Bekijk uw eerdere gesprekken met Procy en ga verder waar u gebleven was
                     </p>
                 </div>
             </div>

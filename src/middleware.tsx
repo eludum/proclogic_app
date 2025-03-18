@@ -15,6 +15,7 @@ const onboardingSteps = [
     '/onboarding/company-info',   // Manual path or after AI
     '/onboarding/sectors',
     '/onboarding/regions',
+    '/onboarding/accreditations', // New step
     '/onboarding/complete'
 ]
 
@@ -39,51 +40,27 @@ export default clerkMiddleware(async (auth, req) => {
 
     // If user is logged in but onboarding is not complete
     if (userId && !sessionClaims?.metadata?.onboardingComplete) {
-        // IMPORTANT: Always allow access to the welcome page and the two first steps
-        if (path.startsWith('/onboarding/welcome') ||
-            path.startsWith('/onboarding/website-parser') ||
-            path.startsWith('/onboarding/company-info')) {
+        // IMPORTANT: Always allow back navigation between onboarding steps
+        if (isOnboardingRoute(req)) {
+            // This allows users to navigate freely between onboarding steps
+            // Actual validation of prerequisites will happen in the page components
             return NextResponse.next()
         }
 
-        // For sectors, require hasCompanyInfo
-        if (path.startsWith('/onboarding/sectors')) {
-            if (sessionClaims?.metadata?.hasCompanyInfo) {
-                return NextResponse.next()
-            } else {
-                return NextResponse.redirect(new URL('/onboarding/company-info', req.url))
-            }
-        }
-
-        // For regions, require hasCompanyInfo and hasSectors
-        if (path.startsWith('/onboarding/regions')) {
-            if (sessionClaims?.metadata?.hasCompanyInfo && sessionClaims?.metadata?.hasSectors) {
-                return NextResponse.next()
-            } else if (sessionClaims?.metadata?.hasCompanyInfo) {
-                return NextResponse.redirect(new URL('/onboarding/sectors', req.url))
-            } else {
-                return NextResponse.redirect(new URL('/onboarding/company-info', req.url))
-            }
-        }
-
-        // For complete, require all previous steps
-        if (path.startsWith('/onboarding/complete')) {
-            if (sessionClaims?.metadata?.hasCompanyInfo &&
-                sessionClaims?.metadata?.hasSectors &&
-                sessionClaims?.metadata?.hasRegions) {
-                return NextResponse.next()
-            } else if (sessionClaims?.metadata?.hasCompanyInfo && sessionClaims?.metadata?.hasSectors) {
+        // If on any other route, redirect to welcome or the last completed step
+        if (!isOnboardingRoute(req)) {
+            // Check the metadata to determine the furthest step completed
+            if (sessionClaims?.metadata?.hasAccreditations) {
+                return NextResponse.redirect(new URL('/onboarding/complete', req.url))
+            } else if (sessionClaims?.metadata?.hasRegions) {
+                return NextResponse.redirect(new URL('/onboarding/accreditations', req.url))
+            } else if (sessionClaims?.metadata?.hasSectors) {
                 return NextResponse.redirect(new URL('/onboarding/regions', req.url))
             } else if (sessionClaims?.metadata?.hasCompanyInfo) {
                 return NextResponse.redirect(new URL('/onboarding/sectors', req.url))
             } else {
-                return NextResponse.redirect(new URL('/onboarding/company-info', req.url))
+                return NextResponse.redirect(new URL('/onboarding/welcome', req.url))
             }
-        }
-
-        // If on any other route, redirect to welcome
-        if (!isOnboardingRoute(req)) {
-            return NextResponse.redirect(new URL('/onboarding/welcome', req.url))
         }
     }
 

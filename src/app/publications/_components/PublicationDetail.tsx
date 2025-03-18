@@ -2,7 +2,7 @@
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
 import { formatDate, getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
-import { RiChatSmile2Line } from '@remixicon/react';
+import { RiChatSmile2Line, RiExternalLinkLine } from '@remixicon/react';
 import {
     ArrowLeftIcon,
     BuildingIcon,
@@ -18,6 +18,7 @@ import {
     StarIcon,
     TagIcon
 } from 'lucide-react';
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ChatComponent from "./ChatComponent";
@@ -412,8 +413,19 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                 className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
                             >
                                 <RiChatSmile2Line className="size-5" />
-                                <span>ProcLogic AI</span>
+                                <span>Procy</span>
                             </Button>
+                            <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
+
+                                <Button
+                                    className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
+
+                                >
+                                    <RiExternalLinkLine className="size-5" />
+                                    <span>Indienen</span>
+                                </Button>
+                            </Link>
+
                         </div>
                     </div>
                 </div>
@@ -426,6 +438,8 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                     onClose={() => setActiveChatPublication(null)}
                 />
             )}
+
+
         </section>
     );
 }
