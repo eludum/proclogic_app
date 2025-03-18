@@ -1,31 +1,19 @@
-"use client"
-import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
-import { useUser } from "@clerk/nextjs"
-import { ArrowRight, PenSquareIcon, Wand } from "lucide-react"
+import { User } from "@clerk/nextjs/server"
+import { PenSquareIcon, Wand } from "lucide-react"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
 
-export default function WelcomePage() {
-    const router = useRouter()
-    const { user } = useUser()
-    const [selectedOption, setSelectedOption] = useState<"ai" | "manual" | null>(null)
+interface StepWelcomeProps {
+    selectedOption: "ai" | "manual" | null
+    setSelectedOption: (option: "ai" | "manual") => void
+    user: User | null | undefined
+}
 
-    const handleContinue = () => {
-        // Log the selected option for debugging
-        console.log("Selected option:", selectedOption)
-
-        if (selectedOption === "ai") {
-            console.log("Navigating to website parser")
-            // Use replace instead of push to avoid back button issues
-            router.replace("/onboarding/website-parser")
-        } else {
-            console.log("Navigating to company info")
-            router.replace("/onboarding/company-info")
-        }
-    }
-
+export default function StepWelcome({
+    selectedOption,
+    setSelectedOption,
+    user
+}: StepWelcomeProps) {
     return (
         <div className="flex flex-col items-center space-y-8 animate-fadeIn">
             {/* Logo and welcome message */}
@@ -97,18 +85,6 @@ export default function WelcomePage() {
                         </p>
                     </div>
                 </Card>
-            </div>
-
-            {/* Continue button */}
-            <div className="mt-8 w-full max-w-xl">
-                <Button
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 float-right"
-                    disabled={!selectedOption}
-                    onClick={handleContinue}
-                >
-                    <span>Doorgaan</span>
-                    <ArrowRight className="h-4 w-4" />
-                </Button>
             </div>
         </div>
     )

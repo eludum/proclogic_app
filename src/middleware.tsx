@@ -1,77 +1,39 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-// Routes that don't require authentication
+const isOnboardingRoute = createRouteMatcher(['/onboarding'])
 const isPublicRoute = createRouteMatcher([
     '/sign-in(.*)',
     '/search(.*)',
     '/publications/free/detail(.*)'
 ])
 
-// Define the onboarding flow steps in order
-const onboardingSteps = [
-    '/onboarding/welcome',
-    '/onboarding/website-parser', // AI path
-    '/onboarding/company-info',   // Manual path or after AI
-    '/onboarding/sectors',
-    '/onboarding/regions',
-    '/onboarding/accreditations', // New step
-    '/onboarding/complete'
-]
-
-// Check if a path is part of the onboarding flow
-const isOnboardingRoute = createRouteMatcher(
-    onboardingSteps.map(step => step + '(.*)') // Match all paths that start with these steps
-)
-
-export default clerkMiddleware(async (auth, req) => {
+export default clerkMiddleware(async (auth, req: NextRequest) => {
     const { userId, sessionClaims, redirectToSignIn } = await auth()
-    const path = req.nextUrl.pathname
 
-    // Always allow public routes
-    if (isPublicRoute(req)) {
+    // For users visiting /onboarding, don't try to redirect
+    if (userId && isOnboardingRoute(req)) {
         return NextResponse.next()
     }
 
-    // If no user is logged in and the route is protected, redirect to sign in
+    // If the user isn't signed in and the route is private, redirect to sign-in
     if (!userId && !isPublicRoute(req)) {
-        return redirectToSignIn()
+        return redirectToSignIn({ returnBackUrl: req.url })
     }
 
-    // If user is logged in but onboarding is not complete
+    // Catch users who do not have `onboardingComplete: true` in their publicMetadata
+    // Redirect them to the /onboarding route to complete onboarding
     if (userId && !sessionClaims?.metadata?.onboardingComplete) {
-        // IMPORTANT: Always allow back navigation between onboarding steps
-        if (isOnboardingRoute(req)) {
-            // This allows users to navigate freely between onboarding steps
-            // Actual validation of prerequisites will happen in the page components
-            return NextResponse.next()
-        }
-
-        // If on any other route, redirect to welcome or the last completed step
-        if (!isOnboardingRoute(req)) {
-            // Check the metadata to determine the furthest step completed
-            if (sessionClaims?.metadata?.hasAccreditations) {
-                return NextResponse.redirect(new URL('/onboarding/complete', req.url))
-            } else if (sessionClaims?.metadata?.hasRegions) {
-                return NextResponse.redirect(new URL('/onboarding/accreditations', req.url))
-            } else if (sessionClaims?.metadata?.hasSectors) {
-                return NextResponse.redirect(new URL('/onboarding/regions', req.url))
-            } else if (sessionClaims?.metadata?.hasCompanyInfo) {
-                return NextResponse.redirect(new URL('/onboarding/sectors', req.url))
-            } else {
-                return NextResponse.redirect(new URL('/onboarding/welcome', req.url))
-            }
-        }
+        const onboardingUrl = new URL('/onboarding', req.url)
+        return NextResponse.redirect(onboardingUrl)
     }
 
-    // If the user has completed onboarding and tries to access onboarding pages
-    if (userId && sessionClaims?.metadata?.onboardingComplete && isOnboardingRoute(req)) {
-        // Redirect them to dashboard instead
-        const dashboardUrl = new URL('/dashboard', req.url)
-        return NextResponse.redirect(dashboardUrl)
+    // If the user is logged in and the route is protected, let them view
+    if (userId && !isPublicRoute(req)) {
+        return NextResponse.next()
     }
 
-    // For all other cases
+    // Default case - proceed
     return NextResponse.next()
 })
 
