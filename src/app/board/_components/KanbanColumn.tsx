@@ -35,7 +35,7 @@ export default function KanbanColumn({ column, onEditStatus, onUpdateNotes }: Co
     const [notesDialogOpen, setNotesDialogOpen] = useState(false);
     const [selectedPublication, setSelectedPublication] = useState<PublicationItem | null>(null);
 
-    // Set up droppable area
+    // Set up droppable area - using column ID as the droppable ID
     const { setNodeRef, isOver } = useDroppable({
         id: `column:${column.id}`,
     });

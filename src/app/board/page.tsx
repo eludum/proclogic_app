@@ -1,3 +1,5 @@
+// Updated board/page.tsx with layout fixes to prevent content from scrolling behind sidebar
+
 "use client"
 
 import { siteConfig } from "@/app/siteConfig";
@@ -59,6 +61,7 @@ export default function KanbanBoardPage() {
     const [showStatusDialog, setShowStatusDialog] = useState(false);
     const [editingStatus, setEditingStatus] = useState<StatusColumn | null>(null);
     const [activePublication, setActivePublication] = useState<PublicationItem | null>(null);
+    const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
 
     // Configure sensors for drag and drop
     const sensors = useSensors(
@@ -110,6 +113,9 @@ export default function KanbanBoardPage() {
         const { active } = event;
         const [publicationId, columnId] = active.id.toString().split(':');
 
+        // Save the active column ID
+        setActiveColumnId(columnId);
+
         // Find the active publication
         const column = kanbanData.columns.find(col => col.id.toString() === columnId);
         if (column) {
@@ -122,84 +128,70 @@ export default function KanbanBoardPage() {
         }
     };
 
-    // Handle drag over - when dragging over different columns
+    // Handle drag over
     const handleDragOver = (event: DragOverEvent) => {
-        const { active, over } = event;
-        if (!over) return;
-
-        const [activePublicationId, activeColumnId] = active.id.toString().split(':');
-        const [, overColumnId] = over.id.toString().split(':');
-
-        // Return if not dragging between different columns
-        if (activeColumnId === overColumnId) return;
-
-        setKanbanData(prev => {
-            const activeColumn = prev.columns.find(col => col.id.toString() === activeColumnId);
-            const overColumn = prev.columns.find(col => col.id.toString() === overColumnId);
-
-            if (!activeColumn || !overColumn) return prev;
-
-            // Find the publication to move
-            const publicationIndex = activeColumn.publications.findIndex(
-                p => p.publication_workspace_id === activePublicationId
-            );
-
-            if (publicationIndex === -1) return prev;
-
-            // Create new state
-            const newColumns = [...prev.columns];
-            const activeColumnIndex = newColumns.findIndex(col => col.id.toString() === activeColumnId);
-            const overColumnIndex = newColumns.findIndex(col => col.id.toString() === overColumnId);
-
-            // Remove from source column
-            const [publication] = newColumns[activeColumnIndex].publications.splice(publicationIndex, 1);
-
-            // Add to destination column
-            newColumns[overColumnIndex].publications.push({
-                ...publication,
-                position: newColumns[overColumnIndex].publications.length
-            });
-
-            return { columns: newColumns };
-        });
+        // In this implementation, we don't modify state during dragOver
+        // This prevents the card from snapping to intermediate columns
     };
 
     // Handle drag end
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
 
-        // Reset active publication
+        // Get the publication and original column IDs
+        const [activePublicationId, sourceColumnId] = active.id.toString().split(':');
+
+        // Reset state
         setActivePublication(null);
+        setActiveColumnId(null);
 
         // Return if no drop target
         if (!over) return;
 
-        const [activePublicationId, activeColumnId] = active.id.toString().split(':');
-        const [overPublicationId, overColumnId] = over.id.toString().split(':');
+        let targetColumnId;
+        let overPublicationId;
 
-        // Find columns
-        const activeColumn = kanbanData.columns.find(col => col.id.toString() === activeColumnId);
-        const overColumn = kanbanData.columns.find(col => col.id.toString() === overColumnId);
+        // Parse the target ID
+        if (over.id.toString().includes('column:')) {
+            // Dropped directly on a column
+            targetColumnId = over.id.toString().replace('column:', '');
+            overPublicationId = null;
+        } else {
+            // Dropped on another publication card
+            [overPublicationId, targetColumnId] = over.id.toString().split(':');
+        }
 
-        if (!activeColumn || !overColumn) return;
+        // Do nothing if dropped in the same column on the same publication
+        if (sourceColumnId === targetColumnId && activePublicationId === overPublicationId) {
+            return;
+        }
 
-        // If dragging in the same column, reorder
-        if (activeColumnId === overColumnId) {
-            const oldIndex = activeColumn.publications.findIndex(
+        // Find the columns
+        const sourceColumn = kanbanData.columns.find(col => col.id.toString() === sourceColumnId);
+        const targetColumn = kanbanData.columns.find(col => col.id.toString() === targetColumnId);
+
+        if (!sourceColumn || !targetColumn) return;
+
+        // Calculate positions and update state
+        // Different behavior based on whether it's same-column or cross-column
+        if (sourceColumnId === targetColumnId) {
+            // Same column reordering
+            const oldIndex = sourceColumn.publications.findIndex(
                 p => p.publication_workspace_id === activePublicationId
             );
-            const newIndex = activeColumn.publications.findIndex(
-                p => p.publication_workspace_id === overPublicationId
-            );
+
+            const newIndex = overPublicationId ?
+                sourceColumn.publications.findIndex(p => p.publication_workspace_id === overPublicationId) :
+                sourceColumn.publications.length;
 
             if (oldIndex === newIndex) return;
 
-            // Create new state with reordered publications
+            // Update state with reordered publications
             setKanbanData(prev => {
                 const newColumns = [...prev.columns];
-                const columnIndex = newColumns.findIndex(col => col.id.toString() === activeColumnId);
+                const columnIndex = newColumns.findIndex(col => col.id.toString() === sourceColumnId);
 
-                // Reorder publications
+                // Reorder publications in this column
                 newColumns[columnIndex].publications = arrayMove(
                     newColumns[columnIndex].publications,
                     oldIndex,
@@ -214,69 +206,105 @@ export default function KanbanBoardPage() {
                 return { columns: newColumns };
             });
 
-            // Send update to API for position change
-            try {
-                const token = await getToken();
-                const response = await fetch(`${API_BASE_URL}/kanban/move`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        publication_workspace_id: activePublicationId,
-                        new_status_id: parseInt(activeColumnId),
-                        new_position: overColumn.publications.findIndex(
-                            p => p.publication_workspace_id === overPublicationId
-                        )
-                    })
-                });
+            // Send API update for the position change
+            await updatePublicationPosition(
+                activePublicationId,
+                parseInt(targetColumnId),
+                overPublicationId ?
+                    targetColumn.publications.findIndex(p => p.publication_workspace_id === overPublicationId) :
+                    targetColumn.publications.length
+            );
 
-                if (!response.ok) {
-                    throw new Error(`Failed to update publication position: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error updating publication position:', error);
-                toast({
-                    title: "Fout bij opslaan",
-                    description: "De wijziging kon niet worden opgeslagen. De weergave wordt vernieuwd.",
-                    variant: "error"
-                });
-
-                // Refresh data to ensure consistency
-                fetchKanbanBoard();
-            }
         } else {
-            // If already moved between columns in dragOver event, just update the API
-            try {
-                const token = await getToken();
-                const response = await fetch(`${API_BASE_URL}/kanban/move`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        publication_workspace_id: activePublicationId,
-                        new_status_id: parseInt(overColumnId),
-                        new_position: overColumn.publications.length - 1 // Add to the end
-                    })
-                });
+            // Moving between columns
+            // First, update our local state
+            setKanbanData(prev => {
+                const newColumns = [...prev.columns];
 
-                if (!response.ok) {
-                    throw new Error(`Failed to update publication position: ${response.status}`);
+                // Find indexes
+                const sourceColumnIndex = newColumns.findIndex(col => col.id.toString() === sourceColumnId);
+                const targetColumnIndex = newColumns.findIndex(col => col.id.toString() === targetColumnId);
+                const publicationIndex = newColumns[sourceColumnIndex].publications.findIndex(
+                    p => p.publication_workspace_id === activePublicationId
+                );
+
+                if (publicationIndex === -1) return prev;
+
+                // Remove from source column
+                const [publication] = newColumns[sourceColumnIndex].publications.splice(publicationIndex, 1);
+
+                // Where to insert in target column
+                let insertIndex = newColumns[targetColumnIndex].publications.length;
+
+                if (overPublicationId) {
+                    const overIndex = newColumns[targetColumnIndex].publications.findIndex(
+                        p => p.publication_workspace_id === overPublicationId
+                    );
+
+                    if (overIndex !== -1) {
+                        insertIndex = overIndex;
+                    }
                 }
-            } catch (error) {
-                console.error('Error updating publication position:', error);
-                toast({
-                    title: "Fout bij opslaan",
-                    description: "De wijziging kon niet worden opgeslagen. De weergave wordt vernieuwd.",
-                    variant: "error"
+
+                // Add to target column
+                newColumns[targetColumnIndex].publications.splice(insertIndex, 0, {
+                    ...publication,
+                    position: insertIndex
                 });
 
-                // Refresh data to ensure consistency
-                fetchKanbanBoard();
+                // Update positions in target column
+                newColumns[targetColumnIndex].publications.forEach((pub, index) => {
+                    pub.position = index;
+                });
+
+                return { columns: newColumns };
+            });
+
+            // Send API update for the column and position change
+            await updatePublicationPosition(
+                activePublicationId,
+                parseInt(targetColumnId),
+                overPublicationId ?
+                    targetColumn.publications.findIndex(p => p.publication_workspace_id === overPublicationId) :
+                    targetColumn.publications.length
+            );
+        }
+    };
+
+    // Helper function to update publication position via API
+    const updatePublicationPosition = async (
+        publicationId: string,
+        newStatusId: number,
+        newPosition: number
+    ) => {
+        try {
+            const token = await getToken();
+            const response = await fetch(`${API_BASE_URL}/kanban/move`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    publication_workspace_id: publicationId,
+                    new_status_id: newStatusId,
+                    new_position: newPosition
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to update publication position: ${response.status}`);
             }
+        } catch (error) {
+            console.error('Error updating publication position:', error);
+            toast({
+                title: "Fout bij opslaan",
+                description: "De wijziging kon niet worden opgeslagen. De weergave wordt vernieuwd.",
+                variant: "error"
+            });
+
+            // Refresh data to ensure consistency
+            fetchKanbanBoard();
         }
     };
 
@@ -464,7 +492,7 @@ export default function KanbanBoardPage() {
     };
 
     return (
-        <section aria-label="Kanban Board">
+        <div className="w-full h-full flex flex-col">
             <Toaster />
 
             {/* Header with title and add column button */}
@@ -488,40 +516,43 @@ export default function KanbanBoardPage() {
                     <Loader loadingtext="Kanban bord laden..." />
                 </div>
             ) : (
-                <DndContext
-                    sensors={sensors}
-                    onDragStart={handleDragStart}
-                    onDragOver={handleDragOver}
-                    onDragEnd={handleDragEnd}
-                >
-                    <div className="p-4 flex overflow-x-auto pb-6">
-                        <div className="flex gap-4">
-                            {kanbanData.columns
-                                .sort((a, b) => a.position - b.position)
-                                .map(column => (
-                                    <KanbanColumn
-                                        key={column.id}
-                                        column={column}
-                                        onEditStatus={() => openEditStatusDialog(column)}
-                                        onUpdateNotes={handleUpdatePublicationNotes}
-                                    />
-                                ))}
-                        </div>
-                    </div>
-
-                    {/* Drag overlay - what appears when dragging */}
-                    <DragOverlay>
-                        {activePublication && (
-                            <div className="opacity-70">
-                                <KanbanCard
-                                    publication={activePublication}
-                                    onOpenNotes={() => { }}
-                                />
+                <div className="flex-grow w-full overflow-hidden">
+                    <DndContext
+                        sensors={sensors}
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <div className="w-full h-full overflow-x-auto overflow-y-auto">
+                            <div className="p-4 pb-6 inline-flex gap-4 min-w-max">
+                                {kanbanData.columns
+                                    .sort((a, b) => a.position - b.position)
+                                    .map(column => (
+                                        <KanbanColumn
+                                            key={column.id}
+                                            column={column}
+                                            onEditStatus={() => openEditStatusDialog(column)}
+                                            onUpdateNotes={handleUpdatePublicationNotes}
+                                        />
+                                    ))}
                             </div>
-                        )}
-                    </DragOverlay>
-                </DndContext>
+                        </div>
+
+                        {/* Drag overlay - what appears when dragging */}
+                        <DragOverlay>
+                            {activePublication && (
+                                <div className="opacity-70">
+                                    <KanbanCard
+                                        publication={activePublication}
+                                        columnId={parseInt(activeColumnId || "0")}
+                                        onOpenNotes={() => { }}
+                                    />
+                                </div>
+                            )}
+                        </DragOverlay>
+                    </DndContext>
+                </div>
             )}
-        </section>
+        </div>
     );
 }

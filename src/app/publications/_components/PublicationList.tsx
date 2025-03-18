@@ -4,7 +4,7 @@ import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
 import { useAuth } from "@clerk/nextjs";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ChatComponent from "./ChatComponent";
 import FilterCard from "./FilterCard";
 import { Pagination } from "./Pagination";
@@ -48,12 +48,32 @@ export default function PublicationList({
         cpvCodeFilter: ""
     });
 
+    // Track if this is the initial load
+    const isInitialLoad = useRef(true);
+    // Track current API request to cancel if another is made
+    const currentRequestController = useRef(null);
+
     const { getToken } = useAuth();
     const { toast } = useToast();
 
-    // Load publications with filters
-    const loadPublications = async (page = 1, newFilters = filters) => {
+    // Make loadPublications a stable function reference using useCallback
+    const loadPublications = useCallback(async (page = 1, newFilters = filters) => {
+        // Skip loading on initial render since we already have server-side data
+        if (isInitialLoad.current) {
+            isInitialLoad.current = false;
+            return;
+        }
+
         setIsLoading(true);
+
+        // Cancel any in-flight request
+        if (currentRequestController.current) {
+            currentRequestController.current.abort();
+        }
+
+        // Create a new AbortController for this request
+        currentRequestController.current = new AbortController();
+        const signal = currentRequestController.current.signal;
 
         try {
             const token = await getToken();
@@ -121,7 +141,8 @@ export default function PublicationList({
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
-                }
+                },
+                signal // Pass the abort signal
             });
 
             if (response.ok) {
@@ -134,35 +155,45 @@ export default function PublicationList({
                     pages: data.pages || 0
                 });
             } else {
-                console.error('Failed to fetch publications:', await response.text());
+                // Only report errors if the request wasn't aborted
+                if (!signal.aborted) {
+                    console.error('Failed to fetch publications:', await response.text());
+                    toast({
+                        title: "Fout bij laden",
+                        description: "De aanbestedingen konden niet worden geladen. Probeer het later opnieuw.",
+                        variant: "error"
+                    });
+                }
+            }
+        } catch (error) {
+            // Only report errors if the request wasn't aborted
+            if (error.name !== 'AbortError') {
+                console.error('Error fetching publications:', error);
                 toast({
                     title: "Fout bij laden",
-                    description: "De aanbestedingen konden niet worden geladen. Probeer het later opnieuw.",
+                    description: "Er is een fout opgetreden bij het laden van aanbestedingen.",
                     variant: "error"
                 });
             }
-        } catch (error) {
-            console.error('Error fetching publications:', error);
-            toast({
-                title: "Fout bij laden",
-                description: "Er is een fout opgetreden bij het laden van aanbestedingen.",
-                variant: "error"
-            });
         } finally {
-            setIsLoading(false);
+            // Only update loading state if the request wasn't aborted
+            if (!signal.aborted) {
+                setIsLoading(false);
+                currentRequestController.current = null;
+            }
         }
-    };
+    }, [filters, pagination.size, getToken, toast]);
 
-    // Handle filter changes
-    const handleFiltersChange = (newFilters) => {
+    // Handle filter changes with debounce
+    const handleFiltersChange = useCallback((newFilters) => {
         setFilters(newFilters);
         loadPublications(1, newFilters);
-    };
+    }, [loadPublications]);
 
     // Handle page change
-    const handlePageChange = (newPage) => {
+    const handlePageChange = useCallback((newPage) => {
         loadPublications(newPage);
-    };
+    }, [loadPublications]);
 
     // Start a chat with a publication
     const startChat = (publication) => {
@@ -315,6 +346,15 @@ export default function PublicationList({
         if (!a.is_recommended && b.is_recommended) return 1;
         return 0;
     });
+
+    // Clean up any pending requests on unmount
+    useEffect(() => {
+        return () => {
+            if (currentRequestController.current) {
+                currentRequestController.current.abort();
+            }
+        };
+    }, []);
 
     return (
         <>

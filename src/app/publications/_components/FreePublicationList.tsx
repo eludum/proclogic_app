@@ -2,7 +2,7 @@
 import { siteConfig } from "@/app/siteConfig";
 import { formatDate } from "@/lib/publicationUtils";
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, CodeIcon, MapPinIcon, TagIcon } from 'lucide-react';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import FreeFilterCard from "./FreeFilterCard";
 import { Pagination } from "./Pagination";
 
@@ -21,6 +21,11 @@ export default function FreePublicationList({ initialPublications }) {
         regionFilters: []
     });
 
+    // Track if this is the initial load
+    const isInitialLoad = useRef(true);
+    // Track current API request to cancel if another is made
+    const currentRequestController = useRef(null);
+
     // Initialize state from initialPublications prop
     useEffect(() => {
         if (initialPublications) {
@@ -30,12 +35,14 @@ export default function FreePublicationList({ initialPublications }) {
             setTotalItems(initialPublications.total || 0);
 
             // Extract initial filters from URL if available
-            const url = new URL(window.location.href);
-            setCurrentFilters({
-                searchTerm: url.searchParams.get('q') || "",
-                sectorFilters: url.searchParams.getAll('sector') || [],
-                regionFilters: url.searchParams.getAll('region') || []
-            });
+            if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                setCurrentFilters({
+                    searchTerm: url.searchParams.get('q') || "",
+                    sectorFilters: url.searchParams.getAll('sector') || [],
+                    regionFilters: url.searchParams.getAll('region') || []
+                });
+            }
         }
     }, [initialPublications]);
 
@@ -47,9 +54,24 @@ export default function FreePublicationList({ initialPublications }) {
         }));
     };
 
-    // Load publications with filters and pagination
-    const loadPublications = async (page = 1, filters = currentFilters) => {
+    // Load publications with filters and pagination using useCallback for stable reference
+    const loadPublications = useCallback(async (page = 1, filters = currentFilters) => {
+        // Skip loading on initial render since we already have server-side data
+        if (isInitialLoad.current) {
+            isInitialLoad.current = false;
+            return;
+        }
+
         setIsLoading(true);
+
+        // Cancel any in-flight request
+        if (currentRequestController.current) {
+            currentRequestController.current.abort();
+        }
+
+        // Create a new AbortController for this request
+        currentRequestController.current = new AbortController();
+        const signal = currentRequestController.current.signal;
 
         try {
             const params = new URLSearchParams();
@@ -74,61 +96,86 @@ export default function FreePublicationList({ initialPublications }) {
             });
 
             // Fetch data from API
-            const response = await fetch(`${API_BASE_URL}/publications/free/search/?${params.toString()}`);
+            const response = await fetch(`${API_BASE_URL}/publications/free/search/?${params.toString()}`, {
+                signal // Pass the abort signal
+            });
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+                if (!signal.aborted) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+                return;
             }
 
             const data = await response.json();
 
-            // Update state with new data
-            setPublications(data.items || []);
-            setCurrentPage(data.page || 1);
-            setTotalPages(data.pages || 1);
-            setTotalItems(data.total || 0);
+            // Only update state if the request wasn't aborted
+            if (!signal.aborted) {
+                // Update state with new data
+                setPublications(data.items || []);
+                setCurrentPage(data.page || 1);
+                setTotalPages(data.pages || 1);
+                setTotalItems(data.total || 0);
 
-            // Update URL without page reload (for browser history)
-            const url = new URL(window.location.href);
+                // Update URL without page reload (for browser history)
+                if (typeof window !== 'undefined') {
+                    const url = new URL(window.location.href);
 
-            // Reset URL params
-            url.search = '';
+                    // Reset URL params
+                    url.search = '';
 
-            // Add current filters to URL
-            if (filters.searchTerm) url.searchParams.set('q', filters.searchTerm);
-            if (page > 1) url.searchParams.set('page', page.toString());
+                    // Add current filters to URL
+                    if (filters.searchTerm) url.searchParams.set('q', filters.searchTerm);
+                    if (page > 1) url.searchParams.set('page', page.toString());
 
-            filters.sectorFilters.forEach(sector => {
-                url.searchParams.append('sector', sector);
-            });
+                    filters.sectorFilters.forEach(sector => {
+                        url.searchParams.append('sector', sector);
+                    });
 
-            filters.regionFilters.forEach(region => {
-                url.searchParams.append('region', region);
-            });
+                    filters.regionFilters.forEach(region => {
+                        url.searchParams.append('region', region);
+                    });
 
-            // Update URL without reload
-            window.history.pushState({}, '', url.toString());
-
+                    // Update URL without reload
+                    window.history.pushState({}, '', url.toString());
+                }
+            }
         } catch (error) {
-            console.error('Error fetching publications:', error);
+            // Only log errors if the request wasn't aborted
+            if (error.name !== 'AbortError') {
+                console.error('Error fetching publications:', error);
+            }
         } finally {
-            setIsLoading(false);
+            // Only update loading state if the request wasn't aborted
+            if (currentRequestController.current && !currentRequestController.current.signal.aborted) {
+                setIsLoading(false);
+                currentRequestController.current = null;
+            }
         }
-    };
+    }, [currentFilters]);
 
     // Handle page change
-    const handlePageChange = (newPage) => {
+    const handlePageChange = useCallback((newPage) => {
         if (newPage >= 1 && newPage <= totalPages && !isLoading) {
             setCurrentPage(newPage);
             loadPublications(newPage);
         }
-    };
+    }, [totalPages, isLoading, loadPublications]);
 
     // Handle filter changes
-    const handleFiltersChange = (newFilters) => {
+    const handleFiltersChange = useCallback((newFilters) => {
         setCurrentFilters(newFilters);
         loadPublications(1, newFilters);
-    };
+    }, [loadPublications]);
+
+    // Clean up any pending requests on unmount
+    useEffect(() => {
+        return () => {
+            if (currentRequestController.current) {
+                currentRequestController.current.abort();
+            }
+        };
+    }, []);
 
     return (
         <div className="w-full space-y-6">
@@ -175,8 +222,7 @@ export default function FreePublicationList({ initialPublications }) {
                                         href={`/publications/free/detail/${publication.workspace_id}`}
                                         className="text-lg font-semibold text-astral-600 dark:text-astral-400 hover:underline focus:outline-hidden mb-1 block"
                                     >
-                                        <p className="line-clamp-2">                                        {publication.title}
-                                        </p>
+                                        <p className="line-clamp-2">{publication.title}</p>
                                     </a>
                                     <span className="text-xs text-gray-500 dark:text-gray-400">
                                         ID: {publication.workspace_id}
