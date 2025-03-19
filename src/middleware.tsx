@@ -11,6 +11,14 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const { userId, sessionClaims, redirectToSignIn } = await auth()
 
+    // const clerk = await clerkClient()
+    // // Update Clerk metadata to mark onboarding as complete
+    // await clerk.users.updateUser(userId, {
+    //     publicMetadata: {
+    //         onboardingComplete: false
+    //     }
+    // })
+
     // For users visiting /onboarding, don't try to redirect
     if (userId && isOnboardingRoute(req)) {
         return NextResponse.next()

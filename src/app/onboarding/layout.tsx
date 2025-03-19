@@ -1,5 +1,6 @@
 "use client"
 import { useSession } from "@clerk/nextjs"
+import { ThemeProvider } from "next-themes"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
@@ -18,5 +19,15 @@ export default function OnboardingLayout({
     }
   }, [isLoaded, session, router])
 
-  return <>{children}</>
+  return (
+    <ThemeProvider
+      defaultTheme="light"
+      disableTransitionOnChange
+      attribute="class"
+    >
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
+        {children}
+      </div>
+    </ThemeProvider>
+  )
 }

@@ -1,7 +1,7 @@
 import { Card } from "@/components/Card"
 import { User } from "@clerk/nextjs/server"
 import { PenSquareIcon, Wand } from "lucide-react"
-import Image from "next/image"
+import { Logo } from "../../../../public/Logo"
 
 interface StepWelcomeProps {
     selectedOption: "ai" | "manual" | null
@@ -19,16 +19,16 @@ export default function StepWelcome({
             {/* Logo and welcome message */}
             <div className="text-center mb-4">
                 <div className="flex justify-center mb-6">
-                    <Image
-                        src="/logo.svg"
-                        alt="ProcLogic Logo"
-                        width={180}
-                        height={40}
-                        className="dark:invert"
-                    />
+                    <Logo className="size-24" />
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                {user?.firstName && (
+                    <p className="mt-2 text-lg font-medium text-astral-600 dark:text-astral-400">
+                        Hallo {user.firstName}!
+                    </p>
+                )}
+
+                <h1 className="text-2xl md:text-3xl font-bold mt-2 text-gray-900 dark:text-white">
                     Welkom bij ProcLogic
                 </h1>
 
@@ -37,11 +37,6 @@ export default function StepWelcome({
                     Laten we even je profiel instellen.
                 </p>
 
-                {user?.firstName && (
-                    <p className="mt-2 text-lg font-medium text-astral-600 dark:text-astral-400">
-                        Hallo {user.firstName}!
-                    </p>
-                )}
             </div>
 
             {/* Options */}
