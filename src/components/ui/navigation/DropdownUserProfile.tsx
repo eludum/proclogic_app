@@ -11,7 +11,6 @@ import {
 } from "@/components/DropdownMenu";
 import { SafeUser } from '@/lib/clerkUserUtils';
 import { ArrowUpRight } from "lucide-react";
-import { useTheme } from "next-themes";
 import * as React from "react";
 
 export type DropdownUserProfileProps = {
@@ -26,7 +25,6 @@ export function DropdownUserProfile({
   user
 }: DropdownUserProfileProps) {
   const [mounted, setMounted] = React.useState(false);
-  const { theme, setTheme } = useTheme();
 
   React.useEffect(() => {
     setMounted(true);

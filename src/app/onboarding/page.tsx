@@ -42,7 +42,7 @@ export default function OnboardingPage() {
     const [companyData, setCompanyData] = useState<CompanyData>({
         vat_number: "BE0000000000",
         name: "",
-        emails: [""],
+        emails: [user.emailAddresses[0]?.emailAddress],
         summary_activities: "",
         number_of_employees: 1,
         max_publication_value: null,
@@ -339,7 +339,7 @@ export default function OnboardingPage() {
     }
 
     // Navigation handlers
-    const goToNextStep = () => {
+    const goToNextStep = async () => {
         if (currentStep === STEPS.WELCOME) {
             if (selectedOption === "ai") {
                 setCurrentStep(STEPS.WEBSITE_PARSER)
@@ -353,27 +353,24 @@ export default function OnboardingPage() {
         } else if (currentStep === STEPS.SECTORS) {
             setCurrentStep(STEPS.REGIONS)
         } else if (currentStep === STEPS.REGIONS) {
-            setCurrentStep(STEPS.COMPLETE)
-        } else if (currentStep === STEPS.COMPLETE) {
-            completeOnboarding()
-        }
-    }
-
-    const goToPreviousStep = () => {
-        if (currentStep === STEPS.WEBSITE_PARSER) {
-            setCurrentStep(STEPS.WELCOME)
-        } else if (currentStep === STEPS.COMPANY_INFO) {
-            if (selectedOption === "ai") {
-                setCurrentStep(STEPS.WEBSITE_PARSER)
-            } else {
-                setCurrentStep(STEPS.WELCOME)
+            // Create the company when moving from REGIONS to COMPLETE
+            setIsSubmitting(true)
+            try {
+                await completeOnboarding()
+                setCurrentStep(STEPS.COMPLETE)
+            } catch (error) {
+                console.error("Error creating company:", error)
+                toast({
+                    title: "Fout bij Voltooien",
+                    description: "Er is een fout opgetreden bij het aanmaken van je bedrijfsprofiel.",
+                    variant: "error",
+                })
+            } finally {
+                setIsSubmitting(false)
             }
-        } else if (currentStep === STEPS.SECTORS) {
-            setCurrentStep(STEPS.COMPANY_INFO)
-        } else if (currentStep === STEPS.REGIONS) {
-            setCurrentStep(STEPS.SECTORS)
         } else if (currentStep === STEPS.COMPLETE) {
-            setCurrentStep(STEPS.REGIONS)
+            // Just navigate to dashboard since company is already created
+            router.push("/dashboard")
         }
     }
 
