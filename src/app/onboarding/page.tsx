@@ -40,7 +40,7 @@ export default function OnboardingPage() {
 
     // Company data state
     const [companyData, setCompanyData] = useState<CompanyData>({
-        vat_number: "BE0000000000",
+        vat_number: "",
         name: "",
         emails: [user?.primaryEmailAddress],
         summary_activities: "",
@@ -394,6 +394,25 @@ export default function OnboardingPage() {
         } else if (currentStep === STEPS.COMPLETE) {
             // Just navigate to dashboard since company is already created
             router.push("/dashboard")
+        }
+    }
+
+    const goToPreviousStep = () => {
+        if (currentStep === STEPS.WEBSITE_PARSER) {
+            setCurrentStep(STEPS.WELCOME)
+        } else if (currentStep === STEPS.COMPANY_INFO) {
+            // If we came from website parser, go back there if AI option was selected
+            if (selectedOption === "ai") {
+                setCurrentStep(STEPS.WEBSITE_PARSER)
+            } else {
+                setCurrentStep(STEPS.WELCOME)
+            }
+        } else if (currentStep === STEPS.SECTORS) {
+            setCurrentStep(STEPS.COMPANY_INFO)
+        } else if (currentStep === STEPS.REGIONS) {
+            setCurrentStep(STEPS.SECTORS)
+        } else if (currentStep === STEPS.COMPLETE) {
+            setCurrentStep(STEPS.REGIONS)
         }
     }
 
