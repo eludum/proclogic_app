@@ -43,14 +43,14 @@ export default function StepWebsiteParser({
                                 id="website"
                                 type="url"
                                 className={`pl-10 ${isUrlValid === false ? "border-red-300 dark:border-red-700" : ""}`}
-                                placeholder="www.jouwbedrijf.be"
+                                placeholder="jouwbedrijf.be"
                                 value={websiteUrl}
                                 onChange={(e) => setWebsiteUrl(e.target.value)}
                                 disabled={isScraping}
                             />
-                            {isUrlValid !== null && (
+                            {websiteUrl.trim() !== "" && (
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    {isUrlValid ? (
+                                    {isUrlValid === true ? (
                                         <CheckCircle className="h-5 w-5 text-green-500 dark:text-green-400" />
                                     ) : (
                                         <XCircle className="h-5 w-5 text-red-500 dark:text-red-400" />
@@ -68,7 +68,7 @@ export default function StepWebsiteParser({
                     </div>
                     {isUrlValid === false && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                            Voer een geldige website URL in.
+                            Voer een geldige website URL in zoals "bedrijf.be", "www.bedrijf.be", "http://bedrijf.be" of "https://bedrijf.be"
                         </p>
                     )}
                 </div>

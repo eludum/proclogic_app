@@ -11,17 +11,16 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const { userId, sessionClaims, redirectToSignIn } = await auth()
 
-    // const clerk = await clerkClient()
-    // // Update Clerk metadata to mark onboarding as complete
-    // await clerk.users.updateUser(userId, {
-    //     publicMetadata: {
-    //         onboardingComplete: false
-    //     }
-    // })
+    // Store current path in a cookie for layout detection
+    const response = NextResponse.next()
+    response.cookies.set('current-path', req.nextUrl.pathname, {
+        maxAge: 60 * 5, // 5 minutes
+        path: '/'
+    });
 
     // For users visiting /onboarding, don't try to redirect
     if (userId && isOnboardingRoute(req)) {
-        return NextResponse.next()
+        return response
     }
 
     // If the user isn't signed in and the route is private, redirect to sign-in
@@ -38,11 +37,11 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
     // If the user is logged in and the route is protected, let them view
     if (userId && !isPublicRoute(req)) {
-        return NextResponse.next()
+        return response
     }
 
     // Default case - proceed
-    return NextResponse.next()
+    return response
 })
 
 export const config = {

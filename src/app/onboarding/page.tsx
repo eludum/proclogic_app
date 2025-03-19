@@ -42,7 +42,7 @@ export default function OnboardingPage() {
     const [companyData, setCompanyData] = useState<CompanyData>({
         vat_number: "BE0000000000",
         name: "",
-        emails: [user.emailAddresses[0]?.emailAddress],
+        emails: [user?.primaryEmailAddress],
         summary_activities: "",
         number_of_employees: 1,
         max_publication_value: null,
@@ -51,24 +51,40 @@ export default function OnboardingPage() {
         activity_keywords: []
     })
 
-    // Basic URL validation
     useEffect(() => {
-        if (!websiteUrl) {
+        // Reset validation state if field is empty
+        if (!websiteUrl || websiteUrl.trim() === "") {
             setIsUrlValid(null)
             return
         }
 
         try {
+            // Trim the URL first
+            const trimmedUrl = websiteUrl.trim()
+
+            // Validate URL format using a regex pattern that requires a domain and TLD
+            const urlPattern = /^(https?:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}(:[0-9]{1,5})?(\/.*)?$/i;
+            // This pattern accepts: domain.com, www.domain.com, http://domain.com, https://domain.com
+
+            // If input doesn't match the pattern, it's not valid
+            if (!urlPattern.test(trimmedUrl)) {
+                setIsUrlValid(false)
+                return
+            }
+
             // Add protocol if missing
-            let urlToCheck = websiteUrl
+            let urlToCheck = trimmedUrl
             if (!urlToCheck.startsWith('http://') && !urlToCheck.startsWith('https://')) {
                 urlToCheck = 'https://' + urlToCheck
             }
 
-            // Try to create URL object
+            // Try to create URL object for final validation
             new URL(urlToCheck)
+
+            // If we got here, URL is valid
             setIsUrlValid(true)
         } catch (e) {
+            // Any errors mean invalid URL
             setIsUrlValid(false)
         }
     }, [websiteUrl])
@@ -211,8 +227,15 @@ export default function OnboardingPage() {
     }
 
     // Scrape website for company data
+
     const handleScrapeWebsite = async () => {
         if (!isUrlValid) return
+
+        // Normalize URL before sending to API
+        let normalizedUrl = websiteUrl.trim();
+        if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+            normalizedUrl = 'https://' + normalizedUrl;
+        }
 
         setIsScraping(true)
         try {
@@ -224,7 +247,7 @@ export default function OnboardingPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    website_url: websiteUrl
+                    website_url: normalizedUrl
                 }),
             })
 
