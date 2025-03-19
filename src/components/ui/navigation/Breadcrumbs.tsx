@@ -11,9 +11,12 @@ const routeTranslations: Record<string, string> = {
   dashboard: "Dashboard",
   search: "Zoeken",
 
-  publications: "Aanbestedingen",
+  publications: "Aanbevolen",
+  "my-publications": "Mijn aanbestedingen",
+  board: "Overzichtsbord",
   workspaces: "Werkruimtes",
   analytics: "Analyses",
+  procy: "Procy",
   settings: "Instellingen",
 
 
@@ -25,7 +28,6 @@ const routeTranslations: Record<string, string> = {
   // Settings subsections
   "company-profile": "Bedrijfsprofiel",
   users: "Gebruikersbeheer",
-  notifications: "Notificatie-instellingen",
 }
 
 interface BreadcrumbItem {

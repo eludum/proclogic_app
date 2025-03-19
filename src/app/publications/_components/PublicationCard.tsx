@@ -220,7 +220,7 @@ export function PublicationCard({
                         className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
                     >
                         <RiChatSmile2Line className="size-5" />
-                        <span>ProcLogic AI</span>
+                        <span>Procy</span>
                     </Button>
                 </div>
             </div>

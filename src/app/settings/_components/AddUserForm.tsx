@@ -50,7 +50,7 @@ export default function AddUserForm({ onAddUser, loading }: AddUserFormProps) {
                         setEmail(e.target.value);
                         setError(null); // Clear error when input changes
                     }}
-                    placeholder="example@company.com"
+                    placeholder="voorbeeld@bedrijf.be"
                     disabled={loading}
                 />
                 {error && (
@@ -59,7 +59,7 @@ export default function AddUserForm({ onAddUser, loading }: AddUserFormProps) {
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-1">
                     <InfoIcon size={12} className="mt-0.5 shrink-0" />
                     <span>
-                        De gebruiker ontvangt een uitnodiging per e-mail om toegang te krijgen tot het bedrijf.
+                        De gebruiker ontvangt een uitnodiging per e-mail om toegang te krijgen tot ProcLogic.
                         Ze moeten deze accepteren om een account aan te maken.
                     </span>
                 </p>

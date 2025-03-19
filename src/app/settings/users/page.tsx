@@ -3,7 +3,7 @@ import { siteConfig } from "@/app/siteConfig";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import AddUserForm from "../_components/AddUserForm";
 import UsersList from "../_components/UsersList";
@@ -27,6 +27,8 @@ export default function UsersSettingsPage() {
     const [addingUser, setAddingUser] = useState(false);
     const { getToken } = useAuth();
     const { toast } = useToast();
+    const { user } = useUser(); // Get current Clerk user
+    const currentUserEmail = user?.primaryEmailAddress?.emailAddress || '';
 
     useEffect(() => {
         fetchUsers();
@@ -114,6 +116,16 @@ export default function UsersSettingsPage() {
     };
 
     const removeUser = async (email: string, userId?: string) => {
+        // Extra safety check to prevent removing the current user
+        if (email === currentUserEmail) {
+            toast({
+                title: "Actie niet toegestaan",
+                description: "Je kunt je eigen account niet verwijderen.",
+                variant: "error"
+            });
+            return;
+        }
+
         try {
             const token = await getToken();
             let url = `${API_BASE_URL}/users/remove/${encodeURIComponent(email)}`;
@@ -144,7 +156,7 @@ export default function UsersSettingsPage() {
             console.error("Error removing user:", error);
             toast({
                 title: "Fout bij verwijderen",
-                description: "Gebruiker kon niet worden verwijderd. Je kunt je eigen account niet verwijderen.",
+                description: "Gebruiker kon niet worden verwijderd. Controleer of er minstens één gebruiker overblijft.",
                 variant: "error"
             });
         }
@@ -176,8 +188,12 @@ export default function UsersSettingsPage() {
                         Gebruikers
                     </h2>
 
-                    {/* Users list */}
-                    <UsersList users={users} onRemoveUser={removeUser} />
+                    {/* Users list - pass current user email */}
+                    <UsersList
+                        users={users}
+                        onRemoveUser={removeUser}
+                        currentUserEmail={currentUserEmail}
+                    />
 
                     {/* Add user form */}
                     <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">

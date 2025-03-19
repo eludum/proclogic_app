@@ -10,10 +10,6 @@ import AnalyticsSummary from './AnalyticsSummary';
 import CompetitorAnalysis from './CompetitorAnalysis';
 import ExportPanel from './ExportPanel';
 import FilterPanel from './FilterPanel';
-import RegionalAnalysis from './RegionalAnalysis';
-import SectorComparisonChart from './SectorComparisonChart';
-import TimeSeriesChart from './TimeSeriesChart';
-import ValueDistributionChart from './ValueDistributionChart';
 
 const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) => {
     const { getToken } = useAuth();
@@ -33,7 +29,7 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
         winnerData: [],
         organisationData: [],
         timeSeriesData: [],
-        valueRangesData: [],
+        // valueRangesData: [],
         regionalData: []
     });
 
@@ -216,24 +212,24 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
             }
 
             // Value ranges
-            setIsLoading(prev => ({ ...prev, valueRanges: true }));
-            try {
-                const valueRangesData = await fetchData('/analytics/value-ranges', {
-                    year: selectedYear,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, valueRangesData: valueRangesData }));
-                setErrors(prev => ({ ...prev, valueRanges: null }));
-            } catch (error) {
-                setErrors(prev => ({ ...prev, valueRanges: error.message }));
-                toast({
-                    title: "Fout bij laden",
-                    description: "De gegevens over waarderanges konden niet worden geladen.",
-                    variant: "error"
-                });
-            } finally {
-                setIsLoading(prev => ({ ...prev, valueRanges: false }));
-            }
+            // setIsLoading(prev => ({ ...prev, valueRanges: true }));
+            // try {
+            //     const valueRangesData = await fetchData('/analytics/value-ranges', {
+            //         year: selectedYear,
+            //         ...sectorParams
+            //     });
+            //     setDashboardData(prev => ({ ...prev, valueRangesData: valueRangesData }));
+            //     setErrors(prev => ({ ...prev, valueRanges: null }));
+            // } catch (error) {
+            //     setErrors(prev => ({ ...prev, valueRanges: error.message }));
+            //     toast({
+            //         title: "Fout bij laden",
+            //         description: "De gegevens over waarderanges konden niet worden geladen.",
+            //         variant: "error"
+            //     });
+            // } finally {
+            //     setIsLoading(prev => ({ ...prev, valueRanges: false }));
+            // }
 
             // Regional data (nuts codes)
             setIsLoading(prev => ({ ...prev, regional: true }));
@@ -291,7 +287,7 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                 />
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-                    <TimeSeriesChart
+                    {/* <TimeSeriesChart
                         data={dashboardData.timeSeriesData}
                         isLoading={isLoading.timeSeries}
                         error={errors.timeSeries}
@@ -302,14 +298,16 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                         data={dashboardData.sectorData}
                         isLoading={isLoading.sectors}
                         error={errors.sectors}
-                    />
+                    /> */}
 
                     <CompetitorAnalysis
                         data={dashboardData.winnerData}
                         isLoading={isLoading.winners}
                         error={errors.winners}
-                    />
+                        className="xl:col-span-2"
 
+                    />
+                    {/* 
                     <ValueDistributionChart
                         data={dashboardData.valueRangesData}
                         isLoading={isLoading.valueRanges}
@@ -320,7 +318,7 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                         data={dashboardData.regionalData || []}
                         isLoading={isLoading.regional}
                         error={errors.regional}
-                    />
+                    /> */}
                 </div>
 
                 <ExportPanel

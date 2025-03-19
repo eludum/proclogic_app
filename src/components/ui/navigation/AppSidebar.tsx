@@ -83,8 +83,8 @@ const secondaryNavigation = [
     hasChildren: false,
   },
   {
-    name: "Proclogic AI",
-    href: "/proclogic-ai",
+    name: "Procy",
+    href: "/procy",
     icon: RiChatSmile2Line,
     notifications: false,
     hasChildren: false,

@@ -381,7 +381,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         setMessages([{
                             id: "welcome",
                             role: "assistant",
-                            content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                            content: `Hallo! Ik ben Procy. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
                             timestamp: new Date()
                         }]);
                     }
@@ -391,7 +391,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     setMessages([{
                         id: "welcome",
                         role: "assistant",
-                        content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                        content: `Hallo! Ik ben Procy. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
                         timestamp: new Date()
                     }]);
                 }
@@ -412,7 +412,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 setMessages([{
                     id: "welcome",
                     role: "assistant",
-                    content: `Hallo! Ik ben ProcLogic AI. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                    content: `Hallo! Ik ben Procy. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
                     timestamp: new Date()
                 }]);
             } finally {
@@ -569,7 +569,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         <div className="bg-white dark:bg-slate-800 p-2 rounded-full shadow-xs">
                             <RiChatSmile2Line className="size-5 text-astral-600" />
                         </div>
-                        <h2 className="text-lg font-semibold text-slate-800 dark:text-white">ProcLogic AI Chat</h2>
+                        <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Procy Chat</h2>
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Fullscreen toggle button */}
@@ -692,7 +692,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-xs">
                                 <div className="flex items-center gap-2">
                                     <LoaderIcon size={16} className="animate-spin text-astral-600" />
-                                    <span className="text-sm text-gray-800 dark:text-gray-200">ProcLogic AI is aan het denken...</span>
+                                    <span className="text-sm text-gray-800 dark:text-gray-200">Procy is aan het denken...</span>
                                 </div>
                             </div>
                         </div>

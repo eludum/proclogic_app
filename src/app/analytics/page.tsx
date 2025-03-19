@@ -104,7 +104,6 @@ export default async function AnalyticsPage() {
     return (
         <div className="container mx-auto px-4 py-8">
             <AnalyticsDashboard
-                initialData={initialData}
                 error={error}
                 apiBaseUrl={API_BASE_URL}
             />

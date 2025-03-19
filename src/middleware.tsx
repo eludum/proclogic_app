@@ -1,4 +1,4 @@
-import { clerkClient, clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
@@ -11,13 +11,6 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const { userId, sessionClaims, redirectToSignIn } = await auth()
 
-    const clerk = await clerkClient()
-    // Update Clerk metadata to mark onboarding as complete
-    await clerk.users.updateUser(userId, {
-        publicMetadata: {
-            onboardingComplete: true
-        }
-    })
 
     // Store current path in a cookie for layout detection
     const response = NextResponse.next()

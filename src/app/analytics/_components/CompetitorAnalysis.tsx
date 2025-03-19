@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
 import { ChartCard, ChartContainer, CustomTooltip, EmptyState, ErrorMessage, LoadingSpinner } from './CommonComponents';
 
-const CompetitorAnalysis = ({ data, isLoading, error }) => {
+const CompetitorAnalysis = ({ data, isLoading, error, className = "" }) => {
     const [viewMode, setViewMode] = useState('chart'); // 'chart' or 'table'
 
     if (isLoading) {
@@ -23,7 +23,7 @@ const CompetitorAnalysis = ({ data, isLoading, error }) => {
     const displayData = data.slice(0, 8);
 
     const toggleViewMode = () => {
-        setViewMode(viewMode === 'chart' ? 'table' : 'chart');
+        setViewMode(viewMode === 'table' ? 'chart' : 'table');
     };
 
     // Format currency for display
@@ -46,12 +46,13 @@ const CompetitorAnalysis = ({ data, isLoading, error }) => {
                         onClick={toggleViewMode}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                     >
-                        {viewMode === 'chart' ? 'Tabelweergave' : 'Grafiekweergave'}
+                        {viewMode === 'table' ? 'Tabelweergave' : 'Grafiekweergave'}
                     </button>
                 </div>
             }
+            className={className}
         >
-            {viewMode === 'chart' ? (
+            {viewMode === 'table' ? (
                 <ChartContainer height={350}>
                     <BarChart
                         data={displayData}
@@ -77,7 +78,7 @@ const CompetitorAnalysis = ({ data, isLoading, error }) => {
                         />
                         <Legend />
                         <Bar dataKey="total_value" name="Totale gunningswaarde" fill="#00C49F" radius={[0, 4, 4, 0]} />
-                        <CustomTooltip />
+                        <CustomTooltip active={undefined} payload={undefined} label={undefined} />
                     </BarChart>
                 </ChartContainer>
             ) : (
