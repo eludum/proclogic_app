@@ -75,25 +75,6 @@ export default function CompanyProfileForm({ company, onSave, saving }: CompanyP
                         />
                     </div>
 
-                    {/* Email Addresses */}
-                    <div className="mb-6">
-                        <label htmlFor="emails" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            E-mailadressen (gescheiden door komma's)
-                        </label>
-                        <input
-                            type="text"
-                            id="emails"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-astral-500"
-                            value={emails}
-                            onChange={(e) => setEmails(e.target.value)}
-                            placeholder="email@bedrijf.be, contact@bedrijf.be"
-                            required
-                        />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Deze e-mailadressen worden gebruikt voor notificaties en communicatie.
-                        </p>
-                    </div>
-
                     {/* Subscription */}
                     <div className="mb-6">
                         <label htmlFor="subscription" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

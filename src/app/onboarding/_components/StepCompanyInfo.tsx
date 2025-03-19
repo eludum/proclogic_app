@@ -1,23 +1,17 @@
-import { Button } from "@/components/Button"
 import { Input } from "@/components/Input"
 import { Textarea } from "@/components/Textarea"
-import { BuildingIcon, MailIcon, Users } from "lucide-react"
+import { BuildingIcon, Users } from "lucide-react"
 import { CompanyData } from "./constants"
 
 interface StepCompanyInfoProps {
     companyData: CompanyData
     setCompanyData: (data: CompanyData) => void
-    handleEmailChange: (index: number, value: string) => void
-    addEmailField: () => void
-    removeEmailField: (index: number) => void
 }
+
 
 export default function StepCompanyInfo({
     companyData,
     setCompanyData,
-    handleEmailChange,
-    addEmailField,
-    removeEmailField
 }: StepCompanyInfoProps) {
     return (
         <div className="flex flex-col space-y-6 animate-fadeIn">
@@ -112,52 +106,6 @@ export default function StepCompanyInfo({
                             required
                         />
                     </div>
-                </div>
-
-                {/* Email Addresses */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        E-mailadressen <span className="text-red-500">*</span>
-                    </label>
-
-                    {companyData.emails.map((email, index) => (
-                        <div key={index} className="flex items-center mb-2">
-                            <div className="relative flex-1">
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <MailIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-                                </div>
-                                <Input
-                                    type="email"
-                                    className="pl-10"
-                                    placeholder="email@bedrijf.be"
-                                    value={email}
-                                    onChange={(e) => handleEmailChange(index, e.target.value)}
-                                    required={index === 0}
-                                />
-                            </div>
-
-                            {companyData.emails.length > 1 && (
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    className="ml-2 px-3"
-                                    onClick={() => removeEmailField(index)}
-                                >
-                                    <span className="sr-only">Verwijderen</span>
-                                    <span aria-hidden="true">×</span>
-                                </Button>
-                            )}
-                        </div>
-                    ))}
-
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="mt-2 text-sm"
-                        onClick={addEmailField}
-                    >
-                        + E-mailadres toevoegen
-                    </Button>
                 </div>
             </div>
         </div>

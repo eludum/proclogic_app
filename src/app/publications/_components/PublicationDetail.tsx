@@ -70,6 +70,19 @@ export default function PublicationDetail({ publication, timelineEvents }) {
         );
     }
 
+    const handleDownload = (filename) => {
+        // Construct the document URL
+        const downloadUrl = `${API_BASE_URL}/publications/publication/${publication.workspace_id}/document/${filename}`;
+
+        // Create a temporary link and trigger download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     // Start a chat with a publication
     const startChat = async (pub) => {
         try {
@@ -379,7 +392,9 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                                 <FileIcon size={14} className="text-gray-400 shrink-0" />
                                                 <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{doc}</span>
                                             </div>
-                                            <Button className="flex items-center justify-center bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-astral-500 dark:text-astral-400 p-1.5 rounded-md">
+                                            <Button
+                                                onClick={() => handleDownload(doc)}
+                                                className="flex items-center justify-center bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-astral-500 dark:text-astral-400 p-1.5 rounded-md">
                                                 <DownloadIcon size={16} />
                                             </Button>
                                         </div>

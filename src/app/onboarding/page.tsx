@@ -208,24 +208,6 @@ export default function OnboardingPage() {
         }
     }
 
-    // Update fields
-    const handleEmailChange = (index: number, value: string) => {
-        const updatedEmails = [...companyData.emails]
-        updatedEmails[index] = value
-        setCompanyData({ ...companyData, emails: updatedEmails })
-    }
-
-    const addEmailField = () => {
-        setCompanyData({ ...companyData, emails: [...companyData.emails, ""] })
-    }
-
-    const removeEmailField = (index: number) => {
-        if (companyData.emails.length > 1) {
-            const updatedEmails = companyData.emails.filter((_, i) => i !== index)
-            setCompanyData({ ...companyData, emails: updatedEmails })
-        }
-    }
-
     // Scrape website for company data
 
     const handleScrapeWebsite = async () => {
@@ -469,9 +451,6 @@ export default function OnboardingPage() {
                 <StepCompanyInfo
                     companyData={companyData}
                     setCompanyData={setCompanyData}
-                    handleEmailChange={handleEmailChange}
-                    addEmailField={addEmailField}
-                    removeEmailField={removeEmailField}
                 />
             )}
 
