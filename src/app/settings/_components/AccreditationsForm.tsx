@@ -289,7 +289,7 @@ export default function AccreditationsForm({ company, onSave, saving }: Accredit
                                             placeholder="Bijv. 1, 2, 3 of D1, D24"
                                         />
                                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            Voer een waarde, niveau of classificatie in. Voor meerdere waarden, scheid ze met komma's.
+                                            Voer een waarde, niveau of classificatie in. Voor meerdere waarden, scheid ze met komma&apos;s.
                                         </p>
                                     </div>
                                 </div>

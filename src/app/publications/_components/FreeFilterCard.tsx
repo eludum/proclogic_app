@@ -5,6 +5,18 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+// Define proper interfaces for the component
+interface FilterState {
+    searchTerm: string;
+    sectorFilters: string[];
+    regionFilters: string[];
+}
+
+interface FreeFilterCardProps {
+    onFiltersChange?: (filters: FilterState) => void;
+    initialFilters?: Partial<FilterState>;
+}
+
 export default function FreeFilterCard({
     onFiltersChange,
     initialFilters = {
@@ -12,12 +24,12 @@ export default function FreeFilterCard({
         sectorFilters: [],
         regionFilters: []
     }
-}) {
+}: FreeFilterCardProps) {
     const [showFilters, setShowFilters] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Initialize with default values
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<FilterState>({
         searchTerm: initialFilters.searchTerm || "",
         sectorFilters: initialFilters.sectorFilters || [],
         regionFilters: initialFilters.regionFilters || []
@@ -35,7 +47,7 @@ export default function FreeFilterCard({
     };
 
     // Update search term
-    const handleSearchChange = (value) => {
+    const handleSearchChange = (value: string) => {
         setFilters(prev => ({
             ...prev,
             searchTerm: value
@@ -43,7 +55,7 @@ export default function FreeFilterCard({
     };
 
     // Toggle a sector filter
-    const handleSectorChange = (sector) => {
+    const handleSectorChange = (sector: string) => {
         setFilters(prev => {
             const newSectors = prev.sectorFilters.includes(sector)
                 ? prev.sectorFilters.filter(s => s !== sector)
@@ -57,7 +69,7 @@ export default function FreeFilterCard({
     };
 
     // Toggle a region filter
-    const handleRegionChange = (region) => {
+    const handleRegionChange = (region: string) => {
         setFilters(prev => {
             const newRegions = prev.regionFilters.includes(region)
                 ? prev.regionFilters.filter(r => r !== region)
@@ -72,7 +84,7 @@ export default function FreeFilterCard({
 
     // Reset all filters to defaults
     const resetFilters = () => {
-        const defaultFilters = {
+        const defaultFilters: FilterState = {
             searchTerm: "",
             sectorFilters: [],
             regionFilters: []
@@ -108,7 +120,7 @@ export default function FreeFilterCard({
     ];
 
     // Handle search on Enter key
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             applyFilters();
@@ -178,7 +190,7 @@ export default function FreeFilterCard({
                                         key={sector.value}
                                         type="button"
                                         onClick={() => handleSectorChange(sector.value)}
-                                        variant={filters.sectorFilters.includes(sector.value) ? "default" : "secondary"}
+                                        variant={filters.sectorFilters.includes(sector.value) ? "primary" : "secondary"}
                                         className="flex items-center gap-1 text-xs py-1 px-2"
                                     >
                                         {sector.label}
@@ -210,7 +222,7 @@ export default function FreeFilterCard({
                                         key={region.value}
                                         type="button"
                                         onClick={() => handleRegionChange(region.value)}
-                                        variant={filters.regionFilters.includes(region.value) ? "default" : "secondary"}
+                                        variant={filters.regionFilters.includes(region.value) ? "primary" : "secondary"}
                                         className="flex items-center gap-1 text-xs py-1 px-2"
                                     >
                                         {region.label}

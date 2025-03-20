@@ -1,20 +1,33 @@
 // app/publications/free/detail/[workspace_id]/page.tsx
 import { siteConfig } from "@/app/siteConfig";
-import FreePublicationDetail from "../../../_components/FreePublicationDetail";
+import FreePublicationDetail, { Publication } from "../../../_components/FreePublicationDetail";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-interface Params {
-    workspace_id: string;
+interface PageProps {
+    params: Promise<{
+        workspace_id: string;
+    }>
 }
 
-export default async function FreePublicationDetailPage({ params }: { params: Params }) {
-    const resolvedParams = await params;
-    const workspaceId = resolvedParams.workspace_id;
+// Define the timeline event types to match what the component expects
+type TimelineEventStatus = 'completed' | 'in-progress' | 'pending';
+type TimelineEventIcon = 'calendar' | 'file' | 'clock' | 'check-circle';
+
+interface TimelineEvent {
+    date: string | Date;
+    title: string;
+    description: string;
+    status: TimelineEventStatus;
+    icon: TimelineEventIcon;
+}
+
+export default async function FreePublicationDetailPage({ params }: PageProps) {
+    const { workspace_id: workspaceId } = await params;
 
     // Fetch publication details without auth token
-    let publication = null;
-    let fetchError = null;
+    let publication: Publication | null = null;
+    let fetchError: string | null = null;
 
     try {
         const response = await fetch(`${API_BASE_URL}/publications/free/publication/${workspaceId}/`);
@@ -45,14 +58,14 @@ export default async function FreePublicationDetailPage({ params }: { params: Pa
     }
 
     // Generate timeline events based on publication data
-    const generateTimelineEvents = (publication: { dispatch_date: string | number | Date; publication_date: string | number | Date; submission_deadline: string | number | Date; }) => {
-        if (!publication) return [];
+    const generateTimelineEvents = (pub: Publication): TimelineEvent[] => {
+        if (!pub) return [];
 
-        const events = [];
+        const events: TimelineEvent[] = [];
 
-        if (publication.dispatch_date) {
+        if (pub.dispatch_date) {
             events.push({
-                date: new Date(publication.dispatch_date),
+                date: new Date(pub.dispatch_date).toISOString(),
                 title: "Publicatie verzonden",
                 description: "Aanbesteding officieel verzonden",
                 status: "completed",
@@ -60,9 +73,9 @@ export default async function FreePublicationDetailPage({ params }: { params: Pa
             });
         }
 
-        if (publication.publication_date) {
+        if (pub.publication_date) {
             events.push({
-                date: new Date(publication.publication_date),
+                date: new Date(pub.publication_date).toISOString(),
                 title: "Gepubliceerd",
                 description: "Aanbesteding officieel gepubliceerd",
                 status: "completed",
@@ -71,7 +84,7 @@ export default async function FreePublicationDetailPage({ params }: { params: Pa
         }
 
         // Add current date as a milestone
-        const now = new Date();
+        const now = new Date().toISOString();
         events.push({
             date: now,
             title: "Vandaag",
@@ -80,9 +93,10 @@ export default async function FreePublicationDetailPage({ params }: { params: Pa
             icon: "clock"
         });
 
-        if (publication.submission_deadline) {
-            const deadlineDate = new Date(publication.submission_deadline);
-            const status = now > deadlineDate ? "completed" : "upcoming";
+        if (pub.submission_deadline) {
+            const deadlineDate = new Date(pub.submission_deadline).toISOString();
+            // Use a valid status from the TimelineEventStatus type
+            const status: TimelineEventStatus = new Date(now) > new Date(deadlineDate) ? "completed" : "pending";
 
             events.push({
                 date: deadlineDate,
@@ -94,7 +108,7 @@ export default async function FreePublicationDetailPage({ params }: { params: Pa
         }
 
         // Sort events by date
-        return events.sort((a, b) => a.date.getTime() - b.date.getTime());
+        return events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     };
 
     // Pass pre-fetched data to the client component

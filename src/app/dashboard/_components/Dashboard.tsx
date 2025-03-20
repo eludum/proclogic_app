@@ -16,6 +16,7 @@ import {
     ClockIcon,
     MailOpenIcon,
     MessageSquareIcon,
+    RefreshCcwIcon,
     StarIcon,
     TrashIcon,
     UserIcon

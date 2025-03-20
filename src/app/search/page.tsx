@@ -54,7 +54,11 @@ export default async function PublicSearch() {
             publicationsData = await response.json();
         }
     } catch (error) {
-        fetchError = error.message;
+        if (error instanceof Error) {
+            fetchError = error.message;
+        } else {
+            fetchError = "An unknown error occurred";
+        }
         console.error("Error fetching publications:", error);
     }
 

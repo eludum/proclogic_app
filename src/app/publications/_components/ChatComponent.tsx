@@ -13,7 +13,7 @@ interface Message {
     id: string;
     role: 'user' | 'assistant';
     content: string;
-    citations?: string[];
+    citations?: string[] | string;
     timestamp: Date;
 }
 
@@ -24,6 +24,26 @@ interface ChatComponentProps {
     toggleFullscreen?: () => void;
 }
 
+// Type definition for file information
+interface FileInfo {
+    name: string;
+    [key: string]: any;
+}
+
+// Type definition for WebSocket response data
+interface WebSocketResponseData {
+    type?: string;
+    content?: string;
+    data?: {
+        content?: string;
+        citations?: string[] | string;
+        done?: boolean;
+        thread_id?: string;
+        detail?: string;
+    };
+    detail?: string;
+}
+
 export default function ChatComponent({ publicationId, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
     const { getToken } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -31,7 +51,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
     const [loading, setLoading] = useState(false);
     const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
     const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
-    const [availableFiles, setAvailableFiles] = useState<Record<string, { name: string }>>({});
+    const [availableFiles, setAvailableFiles] = useState<Record<string, FileInfo>>({});
     const [connectionError, setConnectionError] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,7 +64,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
     const handleToggleFullscreen = toggleFullscreen || (() => setLocalIsFullscreen(prev => !prev));
 
     // Setup WebSocket connection
-    const setupWebSocket = async () => {
+    const setupWebSocket = async (): Promise<boolean> => {
         try {
             const token = await getToken();
             if (!token) {
@@ -63,17 +83,15 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
             // Create new WebSocket connection
             const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/ws/conversation`;
 
-
             websocketRef.current = new WebSocket(wsUrl);
 
-            return new Promise((resolve) => {
+            return new Promise<boolean>((resolve) => {
                 if (!websocketRef.current) {
                     resolve(false);
                     return;
                 }
 
                 websocketRef.current.onopen = () => {
-
                     setConnectionError(null);
 
                     // Sending the initial connection data right after connection is established
@@ -91,14 +109,13 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 websocketRef.current.onmessage = handleWebSocketMessage;
 
-                websocketRef.current.onerror = (event) => {
+                websocketRef.current.onerror = (event: Event) => {
                     console.error("WebSocket connection error occurred", event);
                     setConnectionError("Connection error occurred. Please try again.");
                     resolve(false);
                 };
 
-                websocketRef.current.onclose = (event) => {
-
+                websocketRef.current.onclose = (event: CloseEvent) => {
                     if (event.code !== 1000) { // Not a normal closure
                         setConnectionError("Connection was closed. Please try again.");
                         // Add this line to reset loading state when connection closes unexpectedly
@@ -116,26 +133,24 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
     };
 
     // Handler for WebSocket messages
-    const handleWebSocketMessage = (event) => {
-
+    const handleWebSocketMessage = (event: MessageEvent) => {
         try {
-            const data = JSON.parse(event.data);
+            const data: WebSocketResponseData = JSON.parse(event.data);
 
             // Direct content handling first (without type field)
             if (!data.type && data.content !== undefined) {
-
                 setStreamingMessage(prev => {
                     if (!prev) {
                         return {
                             id: `assistant-${Date.now()}`,
                             role: "assistant",
-                            content: data.content || "",
+                            content: data.content ?? "",
                             timestamp: new Date()
                         };
                     }
                     return {
                         ...prev,
-                        content: data.content
+                        content: data.content ?? ""
                     };
                 });
                 return;
@@ -143,13 +158,10 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
             // Handle different message types
             switch (data.type) {
-
                 case "connected":
-
                     break;
 
                 case "stream_start":
-
                     // Reset any previous streaming message
                     setStreamingMessage({
                         id: `assistant-${Date.now()}`,
@@ -162,27 +174,24 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 case "stream_chunk":
                     const chunkContent = data.data?.content || "";
 
-
                     setStreamingMessage(prev => {
                         if (!prev) {
                             return {
                                 id: `assistant-${Date.now()}`,
                                 role: "assistant",
-                                content: chunkContent,
+                                content: chunkContent || "",
                                 timestamp: new Date()
                             };
                         }
                         return {
                             ...prev,
-                            content: prev.content + chunkContent
+                            content: prev.content + (chunkContent || "")
                         };
                     });
                     break;
 
                 case "stream_end":
                 case "response_complete":
-
-
                     // Determine content and citations based on available data
                     const content = data.data?.content || streamingMessage?.content || "";
                     const citations = data.data?.citations || [];
@@ -192,7 +201,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         {
                             id: `assistant-${Date.now()}`,
                             role: "assistant",
-                            content: content,
+                            content: content || "",
                             citations: citations,
                             timestamp: new Date()
                         }
@@ -222,7 +231,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 case "response_chunk":
                     // Support for alternate chunk format
-
                     const responseChunkContent = data.data?.content || "";
                     const isDone = data.data?.done === true;
 
@@ -244,7 +252,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     } else {
                         // Handle completion
                         if (data.data?.thread_id) {
-
+                            // Thread ID processing if needed
                         }
 
                         setMessages(prev => [
@@ -252,7 +260,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             {
                                 id: `assistant-${Date.now()}`,
                                 role: "assistant",
-                                content: responseChunkContent,
+                                content: responseChunkContent || "",
                                 timestamp: new Date()
                             }
                         ]);
@@ -264,7 +272,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                 case "citations":
                     // Handle citations separately
-
                     // Update the last assistant message to include citations
                     setMessages(prev => {
                         const lastAssistantIndex = [...prev].reverse().findIndex(msg => msg.role === 'assistant');
@@ -281,16 +288,14 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     break;
 
                 default:
-
                     // Try to handle data even without a recognized type
                     if (data.content) {
-
                         setMessages(prev => [
                             ...prev,
                             {
                                 id: `assistant-${Date.now()}`,
                                 role: "assistant",
-                                content: data.content,
+                                content: data.content || "",
                                 timestamp: new Date()
                             }
                         ]);
@@ -301,25 +306,27 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
             }
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);
-            setConnectionError(`Error parsing message: ${err.message}`);
+            if (err instanceof Error) {
+                setConnectionError(`Error parsing message: ${err.message}`);
+            } else {
+                setConnectionError("Error parsing message: Unknown error occurred");
+            }
         }
     };
 
     // Fetch documents and set up initial state when component mounts
-    // Replace your current useEffect with this updated version
     useEffect(() => {
         // Fetch documents and conversation history
         const initializeChat = async () => {
             setLoading(true);
             try {
-                // Step 1: Fetch publication details (same as before)
+                // Step 1: Fetch publication details
                 const token = await getToken();
                 if (!token) {
                     console.error("Failed to get authentication token");
                     setConnectionError("Authentication failed. Please log in again.");
                     return;
                 }
-
 
                 const response = await fetch(`${API_BASE_URL}/publications/publication/${publicationId}/`, {
                     headers: {
@@ -331,21 +338,18 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     const data = await response.json();
 
                     if (data.documents) {
-                        const fileMap = {};
+                        const fileMap: Record<string, FileInfo> = {};
                         Object.keys(data.documents).forEach(key => {
                             fileMap[key] = { name: key };
                         });
                         setAvailableFiles(fileMap);
-
-                    } else {
-
                     }
                 } else {
                     console.error("Failed to fetch publication:", response.status);
                     setConnectionError(`Failed to fetch publication data: ${response.status}`);
                 }
 
-                // Step 2: NEW - Fetch previous conversation if it exists
+                // Step 2: Fetch previous conversation if it exists
                 const conversationResponse = await fetch(`${API_BASE_URL}/publications/${publicationId}/conversation`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -357,12 +361,12 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                     if (conversationData && conversationData.messages && conversationData.messages.length > 0) {
                         // Convert backend messages to our message format
-                        const previousMessages = conversationData.messages.map(msg => {
+                        const previousMessages = conversationData.messages.map((msg: any) => {
                             // Process citations based on format
                             let citations = msg.citations;
                             if (citations && typeof citations === 'string' && citations.includes('\n')) {
                                 // If citations is a newline-separated string, split it into an array
-                                citations = citations.split('\n').filter(c => c.trim() !== '');
+                                citations = citations.split('\n').filter((c: string) => c.trim() !== '');
                             }
 
                             return {
@@ -373,7 +377,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                                 timestamp: new Date(msg.created_at)
                             };
                         });
-
 
                         setMessages(previousMessages);
                     } else {
@@ -387,7 +390,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     }
                 } else {
                     // If error or no previous conversation, show welcome message
-
                     setMessages([{
                         id: "welcome",
                         role: "assistant",
@@ -396,17 +398,15 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     }]);
                 }
 
-                // Step 3: Setup WebSocket (same as before)
-
+                // Step 3: Setup WebSocket
                 const connectionSuccess = await setupWebSocket();
 
-
                 if (!connectionSuccess) {
-
+                    // WebSocket connection failed handling
                 }
             } catch (error) {
                 console.error("Error initializing chat:", error);
-                setConnectionError(`Error initializing chat: ${error.message}`);
+                setConnectionError(`Error initializing chat: ${error instanceof Error ? error.message : "Unknown error"}`);
 
                 // Fall back to welcome message if there's an error
                 setMessages([{
@@ -430,7 +430,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
         // Cleanup function
         return () => {
             if (websocketRef.current) {
-
                 websocketRef.current.close();
             }
         };
@@ -465,7 +464,6 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
         // Ensure WebSocket connection is active
         if (!websocketRef.current || websocketRef.current.readyState !== WebSocket.OPEN) {
-
             const connectionSuccess = await setupWebSocket();
 
             if (!connectionSuccess) {
@@ -503,7 +501,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     {
                         id: `error-${Date.now()}`,
                         role: "assistant",
-                        content: `Fout bij het verzenden van bericht: ${error.message}`,
+                        content: `Fout bij het verzenden van bericht: ${error instanceof Error ? error.message : "Onbekende fout"}`,
                         timestamp: new Date()
                     }
                 ]);
@@ -539,6 +537,30 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
             websocketRef.current.close();
         }
         onClose();
+    };
+
+    // Helper function to render citations
+    const renderCitations = (citations: string[] | string | undefined) => {
+        if (!citations) return null;
+
+        // Handle string citations by splitting them into an array
+        const citationsArray = typeof citations === 'string'
+            ? citations.split('\n').filter(c => c.trim() !== '')
+            : citations;
+
+        return (
+            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Bronnen:</p>
+                <ul className="space-y-1">
+                    {citationsArray.map((citation, index) => (
+                        <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
+                            <FileTextIcon size={10} className="mt-1 shrink-0" />
+                            <span>{citation}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
     };
 
     return (
@@ -634,30 +656,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                                 <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</div>
 
                                 {/* Citations */}
-                                {message.citations && message.citations.length > 0 && (
-                                    <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                                        <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Bronnen:</p>
-                                        <ul className="space-y-1">
-                                            {Array.isArray(message.citations) ? (
-                                                // If citations is an array, map through it
-                                                message.citations.map((citation, index) => (
-                                                    <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
-                                                        <FileTextIcon size={10} className="mt-1 shrink-0" />
-                                                        <span>{citation}</span>
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                // If citations is a string, split by newlines
-                                                typeof message.citations === 'string' && message.citations.split('\n').map((citation, index) => (
-                                                    <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
-                                                        <FileTextIcon size={10} className="mt-1 shrink-0" />
-                                                        <span>{citation}</span>
-                                                    </li>
-                                                ))
-                                            )}
-                                        </ul>
-                                    </div>
-                                )}
+                                {renderCitations(message.citations)}
 
                                 <div className="mt-1 text-right">
                                     <span className="text-xs opacity-70">

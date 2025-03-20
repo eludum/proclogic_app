@@ -2,23 +2,36 @@
 
 import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
-import PublicationDetail from "../../_components/PublicationDetail";
+import PublicationDetail, { Publication } from "../../_components/PublicationDetail";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-interface Params {
-    workspace_id: string;
+interface PageProps {
+    params: Promise<{
+        workspace_id: string;
+    }>
 }
 
-export default async function PublicationDetailPage({ params }: { params: Params }) {
-    const resolvedParams = await params;
-    const workspaceId = resolvedParams.workspace_id;
+// Match the exact type expected by the client component
+type TimelineEventStatus = 'completed' | 'in-progress' | 'pending';
+type TimelineEventIcon = 'calendar' | 'file' | 'clock' | 'check-circle';
+
+interface TimelineEvent {
+    date: Date | string;
+    title: string;
+    description: string;
+    status: TimelineEventStatus;
+    icon: TimelineEventIcon;
+}
+
+export default async function PublicationDetailPage({ params }: PageProps) {
+    const { workspace_id: workspaceId } = await params;
 
     const { getToken } = await auth()
 
     // Fetch publication details
-    let publication = null;
-    let fetchError = null;
+    let publication: Publication | null = null;
+    let fetchError: string | null = null;
 
     try {
         const token = await getToken();
@@ -55,14 +68,14 @@ export default async function PublicationDetailPage({ params }: { params: Params
     }
 
     // Generate timeline events based on publication data
-    const generateTimelineEvents = (publication: { dispatch_date: string | number | Date; publication_date: string | number | Date; submission_deadline: string | number | Date; }) => {
-        if (!publication) return [];
+    const generateTimelineEvents = (pub: Publication): TimelineEvent[] => {
+        if (!pub) return [];
 
-        const events = [];
+        const events: TimelineEvent[] = [];
 
-        if (publication.dispatch_date) {
+        if (pub.dispatch_date) {
             events.push({
-                date: new Date(publication.dispatch_date),
+                date: new Date(pub.dispatch_date),
                 title: "Publicatie verzonden",
                 description: "Aanbesteding officieel verzonden",
                 status: "completed",
@@ -70,9 +83,9 @@ export default async function PublicationDetailPage({ params }: { params: Params
             });
         }
 
-        if (publication.publication_date) {
+        if (pub.publication_date) {
             events.push({
-                date: new Date(publication.publication_date),
+                date: new Date(pub.publication_date),
                 title: "Gepubliceerd",
                 description: "Aanbesteding officieel gepubliceerd",
                 status: "completed",
@@ -90,9 +103,10 @@ export default async function PublicationDetailPage({ params }: { params: Params
             icon: "clock"
         });
 
-        if (publication.submission_deadline) {
-            const deadlineDate = new Date(publication.submission_deadline);
-            const status = now > deadlineDate ? "completed" : "upcoming";
+        if (pub.submission_deadline) {
+            const deadlineDate = new Date(pub.submission_deadline);
+            // Define status based on date comparison, ensuring it's a valid TimelineEventStatus
+            const status: TimelineEventStatus = now > deadlineDate ? "completed" : "pending";
 
             events.push({
                 date: deadlineDate,
@@ -104,7 +118,11 @@ export default async function PublicationDetailPage({ params }: { params: Params
         }
 
         // Sort events by date
-        return events.sort((a, b) => a.date.getTime() - b.date.getTime());
+        return events.sort((a, b) => {
+            const dateA = a.date instanceof Date ? a.date.getTime() : new Date(a.date).getTime();
+            const dateB = b.date instanceof Date ? b.date.getTime() : new Date(b.date).getTime();
+            return dateA - dateB;
+        });
     };
 
     // Pass pre-fetched data to the client component

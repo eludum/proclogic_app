@@ -12,21 +12,78 @@ import { PublicationCard } from "./PublicationCard";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
+// Define types for our component
+interface Publication {
+    workspace_id: string;
+    title: string;
+    original_description: string;
+    is_active: boolean;
+    submission_deadline?: string | Date;
+    organisation: string;
+    sector: string;
+    cpv_code: string;
+    region?: string[];
+    is_recommended?: boolean;
+    is_viewed?: boolean;
+    is_saved?: boolean;
+    match_percentage?: number;
+    publication_in_your_sector?: boolean;
+    publication_in_your_region?: boolean;
+    [key: string]: any; // For any additional properties
+}
+
+interface PaginationState {
+    page: number;
+    size: number;
+    total: number;
+    pages: number;
+}
+
+interface InitialPublications {
+    items: Publication[];
+    page: number;
+    size: number;
+    total: number;
+    pages: number;
+}
+
+interface FilterState {
+    searchTerm: string;
+    activeFilters: {
+        recommended: boolean;
+        viewed: boolean;
+        saved: boolean;
+        active: boolean;
+        [key: string]: boolean;
+    };
+    sectorFilters: string[];
+    regionFilters: string[];
+    dateFilter: string;
+    cpvCodeFilter: string;
+}
+
+interface PublicationListProps {
+    initialPublications?: InitialPublications;
+    isSearchPage?: boolean;
+    isSavedPage?: boolean;
+    isOverviewPage?: boolean;
+}
+
 export default function PublicationList({
     initialPublications,
     isSearchPage = false,
     isSavedPage = false,
     isOverviewPage = false
-}) {
+}: PublicationListProps) {
     // UI states
-    const [activeChatPublication, setActiveChatPublication] = useState(null);
-    const [savingPublications, setSavingPublications] = useState({});
-    const [unsavingPublications, setUnsavingPublications] = useState({});
-    const [isLoading, setIsLoading] = useState(false);
+    const [activeChatPublication, setActiveChatPublication] = useState<Publication | null>(null);
+    const [savingPublications, setSavingPublications] = useState<Record<string, boolean>>({});
+    const [unsavingPublications, setUnsavingPublications] = useState<Record<string, boolean>>({});
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Publications data
-    const [publications, setPublications] = useState(initialPublications?.items || []);
-    const [pagination, setPagination] = useState({
+    const [publications, setPublications] = useState<Publication[]>(initialPublications?.items || []);
+    const [pagination, setPagination] = useState<PaginationState>({
         page: initialPublications?.page || 1,
         size: initialPublications?.size || 10,
         total: initialPublications?.total || 0,
@@ -34,7 +91,7 @@ export default function PublicationList({
     });
 
     // Current filters state
-    const [filters, setFilters] = useState({
+    const [filters, setFilters] = useState<FilterState>({
         searchTerm: "",
         activeFilters: {
             recommended: isOverviewPage, // Default true only on overview page
@@ -49,9 +106,9 @@ export default function PublicationList({
     });
 
     // Track if this is the initial load
-    const isInitialLoad = useRef(true);
+    const isInitialLoad = useRef<boolean>(true);
     // Track current API request to cancel if another is made
-    const currentRequestController = useRef(null);
+    const currentRequestController = useRef<AbortController | null>(null);
 
     const { getToken } = useAuth();
     const { toast } = useToast();
@@ -114,7 +171,7 @@ export default function PublicationList({
             // Add date filter
             if (newFilters.dateFilter) {
                 const today = new Date();
-                let dateFrom;
+                let dateFrom: Date | undefined;
 
                 if (newFilters.dateFilter === "7d") {
                     dateFrom = new Date(today);
@@ -167,7 +224,7 @@ export default function PublicationList({
             }
         } catch (error) {
             // Only report errors if the request wasn't aborted
-            if (error.name !== 'AbortError') {
+            if (error instanceof Error && error.name !== 'AbortError') {
                 console.error('Error fetching publications:', error);
                 toast({
                     title: "Fout bij laden",
@@ -177,7 +234,7 @@ export default function PublicationList({
             }
         } finally {
             // Only update loading state if the request wasn't aborted
-            if (!signal.aborted) {
+            if (currentRequestController.current && !currentRequestController.current.signal.aborted) {
                 setIsLoading(false);
                 currentRequestController.current = null;
             }
@@ -185,23 +242,23 @@ export default function PublicationList({
     }, [filters, pagination.size, getToken, toast]);
 
     // Handle filter changes with debounce
-    const handleFiltersChange = useCallback((newFilters) => {
+    const handleFiltersChange = useCallback((newFilters: FilterState) => {
         setFilters(newFilters);
         loadPublications(1, newFilters);
     }, [loadPublications]);
 
     // Handle page change
-    const handlePageChange = useCallback((newPage) => {
+    const handlePageChange = useCallback((newPage: number) => {
         loadPublications(newPage);
     }, [loadPublications]);
 
     // Start a chat with a publication
-    const startChat = (publication) => {
+    const startChat = (publication: Publication) => {
         setActiveChatPublication(publication);
     };
 
     // Save a publication
-    const savePublication = async (publication) => {
+    const savePublication = async (publication: Publication) => {
         setSavingPublications(prev => ({ ...prev, [publication.workspace_id]: true }));
 
         try {
@@ -255,7 +312,7 @@ export default function PublicationList({
     };
 
     // Unsave a publication
-    const unsavePublication = async (publication) => {
+    const unsavePublication = async (publication: Publication) => {
         setUnsavingPublications(prev => ({ ...prev, [publication.workspace_id]: true }));
 
         try {
@@ -309,7 +366,7 @@ export default function PublicationList({
     };
 
     // Mark publication as viewed
-    const markAsViewed = async (publication) => {
+    const markAsViewed = async (publication: Publication) => {
         try {
             const token = await getToken();
             const response = await fetch(`${API_BASE_URL}/publications/publication/${publication.workspace_id}/viewed`, {

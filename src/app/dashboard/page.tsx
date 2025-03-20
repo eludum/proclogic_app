@@ -33,7 +33,11 @@ export default async function Inbox() {
 
         notificationsData = await response.json();
     } catch (error) {
-        fetchError = error.message;
+        if (error instanceof Error) {
+            fetchError = error.message;
+        } else {
+            fetchError = "An unknown error occurred";
+        }
         console.error("Error fetching notifications:", error);
     }
 

@@ -120,7 +120,7 @@ export default function StatusDialog({
                                 <AlertTriangle className="text-red-500 mt-0.5 flex-shrink-0" size={24} />
                                 <div>
                                     <h3 className="font-medium text-red-700 dark:text-red-400">
-                                        Weet je zeker dat je "{status?.name}" wilt verwijderen?
+                                        Weet je zeker dat je &quot;{status?.name}&quot; wilt verwijderen?
                                     </h3>
                                     <p className="text-sm text-red-600 dark:text-red-300 mt-1">
                                         Aanbestedingen in deze status worden naar een andere status verplaatst.
@@ -178,8 +178,8 @@ export default function StatusDialog({
                                         type="button"
                                         onClick={() => setColor(option.value)}
                                         className={`w-full aspect-square rounded-full border-2 ${color === option.value
-                                                ? 'border-gray-900 dark:border-white'
-                                                : 'border-transparent'
+                                            ? 'border-gray-900 dark:border-white'
+                                            : 'border-transparent'
                                             }`}
                                         style={{ backgroundColor: option.value }}
                                         title={option.name}

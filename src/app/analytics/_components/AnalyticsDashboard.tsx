@@ -3,23 +3,37 @@
 import { Toaster } from '@/components/Toaster';
 import { useToast } from '@/lib/useToast';
 import { useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-// Component imports
 import AnalyticsSummary from './AnalyticsSummary';
 import CompetitorAnalysis from './CompetitorAnalysis';
 import ExportPanel from './ExportPanel';
 import FilterPanel from './FilterPanel';
 
-const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) => {
+interface AnalyticsDashboardProps {
+    initialData?: {
+        years?: number[];
+        companySectors?: { name: string; cpvCodes?: string[] }[];
+        totalValue?: number;
+        sectorData?: Array<any>;
+    };
+    error: string | null;
+    apiBaseUrl: string;
+}
+
+const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
+    initialData = {},
+    error: initialError,
+    apiBaseUrl
+}) => {
     const { getToken } = useAuth();
     const { toast } = useToast();
 
     // State for filters
-    const [selectedYear, setSelectedYear] = useState(null);
+    const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [timeframe, setTimeframe] = useState('monthly');
     const [selectedSector, setSelectedSector] = useState('all');
-    const [availableYears, setAvailableYears] = useState(initialData?.years || []);
+    const [availableYears, setAvailableYears] = useState<number[]>(initialData?.years || []);
     const [companySectors, setCompanySectors] = useState(initialData?.companySectors || []);
 
     // State for data
@@ -29,7 +43,6 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
         winnerData: [],
         organisationData: [],
         timeSeriesData: [],
-        // valueRangesData: [],
         regionalData: []
     });
 
@@ -43,7 +56,16 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
         valueRanges: false,
         regional: false
     });
-    const [errors, setErrors] = useState({
+
+    const [errors, setErrors] = useState<{
+        total: string | null;
+        sectors: string | null;
+        winners: string | null;
+        organisations: string | null;
+        timeSeries: string | null;
+        valueRanges: string | null;
+        regional: string | null;
+    }>({
         total: initialError,
         sectors: initialError,
         winners: null,
@@ -54,14 +76,15 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
     });
 
     // Helper function to fetch data from API
-    const fetchData = async (endpoint, params = {}) => {
+    const fetchData = useCallback(async (endpoint: string, params: Record<string, any> = {}) => {
         try {
             // Build query string from params
             const queryString = Object.keys(params)
                 .filter(key => params[key] !== null && params[key] !== undefined)
                 .map(key => {
                     if (Array.isArray(params[key])) {
-                        return params[key].map(value => `${key}=${encodeURIComponent(value)}`).join('&');
+                        return params[key].map((value: string) =>
+                            `${key}=${encodeURIComponent(value)}`).join('&');
                     }
                     return `${key}=${encodeURIComponent(params[key])}`;
                 })
@@ -91,13 +114,13 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
             console.error(`Error fetching data from ${endpoint}:`, error);
             throw error;
         }
-    };
+    }, [apiBaseUrl, getToken]);
 
     // Load data when filters change
     useEffect(() => {
         const loadData = async () => {
             // Sector filtering params
-            const sectorParams = {};
+            const sectorParams: { sector?: string[] } = {};
             if (selectedSector !== 'all') {
                 // Find the selected sector in the company sectors
                 const sector = companySectors.find(s => s.name === selectedSector);
@@ -111,13 +134,14 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
             setIsLoading(prev => ({ ...prev, total: true }));
             try {
                 const totalValueData = await fetchData('/analytics/total-value', {
-                    year: selectedYear,
+                    year: selectedYear ?? 0,
                     ...sectorParams
                 });
                 setDashboardData(prev => ({ ...prev, totalValue: totalValueData.total_value }));
                 setErrors(prev => ({ ...prev, total: null }));
             } catch (error) {
-                setErrors(prev => ({ ...prev, total: error.message }));
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                setErrors(prev => ({ ...prev, total: errorMessage }));
                 toast({
                     title: "Fout bij laden",
                     description: "De totale waarde kon niet worden geladen.",
@@ -131,13 +155,14 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
             setIsLoading(prev => ({ ...prev, sectors: true }));
             try {
                 const sectorsData = await fetchData('/analytics/by-sector', {
-                    year: selectedYear,
+                    year: selectedYear ?? 0,
                     ...sectorParams
                 });
                 setDashboardData(prev => ({ ...prev, sectorData: sectorsData }));
                 setErrors(prev => ({ ...prev, sectors: null }));
             } catch (error) {
-                setErrors(prev => ({ ...prev, sectors: error.message }));
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                setErrors(prev => ({ ...prev, sectors: errorMessage }));
                 toast({
                     title: "Fout bij laden",
                     description: "De sectorgegevens konden niet worden geladen.",
@@ -158,7 +183,8 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                 setDashboardData(prev => ({ ...prev, winnerData: winnersData }));
                 setErrors(prev => ({ ...prev, winners: null }));
             } catch (error) {
-                setErrors(prev => ({ ...prev, winners: error.message }));
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                setErrors(prev => ({ ...prev, winners: errorMessage }));
                 toast({
                     title: "Fout bij laden",
                     description: "De gegevens over concurrenten konden niet worden geladen.",
@@ -168,90 +194,10 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                 setIsLoading(prev => ({ ...prev, winners: false }));
             }
 
-            // Organisations
-            setIsLoading(prev => ({ ...prev, organisations: true }));
-            try {
-                const organisationsData = await fetchData('/analytics/by-organisation', {
-                    year: selectedYear,
-                    limit: 10,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, organisationData: organisationsData }));
-                setErrors(prev => ({ ...prev, organisations: null }));
-            } catch (error) {
-                setErrors(prev => ({ ...prev, organisations: error.message }));
-                toast({
-                    title: "Fout bij laden",
-                    description: "De organisatiegegevens konden niet worden geladen.",
-                    variant: "error"
-                });
-            } finally {
-                setIsLoading(prev => ({ ...prev, organisations: false }));
-            }
-
-            // Time series
-            setIsLoading(prev => ({ ...prev, timeSeries: true }));
-            try {
-                const years = selectedYear ? [selectedYear] : null;
-                const timeSeriesData = await fetchData('/analytics/time-series', {
-                    timeframe: timeframe,
-                    years: years,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, timeSeriesData: timeSeriesData }));
-                setErrors(prev => ({ ...prev, timeSeries: null }));
-            } catch (error) {
-                setErrors(prev => ({ ...prev, timeSeries: error.message }));
-                toast({
-                    title: "Fout bij laden",
-                    description: "De tijdreeksgegevens konden niet worden geladen.",
-                    variant: "error"
-                });
-            } finally {
-                setIsLoading(prev => ({ ...prev, timeSeries: false }));
-            }
-
-            // Value ranges
-            // setIsLoading(prev => ({ ...prev, valueRanges: true }));
-            // try {
-            //     const valueRangesData = await fetchData('/analytics/value-ranges', {
-            //         year: selectedYear,
-            //         ...sectorParams
-            //     });
-            //     setDashboardData(prev => ({ ...prev, valueRangesData: valueRangesData }));
-            //     setErrors(prev => ({ ...prev, valueRanges: null }));
-            // } catch (error) {
-            //     setErrors(prev => ({ ...prev, valueRanges: error.message }));
-            //     toast({
-            //         title: "Fout bij laden",
-            //         description: "De gegevens over waarderanges konden niet worden geladen.",
-            //         variant: "error"
-            //     });
-            // } finally {
-            //     setIsLoading(prev => ({ ...prev, valueRanges: false }));
-            // }
-
-            // Regional data (nuts codes)
-            setIsLoading(prev => ({ ...prev, regional: true }));
-            try {
-                // This would need a new backend endpoint
-                const regionalData = await fetchData('/analytics/by-region', {
-                    year: selectedYear,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, regionalData: regionalData }));
-                setErrors(prev => ({ ...prev, regional: null }));
-            } catch (error) {
-                setErrors(prev => ({ ...prev, regional: error.message }));
-                // Don't show toast for this as it might be a new endpoint not yet implemented
-                console.warn("Regional data endpoint might not be implemented yet:", error);
-            } finally {
-                setIsLoading(prev => ({ ...prev, regional: false }));
-            }
         };
 
         loadData();
-    }, [selectedYear, timeframe, selectedSector, apiBaseUrl, getToken, toast]);
+    }, [selectedYear, timeframe, selectedSector, fetchData, toast, companySectors]);
 
     return (
         <>
@@ -287,19 +233,6 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                 />
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-                    {/* <TimeSeriesChart
-                        data={dashboardData.timeSeriesData}
-                        isLoading={isLoading.timeSeries}
-                        error={errors.timeSeries}
-                        className="xl:col-span-2"
-                    />
-
-                    <SectorComparisonChart
-                        data={dashboardData.sectorData}
-                        isLoading={isLoading.sectors}
-                        error={errors.sectors}
-                    /> */}
-
                     <CompetitorAnalysis
                         data={dashboardData.winnerData}
                         isLoading={isLoading.winners}
@@ -307,18 +240,6 @@ const AnalyticsDashboard = ({ initialData, error: initialError, apiBaseUrl }) =>
                         className="xl:col-span-2"
 
                     />
-                    {/* 
-                    <ValueDistributionChart
-                        data={dashboardData.valueRangesData}
-                        isLoading={isLoading.valueRanges}
-                        error={errors.valueRanges}
-                    />
-
-                    <RegionalAnalysis
-                        data={dashboardData.regionalData || []}
-                        isLoading={isLoading.regional}
-                        error={errors.regional}
-                    /> */}
                 </div>
 
                 <ExportPanel

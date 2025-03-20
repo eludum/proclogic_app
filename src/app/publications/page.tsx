@@ -1,6 +1,7 @@
 "use server"
 import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
+import { Sparkles } from "lucide-react";
 import PublicationList from "./_components/PublicationList";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -35,7 +36,7 @@ export default async function Publications() {
 
     publicationsData = await response.json();
   } catch (error) {
-    fetchError = error.message;
+    fetchError = error instanceof Error ? error.message : String(error);
     console.error("Error fetching publications:", error);
   }
 
@@ -43,8 +44,8 @@ export default async function Publications() {
     <section aria-label="Publications">
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
         <div className="w-full">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingen Overzicht</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk aanbevolen aanbestedingen voor uw bedrijf</p>
+          <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Overzicht van alle aanbevolen publieke aanbestedingen</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk hieronder aanbevolen publieke aanbestedingen die Procy voor je bedrijf heeft uitgekozen.</p>
         </div>
       </div>
 
@@ -55,18 +56,30 @@ export default async function Publications() {
             <form action="/publications">
               <button
                 type="submit"
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                className="mt-4 px-4 py-2 bg-astral-500 text-white rounded-md hover:bg-astral-600 transition-colors"
               >
                 Probeer opnieuw
               </button>
             </form>
           </div>
         ) : publicationsData.items.length === 0 ? (
-          <div className="p-6 text-center bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
-            <p className="text-gray-600 dark:text-gray-300 mb-3">Geen aanbevolen aanbestedingen gevonden</p>
-            <a href="/publications/search" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-              Zoek alle aanbestedingen
-            </a>
+          <div className="p-12 text-center bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm my-4 mx-6">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="w-16 h-16 flex items-center justify-center rounded-full bg-astral-100 dark:bg-astral-900/30">
+                <Sparkles className="w-8 h-8 text-astral-600 dark:text-astral-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Geen aanbevolen publieke aanbestedingen</h3>
+              <p className="text-gray-600 dark:text-gray-300 max-w-md mb-4">
+                Op dit moment zijn er geen aanbevolen publieke aanbestedingen gevonden die passen bij je bedrijf.
+              </p>
+              <a href="/publications/search" className="px-4 py-2 bg-astral-600 text-white rounded-md hover:bg-astral-700 transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Zoek alle aanbestedingen
+              </a>
+            </div>
           </div>
         ) : (
           <div className="p-4">

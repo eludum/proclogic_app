@@ -68,7 +68,7 @@ export default function StepWebsiteParser({
                     </div>
                     {isUrlValid === false && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                            Voer een geldige website URL in zoals "bedrijf.be", "www.bedrijf.be", "http://bedrijf.be" of "https://bedrijf.be"
+                            Voer een geldige website URL in zoals &quot;bedrijf.be&quot;, &quot;www.bedrijf.be&quot;, &quot;http://bedrijf.be&quot; of &quot;https://bedrijf.be&quot;
                         </p>
                     )}
                 </div>
@@ -80,7 +80,7 @@ export default function StepWebsiteParser({
                 )}
 
                 <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                    <p>Je kunt ook doorgaan zonder website analyse door op de knop 'Overslaan' te klikken.</p>
+                    <p>Je kunt ook doorgaan zonder website analyse door op de knop &quot;Overslaan&quot; te klikken.</p>
                 </div>
             </div>
         </div>

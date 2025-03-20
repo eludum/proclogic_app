@@ -4,7 +4,7 @@ import { BarChart2Icon, BuildingIcon, CalendarIcon, PieChartIcon } from 'lucide-
 import { ErrorMessage, LoadingSpinner } from './CommonComponents';
 
 // Format large numbers for display with euro symbol
-const formatValue = (value) => {
+const formatValue = (value: number): string => {
     if (!value && value !== 0) return 'N/A';
 
     if (value >= 1000000) {
@@ -15,8 +15,28 @@ const formatValue = (value) => {
     return `€${value}`;
 };
 
+// Interface for sector data
+interface SectorDataItem {
+    count: number;
+    sector: string;
+    total_value?: number;
+}
+
+// Summary card component props
+interface SummaryCardProps {
+    title: string;
+    value: string | number;
+    icon: React.ComponentType<{ className?: string }>;
+    colorClass?: string;
+}
+
 // Summary card component
-const SummaryCard = ({ title, value, icon, colorClass = "text-blue-600 dark:text-blue-400" }) => {
+const SummaryCard: React.FC<SummaryCardProps> = ({
+    title,
+    value,
+    icon,
+    colorClass = "text-blue-600 dark:text-blue-400"
+}) => {
     const IconComponent = icon;
 
     return (
@@ -30,7 +50,21 @@ const SummaryCard = ({ title, value, icon, colorClass = "text-blue-600 dark:text
     );
 };
 
-const AnalyticsSummary = ({ totalValue, sectorData, isLoading, error }) => {
+// Analytics summary component props
+interface AnalyticsSummaryProps {
+    totalValue: number;
+    sectorData: SectorDataItem[] | null;
+    isLoading: boolean;
+    error: string | null;
+}
+
+// Analytics summary component
+const AnalyticsSummary: React.FC<AnalyticsSummaryProps> = ({
+    totalValue,
+    sectorData,
+    isLoading,
+    error
+}) => {
     if (isLoading) {
         return <LoadingSpinner message="Samenvattingsgegevens laden..." />;
     }
@@ -40,7 +74,7 @@ const AnalyticsSummary = ({ totalValue, sectorData, isLoading, error }) => {
     }
 
     // Calculate summary metrics
-    const totalCount = sectorData ? sectorData.reduce((acc, item) => acc + item.count, 0) : 0;
+    const totalCount = sectorData ? sectorData.reduce((acc: number, item: SectorDataItem) => acc + item.count, 0) : 0;
     const avgValue = totalCount ? totalValue / totalCount : 0;
     const topSector = sectorData && sectorData.length > 0 ? sectorData[0].sector : "N/A";
 

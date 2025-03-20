@@ -1,18 +1,17 @@
 import { Card } from "@/components/Card"
-import { User } from "@clerk/nextjs/server"
 import { PenSquareIcon, Wand } from "lucide-react"
 import { Logo } from "../../../../public/Logo"
 
 interface StepWelcomeProps {
     selectedOption: "ai" | "manual" | null
     setSelectedOption: (option: "ai" | "manual") => void
-    user: User | null | undefined
+    user_first_name: string
 }
 
 export default function StepWelcome({
     selectedOption,
     setSelectedOption,
-    user
+    user_first_name
 }: StepWelcomeProps) {
     return (
         <div className="flex flex-col items-center space-y-8 animate-fadeIn">
@@ -22,11 +21,9 @@ export default function StepWelcome({
                     <Logo className="size-24" />
                 </div>
 
-                {user?.firstName && (
-                    <p className="mt-2 text-lg font-medium text-astral-600 dark:text-astral-400">
-                        Hallo {user.firstName}!
-                    </p>
-                )}
+                <p className="mt-2 text-lg font-medium text-astral-600 dark:text-astral-400">
+                    Hallo {user_first_name}!
+                </p>
 
                 <h1 className="text-2xl md:text-3xl font-bold mt-2 text-gray-900 dark:text-white">
                     Welkom bij ProcLogic

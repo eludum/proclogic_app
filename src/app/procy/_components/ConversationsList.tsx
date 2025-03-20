@@ -12,10 +12,10 @@ import ChatComponent from "../../publications/_components/ChatComponent";
 const API_BASE_URL = siteConfig.api_base_url;
 
 export default function ConversationsList() {
-    const [activeConversation, setActiveConversation] = useState(null);
-    const [conversations, setConversations] = useState([]);
+    const [activeConversation, setActiveConversation] = useState<{ id: string; updated_at: string; publication_workspace_id: string; publication_title: string; message_count: number; last_message_preview?: string } | null>(null);
+    const [conversations, setConversations] = useState<{ id: string; updated_at: string; publication_workspace_id: string; publication_title: string; message_count: number; last_message_preview?: string }[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const { getToken } = useAuth();
 
     // Fetch conversations
@@ -36,13 +36,17 @@ export default function ConversationsList() {
 
             const data = await response.json();
             // Sort conversations by updated_at (newest first)
-            const sortedConversations = data.sort((a, b) =>
-                new Date(b.updated_at) - new Date(a.updated_at)
+            const sortedConversations = data.sort((a: { updated_at: string | number | Date; }, b: { updated_at: string | number | Date; }) =>
+                new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
             );
             setConversations(sortedConversations);
             setError(null);
         } catch (err) {
-            setError(err.message);
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unknown error occurred");
+            }
         } finally {
             setLoading(false);
         }
@@ -54,21 +58,21 @@ export default function ConversationsList() {
     }, []);
 
     // Open chat with a conversation
-    const openChat = (conversation) => {
+    const openChat = (conversation: { id: string; updated_at: string; publication_workspace_id: string; publication_title: string; message_count: number; last_message_preview?: string }) => {
         setActiveConversation(conversation);
     };
 
     // Format date for display
-    const formatConversationDate = (dateString) => {
+    const formatConversationDate = (dateString: string | number | Date) => {
         const date = new Date(dateString);
         return formatDate(date);
     };
 
     // Calculate time since update
-    const getTimeSince = (dateString) => {
+    const getTimeSince = (dateString: string | number | Date) => {
         const date = new Date(dateString);
         const now = new Date();
-        const diffMs = now - date;
+        const diffMs = now.getTime() - date.getTime();
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
         if (diffDays === 0) {
@@ -153,7 +157,7 @@ export default function ConversationsList() {
                                 {conversation.last_message_preview && (
                                     <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md border-l-2 border-slate-300 dark:border-slate-700">
                                         <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 break-words whitespace-normal italic">
-                                            "{conversation.last_message_preview}"
+                                            &quot;{conversation.last_message_preview}&quot;
                                         </p>
                                     </div>
                                 )}
@@ -176,7 +180,6 @@ export default function ConversationsList() {
                 {activeConversation && (
                     <ChatComponent
                         publicationId={activeConversation.publication_workspace_id}
-                        conversationId={activeConversation.id}
                         onClose={() => {
                             setActiveConversation(null);
                             fetchConversations();

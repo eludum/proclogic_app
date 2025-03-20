@@ -22,7 +22,7 @@ export default function NavButtons({
             {currentStep !== STEPS.WELCOME && (
                 <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     onClick={goToPreviousStep}
                     className="flex items-center gap-2"
                     disabled={isSubmitting}

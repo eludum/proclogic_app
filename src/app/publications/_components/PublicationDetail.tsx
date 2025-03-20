@@ -25,11 +25,51 @@ import ChatComponent from "./ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
+// TODO: make one uniform interface
+// Define interfaces for the component
+export interface Publication {
+    publication_date: any;
+    dispatch_date: any;
+    cpv_additional_codes: string[];
+    workspace_id: string;
+    title: string;
+    original_description: string;
+    is_active: boolean;
+    submission_deadline?: string | Date;
+    organisation: string;
+    sector: string;
+    cpv_code: string;
+    region?: string[];
+    lots?: string[];
+    documents?: Record<string, any>;
+    estimated_value?: number;
+    accreditations?: Record<string, any>;
+    is_recommended?: boolean;
+    match_percentage?: number;
+    publication_in_your_sector?: boolean;
+    publication_in_your_region?: boolean;
+    ai_summary_without_documents?: string;
+    ai_summary_with_documents?: string;
+}
+
+interface TimelineEvent {
+    title: string;
+    date: Date | string;
+    description: string;
+    status: 'completed' | 'in-progress' | 'pending';
+    icon: 'calendar' | 'file' | 'clock' | 'check-circle';
+}
+
+interface PublicationDetailProps {
+    publication: Publication | null;
+    timelineEvents: TimelineEvent[];
+}
+
 // Modified getCompany hook to use server-side data
-export default function PublicationDetail({ publication, timelineEvents }) {
+export default function PublicationDetail({ publication, timelineEvents }: PublicationDetailProps) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState('ai');
-    const [activeChatPublication, setActiveChatPublication] = useState(null);
+    const [activeTab, setActiveTab] = useState<'ai' | 'original'>('ai');
+    const [activeChatPublication, setActiveChatPublication] = useState<Publication | null>(null);
 
     if (!publication) {
         return (
@@ -70,7 +110,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
         );
     }
 
-    const handleDownload = (filename) => {
+    const handleDownload = (filename: string) => {
         // Construct the document URL
         const downloadUrl = `${API_BASE_URL}/publications/publication/${publication.workspace_id}/document/${filename}`;
 
@@ -84,7 +124,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     };
 
     // Start a chat with a publication
-    const startChat = async (pub) => {
+    const startChat = async (pub: Publication) => {
         try {
             setActiveChatPublication(pub);
         } catch (error) {
@@ -95,7 +135,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
     const timeRemaining = getTimeRemaining(publication.submission_deadline);
 
     // Helper function to render icon based on string name
-    const renderIcon = (iconName, size = 14) => {
+    const renderIcon = (iconName: TimelineEvent['icon'], size = 14) => {
         switch (iconName) {
             case 'calendar': return <CalendarIcon size={size} />;
             case 'file': return <FileIcon size={size} />;
@@ -122,9 +162,9 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                         </div>
 
                         {/* Time remaining badge */}
-                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getTimeRemainingStyles(getTimeRemaining(publication.submission_deadline).variant)}`}>
+                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getTimeRemainingStyles(timeRemaining.variant)}`}>
                             <ClockIcon size={12} />
-                            <span>{getTimeRemaining(publication.submission_deadline).text}</span>
+                            <span>{timeRemaining.text}</span>
                         </div>
                     </div>
 
@@ -142,7 +182,7 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                     <div className="flex flex-wrap items-center">
                                         <div className="flex items-center text-xs">
                                             <span className="font-medium text-astral-700 dark:text-astral-300">Match score:</span>
-                                            <span className="ml-1 font-bold text-emerald-600 dark:text-emerald-400">{publication.match_percentage.toFixed(0)}%</span>
+                                            <span className="ml-1 font-bold text-emerald-600 dark:text-emerald-400">{publication.match_percentage?.toFixed(0)}%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -431,16 +471,13 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                                 <span>Procy</span>
                             </Button>
                             <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
-
                                 <Button
                                     className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
-
                                 >
                                     <RiExternalLinkLine className="size-5" />
                                     <span>Indienen</span>
                                 </Button>
                             </Link>
-
                         </div>
                     </div>
                 </div>
@@ -453,8 +490,6 @@ export default function PublicationDetail({ publication, timelineEvents }) {
                     onClose={() => setActiveChatPublication(null)}
                 />
             )}
-
-
         </section>
     );
 }

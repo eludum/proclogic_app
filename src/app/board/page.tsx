@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 import KanbanCard from './_components/KanbanCard';
 import KanbanColumn from './_components/KanbanColumn';
 import KanbanHeader from './_components/KanbanHeader';
-import StatusDialog from './_components/StatusDialog.tsx';
+import StatusDialog from './_components/StatusDialog';
 
 const API_BASE_URL = siteConfig.api_base_url;
 
@@ -513,7 +513,7 @@ export default function KanbanBoardPage() {
             {/* Main kanban board */}
             {isLoading ? (
                 <div className="flex justify-center items-center h-64">
-                    <Loader loadingtext="Kanban bord laden..." />
+                    <Loader loadingtext="Kanban bord laden..." size={32} />
                 </div>
             ) : (
                 <div className="flex-grow w-full overflow-hidden">

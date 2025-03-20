@@ -1,6 +1,18 @@
 "use client";
 
-const FilterPanel = ({
+interface FilterPanelProps {
+    selectedYear: number | null;
+    setSelectedYear: (year: number | null) => void;
+    timeframe: string;
+    setTimeframe: (timeframe: string) => void;
+    selectedSector: string;
+    setSelectedSector: (sector: string) => void;
+    availableYears: number[];
+    companySectors: { name: string }[];
+    isLoading: boolean;
+}
+
+const FilterPanel: React.FC<FilterPanelProps> = ({
     selectedYear,
     setSelectedYear,
     timeframe,

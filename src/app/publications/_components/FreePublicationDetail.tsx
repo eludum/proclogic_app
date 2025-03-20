@@ -19,7 +19,36 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function FreePublicationDetail({ publication, timelineEvents }) {
+// Define types for our component props
+interface TimelineEvent {
+    title: string;
+    date: Date | string;
+    description: string;
+    status: 'completed' | 'in-progress' | 'pending';
+    icon: 'calendar' | 'file' | 'clock' | 'check-circle';
+}
+
+export interface Publication {
+    dispatch_date: any;
+    publication_date: any;
+    workspace_id: string;
+    title: string;
+    original_description: string;
+    is_active: boolean;
+    submission_deadline?: Date | string;
+    organisation: string;
+    sector: string;
+    region?: string[];
+    cpv_code: string;
+    cpv_additional_codes?: string[];
+}
+
+interface FreePublicationDetailProps {
+    publication: Publication | null;
+    timelineEvents: TimelineEvent[];
+}
+
+export default function FreePublicationDetail({ publication, timelineEvents }: FreePublicationDetailProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('original');
 
@@ -72,7 +101,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
     const timeRemaining = getTimeRemaining(publication.submission_deadline);
 
     // Helper function to render icon based on string name
-    const renderIcon = (iconName, size = 14) => {
+    const renderIcon = (iconName: TimelineEvent['icon'], size = 14) => {
         switch (iconName) {
             case 'calendar': return <CalendarIcon size={size} />;
             case 'file': return <FileIcon size={size} />;
@@ -336,20 +365,6 @@ export default function FreePublicationDetail({ publication, timelineEvents }) {
                             </div>
                         </div>
 
-                        {/* Source information with more prominence */}
-                        {/* <div className="dark:border-slate-800">
-                            <h3 className="font-medium text-base mb-2 text-gray-900 dark:text-white">Indienen</h3>
-                            <div className="flex items-center text-gray-500 dark:text-gray-400">
-                                <a
-                                    href={`https://www.publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                                >
-                                    publicprocurement.be
-                                </a>
-                            </div>
-                        </div> */}
                     </div>
                 </div>
             </div>

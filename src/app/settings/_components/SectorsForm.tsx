@@ -217,7 +217,7 @@ export default function SectorsForm({ company, onSave, saving }: SectorsFormProp
                                     {/* CPV Codes Input */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            CPV-codes (gescheiden door komma's)
+                                            CPV-codes (gescheiden door komma&apos;s)
                                         </label>
                                         <input
                                             type="text"

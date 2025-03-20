@@ -8,23 +8,54 @@ import { Pagination } from "./Pagination";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default function FreePublicationList({ initialPublications }) {
-    const [expandedDescriptions, setExpandedDescriptions] = useState({});
-    const [publications, setPublications] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalItems, setTotalItems] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
-    const [currentFilters, setCurrentFilters] = useState({
+// Define interfaces for the component
+interface Publication {
+    workspace_id: string;
+    title: string;
+    original_description: string;
+    is_active: boolean;
+    publication_date: string | Date;
+    submission_deadline?: string | Date;
+    organisation: string;
+    sector: string;
+    cpv_code: string;
+    region?: string[];
+}
+
+interface PaginatedResponse {
+    items: Publication[];
+    page: number;
+    pages: number;
+    total: number;
+}
+
+interface FilterState {
+    searchTerm: string;
+    sectorFilters: string[];
+    regionFilters: string[];
+}
+
+interface FreePublicationListProps {
+    initialPublications: PaginatedResponse;
+}
+
+export default function FreePublicationList({ initialPublications }: FreePublicationListProps) {
+    const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+    const [publications, setPublications] = useState<Publication[]>([]);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [totalPages, setTotalPages] = useState<number>(1);
+    const [totalItems, setTotalItems] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [currentFilters, setCurrentFilters] = useState<FilterState>({
         searchTerm: "",
         sectorFilters: [],
         regionFilters: []
     });
 
     // Track if this is the initial load
-    const isInitialLoad = useRef(true);
+    const isInitialLoad = useRef<boolean>(true);
     // Track current API request to cancel if another is made
-    const currentRequestController = useRef(null);
+    const currentRequestController = useRef<AbortController | null>(null);
 
     // Initialize state from initialPublications prop
     useEffect(() => {
@@ -47,7 +78,7 @@ export default function FreePublicationList({ initialPublications }) {
     }, [initialPublications]);
 
     // Toggle description expansion for a publication
-    const toggleDescription = (id) => {
+    const toggleDescription = (id: string) => {
         setExpandedDescriptions(prev => ({
             ...prev,
             [id]: !prev[id]
@@ -107,7 +138,7 @@ export default function FreePublicationList({ initialPublications }) {
                 return;
             }
 
-            const data = await response.json();
+            const data = await response.json() as PaginatedResponse;
 
             // Only update state if the request wasn't aborted
             if (!signal.aborted) {
@@ -142,7 +173,7 @@ export default function FreePublicationList({ initialPublications }) {
             }
         } catch (error) {
             // Only log errors if the request wasn't aborted
-            if (error.name !== 'AbortError') {
+            if (error instanceof Error && error.name !== 'AbortError') {
                 console.error('Error fetching publications:', error);
             }
         } finally {
@@ -155,7 +186,7 @@ export default function FreePublicationList({ initialPublications }) {
     }, [currentFilters]);
 
     // Handle page change
-    const handlePageChange = useCallback((newPage) => {
+    const handlePageChange = useCallback((newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages && !isLoading) {
             setCurrentPage(newPage);
             loadPublications(newPage);
@@ -163,7 +194,7 @@ export default function FreePublicationList({ initialPublications }) {
     }, [totalPages, isLoading, loadPublications]);
 
     // Handle filter changes
-    const handleFiltersChange = useCallback((newFilters) => {
+    const handleFiltersChange = useCallback((newFilters: FilterState) => {
         setCurrentFilters(newFilters);
         loadPublications(1, newFilters);
     }, [loadPublications]);

@@ -1,5 +1,13 @@
 import { Button } from '@/components/Button';
-import { InfoIcon, MapPinIcon, SaveIcon } from 'lucide-react';
+import { Input } from '@/components/Input';
+import { cx } from "@/lib/utils";
+import {
+    CheckCircle,
+    InfoIcon,
+    MapPinIcon,
+    SaveIcon,
+    SearchIcon
+} from 'lucide-react';
 import { useState } from 'react';
 import { Company } from '../company-profile/page';
 
@@ -28,9 +36,40 @@ const availableRegions = [
     { value: "BE", label: "België (Heel België)" },
 ];
 
+// Group regions into categories
+const regionCategories = [
+    {
+        name: "Landelijk",
+        regions: ["BE"]
+    },
+    {
+        name: "Gewesten",
+        regions: ["BE1", "BE2", "BE3"]
+    },
+    {
+        name: "Provincies in Vlaanderen",
+        regions: ["BE21", "BE22", "BE23", "BE24", "BE25"]
+    },
+    {
+        name: "Provincies in Wallonië",
+        regions: ["BE31", "BE32", "BE33", "BE34", "BE35"]
+    },
+    {
+        name: "Brussel",
+        regions: ["BE10"]
+    }
+];
+
 export default function RegionsForm({ company, onSave, saving }: RegionsFormProps) {
     const [selectedRegions, setSelectedRegions] = useState<string[]>(
         company.operating_regions || []
+    );
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filter regions based on search query
+    const filteredRegions = availableRegions.filter(region =>
+        region.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        region.value.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const toggleRegion = (regionValue: string) => {
@@ -41,12 +80,35 @@ export default function RegionsForm({ company, onSave, saving }: RegionsFormProp
         }
     };
 
-    const selectAll = () => {
+    const selectAllRegions = () => {
         setSelectedRegions(availableRegions.map(r => r.value));
     };
 
-    const clearAll = () => {
+    const clearAllRegions = () => {
         setSelectedRegions([]);
+    };
+
+    const selectCategory = (category: string) => {
+        const categoryToRegions: Record<string, string[]> = {
+            "Landelijk": ["BE"],
+            "Gewesten": ["BE1", "BE2", "BE3"],
+            "Provincies in Vlaanderen": ["BE21", "BE22", "BE23", "BE24", "BE25"],
+            "Provincies in Wallonië": ["BE31", "BE32", "BE33", "BE34", "BE35"],
+            "Brussel": ["BE10"]
+        };
+
+        const regionsToAdd = categoryToRegions[category] || [];
+
+        // Add all regions from the category that aren't already selected
+        setSelectedRegions(prev => {
+            const newRegions = [...prev];
+            regionsToAdd.forEach(region => {
+                if (!newRegions.includes(region)) {
+                    newRegions.push(region);
+                }
+            });
+            return newRegions;
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -54,24 +116,16 @@ export default function RegionsForm({ company, onSave, saving }: RegionsFormProp
         await onSave({ operating_regions: selectedRegions.length > 0 ? selectedRegions : null });
     };
 
-    // Group regions by the first character (B for Belgium, then by number)
-    const groupedRegions = availableRegions.reduce((acc, region) => {
-        const key = region.value.charAt(0) + (region.value.length > 2 ? region.value.charAt(1) : '');
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(region);
-        return acc;
-    }, {} as Record<string, typeof availableRegions>);
-
     return (
         <form onSubmit={handleSubmit}>
             <div className="space-y-8">
                 <div>
                     <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
-                        Operationele Regio's
+                        Operationele Regio&apos;s
                     </h3>
 
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Selecteer de regio's waar uw bedrijf actief is. Dit helpt ons om relevante lokale aanbestedingen te vinden.
+                        Selecteer de regio&apos;s waar uw bedrijf actief is. Dit helpt ons om relevante lokale aanbestedingen te vinden.
                     </p>
 
                     <div className="mb-6 bg-astral-50 dark:bg-astral-900/20 p-3 rounded-md">
@@ -80,111 +134,170 @@ export default function RegionsForm({ company, onSave, saving }: RegionsFormProp
                             <div className="text-sm text-astral-700 dark:text-astral-200">
                                 <p className="font-medium">NUTS codes</p>
                                 <p className="mt-1">
-                                    De geselecteerde regio's zijn gebaseerd op NUTS codes (Nomenclature of Territorial Units for Statistics),
+                                    De geselecteerde regio&apos;s zijn gebaseerd op NUTS codes (Nomenclature of Territorial Units for Statistics),
                                     een hiërarchisch systeem voor het indelen van economische gebieden in Europa.
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Region selection controls */}
-                    <div className="flex justify-end gap-2 mb-4">
-                        <Button
-                            type="button"
-                            onClick={selectAll}
-                            variant="secondary"
-                            className="text-sm"
-                        >
-                            Alles selecteren
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={clearAll}
-                            variant="secondary"
-                            className="text-sm"
-                        >
-                            Alles wissen
-                        </Button>
-                    </div>
-
-                    {/* Regions selection grid */}
-                    <div className="mb-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {/* Country-wide option */}
-                            <div
-                                className={`flex items-center gap-2 p-3 border rounded-md cursor-pointer 
-                  ${selectedRegions.includes('BE')
-                                        ? 'bg-astral-50 border-astral-200 dark:bg-astral-900/20 dark:border-astral-800'
-                                        : 'bg-white border-gray-200 dark:bg-slate-800 dark:border-gray-700'
-                                    }`}
-                                onClick={() => toggleRegion('BE')}
-                            >
-                                <div className="flex items-center h-5">
-                                    <input
-                                        type="checkbox"
-                                        className="h-4 w-4 text-astral-600 border-gray-300 rounded"
-                                        checked={selectedRegions.includes('BE')}
-                                        onChange={() => { }} // Controlled by the onClick of the parent div
-                                    />
-                                </div>
-                                <div className="flex items-center">
-                                    <MapPinIcon size={14} className="mr-1 text-gray-500 dark:text-gray-400" />
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        België (Heel België)
-                                    </label>
-                                </div>
+                    {/* Search and actions */}
+                    <div className="mb-6 space-y-4">
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <SearchIcon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                             </div>
+                            <Input
+                                type="search"
+                                className="pl-10"
+                                placeholder="Zoek op regio..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
 
-                            {/* Region groups */}
-                            {Object.keys(groupedRegions).filter(key => key !== 'BE').map(groupKey => (
-                                <div key={groupKey} className="space-y-2">
-                                    <div className="font-medium text-sm text-gray-500 dark:text-gray-400">
-                                        {groupKey === 'B2' ? 'Vlaanderen' :
-                                            groupKey === 'B3' ? 'Wallonië' :
-                                                groupKey === 'B1' ? 'Brussel' : groupKey}
-                                    </div>
-
-                                    {groupedRegions[groupKey].map(region => (
-                                        // Skip the all-Belgium option as it's already shown above
-                                        region.value !== 'BE' && (
-                                            <div
-                                                key={region.value}
-                                                className={`flex items-center gap-2 p-2 border rounded-md cursor-pointer 
-                          ${selectedRegions.includes(region.value)
-                                                        ? 'bg-astral-50 border-astral-200 dark:bg-astral-900/20 dark:border-astral-800'
-                                                        : 'bg-white border-gray-200 dark:bg-slate-800 dark:border-gray-700'
-                                                    }`}
-                                                onClick={() => toggleRegion(region.value)}
-                                            >
-                                                <div className="flex items-center h-5">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="h-4 w-4 text-astral-600 border-gray-300 rounded"
-                                                        checked={selectedRegions.includes(region.value)}
-                                                        onChange={() => { }} // Controlled by the onClick of the parent div
-                                                    />
-                                                </div>
-                                                <div className="ml-2 text-sm">
-                                                    <label className="font-medium text-gray-700 dark:text-gray-300">
-                                                        {region.label}
-                                                    </label>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {region.value}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )
-                                    ))}
-                                </div>
-                            ))}
+                        <div className="flex justify-between items-center">
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                                <span className="font-medium">{selectedRegions.length}</span> van {availableRegions.length} regio&apos;sgeselecteerd
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={selectAllRegions}
+                                    className="text-xs"
+                                >
+                                    Alles selecteren
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={clearAllRegions}
+                                    className="text-xs"
+                                >
+                                    Alles wissen
+                                </Button>
+                            </div>
                         </div>
                     </div>
 
+                    {/* Regions selection */}
+                    <div className="mb-6">
+                        {searchQuery ? (
+                            // Show search results
+                            <div>
+                                <h3 className="font-medium text-gray-800 dark:text-gray-200 text-sm pb-2 border-b border-gray-100 dark:border-gray-800 mb-4">
+                                    Zoekresultaten
+                                </h3>
+                                {filteredRegions.length === 0 ? (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
+                                        Geen regio&apos;sgevonden voor &quot;{searchQuery}&quot;
+                                    </p>
+                                ) : (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        {filteredRegions.map((region) => {
+                                            const isSelected = selectedRegions.includes(region.value);
+                                            return (
+                                                <div
+                                                    key={region.value}
+                                                    className={cx(
+                                                        "flex items-center p-3 border rounded-md cursor-pointer transition-colors",
+                                                        isSelected
+                                                            ? "border-astral-300 bg-astral-50 dark:border-astral-700 dark:bg-astral-900/20"
+                                                            : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                                                    )}
+                                                    onClick={() => toggleRegion(region.value)}
+                                                >
+                                                    <div className="flex items-center h-5">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => { }}
+                                                            className="h-4 w-4 text-astral-600 border-gray-300 rounded"
+                                                        />
+                                                    </div>
+                                                    <div className="flex items-center ml-3">
+                                                        <MapPinIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                                                        <label className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                            {region.label}
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                                                ({region.value})
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            // Show categorized regions
+                            <div className="space-y-6">
+                                {regionCategories.map((category) => (
+                                    <div key={category.name}>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h3 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                                                {category.name}
+                                            </h3>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                className="h-8 text-xs text-astral-600 dark:text-astral-400"
+                                                onClick={() => selectCategory(category.name)}
+                                            >
+                                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                                Alles in {category.name.toLowerCase()} selecteren
+                                            </Button>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                            {availableRegions
+                                                .filter(region => category.regions.includes(region.value))
+                                                .map(region => {
+                                                    const isSelected = selectedRegions.includes(region.value);
+                                                    return (
+                                                        <div
+                                                            key={region.value}
+                                                            className={cx(
+                                                                "flex items-center p-3 border rounded-md cursor-pointer transition-colors",
+                                                                isSelected
+                                                                    ? "border-astral-300 bg-astral-50 dark:border-astral-700 dark:bg-astral-900/20"
+                                                                    : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+                                                            )}
+                                                            onClick={() => toggleRegion(region.value)}
+                                                        >
+                                                            <div className="flex items-center h-5">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isSelected}
+                                                                    onChange={() => { }}
+                                                                    className="h-4 w-4 text-astral-600 border-gray-300 rounded"
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-center ml-3">
+                                                                <MapPinIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" />
+                                                                <label className="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                                    {region.label}
+                                                                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                                                                        ({region.value})
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Selected regions summary */}
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Geselecteerde regio's ({selectedRegions.length})
-                        </h4>
+                    <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
+                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Geselecteerde regio&apos;s ({selectedRegions.length})
+                        </h3>
                         {selectedRegions.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
                                 {selectedRegions.map(regionValue => {
@@ -192,16 +305,23 @@ export default function RegionsForm({ company, onSave, saving }: RegionsFormProp
                                     return (
                                         <div
                                             key={regionValue}
-                                            className="px-2 py-1 bg-astral-100 dark:bg-astral-900/40 text-astral-700 dark:text-astral-300 rounded-md text-xs"
+                                            className="px-2 py-1 bg-astral-100 dark:bg-astral-900/40 text-astral-700 dark:text-astral-300 rounded-md text-xs flex items-center group"
                                         >
                                             {region?.label || regionValue}
+                                            <button
+                                                type="button"
+                                                className="ml-1 text-astral-500 dark:text-astral-400 hover:text-astral-700 dark:hover:text-astral-200"
+                                                onClick={() => toggleRegion(regionValue)}
+                                            >
+                                                ×
+                                            </button>
                                         </div>
                                     );
                                 })}
                             </div>
                         ) : (
                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Geen regio's geselecteerd. Selecteer minstens één regio.
+                                Geen regio&apos;s geselecteerd. Selecteer minstens één regio.
                             </p>
                         )}
                     </div>

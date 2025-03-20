@@ -130,7 +130,7 @@ export default function CompanyProfileForm({ company, onSave, saving }: CompanyP
                     {/* Activity Keywords */}
                     <div className="mb-6">
                         <label htmlFor="activity_keywords" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Activiteit Trefwoorden (gescheiden door komma's)
+                            Activiteit Trefwoorden (gescheiden door komma&apos;s)
                         </label>
                         <input
                             type="text"

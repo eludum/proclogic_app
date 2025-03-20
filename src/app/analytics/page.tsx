@@ -1,4 +1,3 @@
-// app/analytics/page.jsx
 import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
 import AnalyticsDashboard from './_components/AnalyticsDashboard';
@@ -19,7 +18,7 @@ export default async function AnalyticsPage() {
     let initialData = {
         totalValue: 0,
         sectorData: [],
-        years: [],
+        years: [] as number[],
         companySectors: []
     };
     let error = null;
@@ -41,7 +40,7 @@ export default async function AnalyticsPage() {
 
         // Extract company sectors
         if (companyData.interested_sectors && companyData.interested_sectors.length > 0) {
-            initialData.companySectors = companyData.interested_sectors.map(sector => ({
+            initialData.companySectors = companyData.interested_sectors.map((sector: { sector: any; cpv_codes: any; }) => ({
                 name: sector.sector,
                 cpvCodes: sector.cpv_codes
             }));
@@ -86,7 +85,7 @@ export default async function AnalyticsPage() {
 
         if (timeSeriesResponse.ok) {
             const timeSeriesData = await timeSeriesResponse.json();
-            initialData.years = Array.from(new Set(timeSeriesData.map(item => {
+            initialData.years = Array.from(new Set((timeSeriesData as { period: string | number }[]).map(item => {
                 // Handle different possible formats - either direct year or 'YYYY-Q1' format
                 const period = item.period;
                 if (typeof period === 'number') return period;
@@ -98,7 +97,11 @@ export default async function AnalyticsPage() {
 
     } catch (e) {
         console.error("Error fetching initial analytics data:", e);
-        error = e.message;
+        if (e instanceof Error) {
+            error = e.message;
+        } else {
+            error = "An unknown error occurred";
+        }
     }
 
     return (

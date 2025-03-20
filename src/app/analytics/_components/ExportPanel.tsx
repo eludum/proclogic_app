@@ -3,7 +3,28 @@
 import { useToast } from '@/lib/useToast';
 import { DownloadIcon } from 'lucide-react';
 
-const ExportPanel = ({ dashboardData, filters, isLoading }) => {
+interface DashboardData {
+    sectorData: { sector: string; count: number; total_value: number }[];
+    totalValue: number;
+    winnerData?: { winner: string; count: number; total_value: number }[];
+    timeSeriesData?: any; // Replace 'any' with the correct type if known
+    valueRangesData?: any; // Replace 'any' with the correct type if known
+    regionalData?: any; // Replace 'any' with the correct type if known
+}
+
+interface Filters {
+    year: number | null;
+    timeframe: string;
+    sector: string;
+}
+
+interface ExportPanelProps {
+    dashboardData: DashboardData;
+    filters: Filters;
+    isLoading: boolean;
+}
+
+const ExportPanel: React.FC<ExportPanelProps> = ({ dashboardData, filters, isLoading }) => {
     const { toast } = useToast();
 
     // Calculate totals for summary
@@ -12,7 +33,7 @@ const ExportPanel = ({ dashboardData, filters, isLoading }) => {
     const topSector = dashboardData.sectorData.length > 0 ? dashboardData.sectorData[0].sector : "N/A";
 
     // Function to export data
-    const exportData = (format) => {
+    const exportData = (format: string) => {
         // Create export data
         let content = '';
         let filename = `marktanalyse-export-${new Date().toISOString().split('T')[0]}.${format}`;

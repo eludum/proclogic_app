@@ -54,7 +54,6 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
       return (
         <SignInButton>
           <Button
-            size="icon"
             variant="ghost"
             className="size-11 rounded-full"
           >
@@ -89,7 +88,6 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
       <div className="flex flex-col items-center gap-2">
         {/* Add logout button above profile when collapsed */}
         <Button
-          size="icon"
           variant="ghost"
           className="size-11 rounded-full text-gray-700 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
           onClick={() => signOut()}
@@ -101,7 +99,6 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
         {/* User profile dropdown */}
         <DropdownUserProfile user={user} align="center">
           <Button
-            size="icon"
             variant="ghost"
             className="size-9 rounded-full"
           >

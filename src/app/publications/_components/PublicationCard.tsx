@@ -2,10 +2,52 @@ import { Button } from "@/components/Button";
 import { getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
 import { RiChatSmile2Line } from '@remixicon/react';
 import { BookmarkCheck, BookmarkPlus, BuildingIcon, CheckCircleIcon, ChevronDown, ChevronUp, ClockIcon, CodeIcon, Eye, EyeOff, Layers, MapPinIcon, StarIcon, TagIcon } from 'lucide-react';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
+
+// Define interfaces for the component props
+interface Publication {
+    workspace_id: string;
+    title: string;
+    original_description: string;
+    is_active: boolean;
+    submission_deadline?: string | Date;
+    organisation: string;
+    sector: string;
+    cpv_code: string;
+    region?: string[];
+    lots?: string[];
+    is_recommended?: boolean;
+    is_viewed?: boolean;
+    is_saved?: boolean;
+    match_percentage?: number;
+    publication_in_your_sector?: boolean;
+    publication_in_your_region?: boolean;
+}
+
+interface PublicationCardProps {
+    publication: Publication;
+    onStartChat: (publication: Publication) => void;
+    onSave: (publication: Publication) => void;
+    onUnsave: (publication: Publication) => void;
+    onMarkAsViewed: (publication: Publication) => void;
+    isSaving: boolean;
+    isUnsaving: boolean;
+}
+
+interface ExpandableTextProps {
+    text: string;
+    maxLength: number;
+}
+
+interface DetailItemProps {
+    icon: ReactNode;
+    label: string;
+    value: ReactNode;
+    truncate?: boolean;
+}
 
 // Expandable text component for description
-function ExpandableText({ text, maxLength }) {
+function ExpandableText({ text, maxLength }: ExpandableTextProps) {
     const [isExpanded, setIsExpanded] = useState(false);
 
     // Check if text needs expansion
@@ -45,7 +87,7 @@ export function PublicationCard({
     onMarkAsViewed,
     isSaving,
     isUnsaving
-}) {
+}: PublicationCardProps) {
     const isRecommended = publication.is_recommended;
     const isViewed = publication.is_viewed;
     const matchPercentage = publication.match_percentage || 0;
@@ -229,13 +271,13 @@ export function PublicationCard({
 }
 
 // Helper components
-function DetailItem({ icon, label, value, truncate = false }) {
+function DetailItem({ icon, label, value, truncate = false }: DetailItemProps) {
     return (
         <div className="flex items-start gap-2">
             <span className="text-gray-400 mt-0.5 shrink-0">{icon}</span>
             <div className="min-w-0 flex-1">
                 <span className="font-medium text-gray-500 dark:text-gray-400 inline after:content-[':'] after:mr-1">{label}</span>
-                <span className={`text-gray-800 dark:text-gray-200 ${truncate ? 'truncate' : 'break-words'}`} title={value}>
+                <span className={`text-gray-800 dark:text-gray-200 ${truncate ? 'truncate' : 'break-words'}`} title={typeof value === 'string' ? value : undefined}>
                     {value}
                 </span>
             </div>
@@ -243,7 +285,7 @@ function DetailItem({ icon, label, value, truncate = false }) {
     );
 }
 
-function renderItemList(items, title, icon) {
+function renderItemList(items: string[] | undefined, title: string, icon: ReactNode) {
     if (!items || items.length === 0) return null;
 
     return (

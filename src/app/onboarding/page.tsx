@@ -42,7 +42,7 @@ export default function OnboardingPage() {
     const [companyData, setCompanyData] = useState<CompanyData>({
         vat_number: "",
         name: "",
-        emails: [user?.primaryEmailAddress],
+        emails: [user?.primaryEmailAddress?.emailAddress || ""],
         summary_activities: "",
         number_of_employees: 1,
         max_publication_value: null,
@@ -433,7 +433,7 @@ export default function OnboardingPage() {
                 <StepWelcome
                     selectedOption={selectedOption}
                     setSelectedOption={setSelectedOption}
-                    user={user}
+                    user_first_name={user?.firstName || ""}
                 />
             )}
 

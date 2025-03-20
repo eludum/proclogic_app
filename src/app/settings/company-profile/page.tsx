@@ -170,7 +170,7 @@ export default function CompanySettingsPage() {
                                 className={`w-full justify-start text-left font-medium ${activeSection === 'regions' ? 'bg-astral-50 dark:bg-astral-900/20 text-astral-600 dark:text-astral-400' : 'bg-transparent hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300'}`}
                                 variant="ghost"
                             >
-                                Regio's
+                                Regio&apos;s
                             </Button>
                             <Button
                                 onClick={() => setActiveSection('accreditations')}

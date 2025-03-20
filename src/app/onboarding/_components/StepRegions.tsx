@@ -35,10 +35,10 @@ export default function StepRegions({
         <div className="flex flex-col space-y-6 animate-fadeIn">
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Regio's Selecteren
+                    Regio&apos;s Selecteren
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-                    Selecteer de regio's waar je bedrijf actief is voor relevante aanbestedingen.
+                    Selecteer de regio&apos;s waar je bedrijf actief is voor relevante aanbestedingen.
                 </p>
             </div>
 
@@ -51,7 +51,7 @@ export default function StepRegions({
                             NUTS-codes
                         </h3>
                         <p className="text-sm text-astral-700 dark:text-astral-300 mt-1">
-                            De geselecteerde regio's zijn gebaseerd op NUTS-codes, een hiërarchisch systeem voor het indelen van economische gebieden in Europa.
+                            De geselecteerde regio&apos;szijn gebaseerd op NUTS-codes, een hiërarchisch systeem voor het indelen van economische gebieden in Europa.
                         </p>
                     </div>
                 </div>
@@ -73,13 +73,12 @@ export default function StepRegions({
 
                     <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-600 dark:text-gray-300">
-                            <span className="font-medium">{companyData.operating_regions.length}</span> van {availableRegions.length} regio's geselecteerd
+                            <span className="font-medium">{companyData.operating_regions.length}</span> van {availableRegions.length} regio&apos;sgeselecteerd
                         </div>
                         <div className="flex gap-2">
                             <Button
                                 type="button"
-                                variant="outline"
-                                size="sm"
+                                variant="ghost"
                                 onClick={selectAllRegions}
                                 className="text-xs"
                             >
@@ -87,8 +86,7 @@ export default function StepRegions({
                             </Button>
                             <Button
                                 type="button"
-                                variant="outline"
-                                size="sm"
+                                variant="ghost"
                                 onClick={clearAllRegions}
                                 className="text-xs"
                             >
@@ -108,7 +106,7 @@ export default function StepRegions({
                             </h3>
                             {filteredRegions.length === 0 ? (
                                 <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                                    Geen regio's gevonden voor "{regionsSearchQuery}"
+                                    Geen regio&apos;sgevonden voor &quot;{regionsSearchQuery}&quot;
                                 </p>
                             ) : (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -163,7 +161,6 @@ export default function StepRegions({
                                         <Button
                                             type="button"
                                             variant="ghost"
-                                            size="sm"
                                             className="h-8 text-xs text-astral-600 dark:text-astral-400"
                                             onClick={() => selectCategory(category.name)}
                                         >
@@ -220,7 +217,7 @@ export default function StepRegions({
                 {/* Selected regions summary */}
                 <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Geselecteerde regio's ({companyData.operating_regions.length})
+                        Geselecteerde regio&apos;s({companyData.operating_regions.length})
                     </h3>
                     {companyData.operating_regions.length > 0 ? (
                         <div className="flex flex-wrap gap-2">
@@ -245,7 +242,7 @@ export default function StepRegions({
                         </div>
                     ) : (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Geen regio's geselecteerd. Selecteer minstens één regio.
+                            Geen regio&apos;sgeselecteerd. Selecteer minstens één regio.
                         </p>
                     )}
                 </div>

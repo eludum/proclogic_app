@@ -86,7 +86,7 @@ export default function StepSectors({
                             </h3>
                             {filteredSectors.length === 0 ? (
                                 <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                                    Geen sectoren gevonden voor "{searchQuery}"
+                                    Geen sectoren gevonden voor &quot;{searchQuery}&quot;
                                 </p>
                             ) : (
                                 <div className="space-y-2">

@@ -1,10 +1,18 @@
-// Pagination.jsx
 import { Button } from "@/components/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 
-export function Pagination({ currentPage, totalPages, totalItems, onPageChange, isLoading }) {
+// Define the prop types for the Pagination component
+interface PaginationProps {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+    isLoading: boolean;
+}
+
+export function Pagination({ currentPage, totalPages, totalItems, onPageChange, isLoading }: PaginationProps) {
     // Generate page numbers for pagination
-    const generatePageNumbers = () => {
+    const generatePageNumbers = (): (number | string)[] => {
         if (totalPages <= 7) {
             return Array.from({ length: totalPages }, (_, i) => i + 1);
         }

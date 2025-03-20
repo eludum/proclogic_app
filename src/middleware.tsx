@@ -1,5 +1,17 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextRequest, NextResponse } from 'next/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+// Define the type for the session claims metadata
+interface SessionClaimsMetadata {
+    onboardingComplete?: boolean;
+    [key: string]: any; // Allow other properties
+}
+
+// Extend the session claims type to include our custom metadata
+interface ExtendedSessionClaims {
+    metadata?: SessionClaimsMetadata;
+    [key: string]: any; // Allow other properties
+}
 
 const isOnboardingRoute = createRouteMatcher(['/onboarding'])
 const isPublicRoute = createRouteMatcher([
@@ -11,6 +23,8 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const { userId, sessionClaims, redirectToSignIn } = await auth()
 
+    // Type assertion to tell TypeScript about our extended claims
+    const typedSessionClaims = sessionClaims as ExtendedSessionClaims | null | undefined
 
     // Store current path in a cookie for layout detection
     const response = NextResponse.next()
@@ -31,7 +45,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
     // Catch users who do not have `onboardingComplete: true` in their publicMetadata
     // Redirect them to the /onboarding route to complete onboarding
-    if (userId && !sessionClaims?.metadata?.onboardingComplete) {
+    if (userId && !typedSessionClaims?.metadata?.onboardingComplete) {
         const onboardingUrl = new URL('/onboarding', req.url)
         return NextResponse.redirect(onboardingUrl)
     }

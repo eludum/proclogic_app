@@ -4,7 +4,21 @@ import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from 'recharts';
 import { ChartCard, ChartContainer, CustomTooltip, EmptyState, ErrorMessage, LoadingSpinner } from './CommonComponents';
 
-const CompetitorAnalysis = ({ data, isLoading, error, className = "" }) => {
+interface CompetitorData {
+    winner: string;
+    count: number;
+    total_value: number;
+    sectors?: string[];
+}
+
+interface CompetitorAnalysisProps {
+    data: CompetitorData[];
+    isLoading: boolean;
+    error: string | null;
+    className?: string;
+}
+
+const CompetitorAnalysis: React.FC<CompetitorAnalysisProps> = ({ data, isLoading, error, className = "" }) => {
     const [viewMode, setViewMode] = useState('chart'); // 'chart' or 'table'
 
     if (isLoading) {
@@ -20,20 +34,20 @@ const CompetitorAnalysis = ({ data, isLoading, error, className = "" }) => {
     }
 
     // Limit to top 8 winners for chart view
-    const displayData = data.slice(0, 8);
+    const displayData = data.slice(0, 10);
 
     const toggleViewMode = () => {
         setViewMode(viewMode === 'table' ? 'chart' : 'table');
     };
 
     // Format currency for display
-    const formatCurrency = (value) => {
+    const formatCurrency = (value: string | number | bigint) => {
         if (!value && value !== 0) return 'N/A';
         return new Intl.NumberFormat('nl-NL', {
             style: 'currency',
             currency: 'EUR',
             maximumFractionDigits: 0
-        }).format(value);
+        }).format(typeof value === 'string' ? parseFloat(value) : value);
     };
 
     return (

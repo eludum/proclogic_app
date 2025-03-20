@@ -7,6 +7,32 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Define proper types for the filters
+interface ActiveFilters {
+    recommended: boolean;
+    viewed: boolean;
+    saved: boolean;
+    active: boolean;
+    [key: string]: boolean; // Index signature to allow dynamic access
+}
+
+interface FilterState {
+    searchTerm: string;
+    activeFilters: ActiveFilters;
+    sectorFilters: string[];
+    regionFilters: string[];
+    dateFilter: string;
+    cpvCodeFilter: string;
+}
+
+interface FilterCardProps {
+    isSearchPage?: boolean;
+    isSavedPage?: boolean;
+    isOverviewPage?: boolean;
+    onFiltersChange: (filters: FilterState) => void;
+    initialFilters?: Partial<FilterState>;
+}
+
 export default function FilterCard({
     isSearchPage = false,
     isSavedPage = false,
@@ -14,18 +40,23 @@ export default function FilterCard({
     onFiltersChange,
     initialFilters = {
         searchTerm: "",
-        activeFilters: {},
+        activeFilters: {
+            recommended: false,
+            viewed: false,
+            saved: false,
+            active: false
+        },
         sectorFilters: [],
         regionFilters: [],
         dateFilter: "",
         cpvCodeFilter: ""
     }
-}) {
+}: FilterCardProps) {
     const [showFilters, setShowFilters] = useState(true);
 
     // Set default filter values based on page type
-    const getDefaultFilters = () => {
-        const defaults = {
+    const getDefaultFilters = (): FilterState => {
+        const defaults: FilterState = {
             searchTerm: "",
             activeFilters: {
                 recommended: isOverviewPage,  // Default true on overview page
@@ -42,7 +73,7 @@ export default function FilterCard({
     };
 
     // Initialize with combined default values and initial values
-    const [filters, setFilters] = useState(() => {
+    const [filters, setFilters] = useState<FilterState>(() => {
         const defaults = getDefaultFilters();
         return {
             searchTerm: initialFilters.searchTerm || defaults.searchTerm,
@@ -68,7 +99,7 @@ export default function FilterCard({
     };
 
     // Toggle boolean filters
-    const handleFilterToggle = (filter) => {
+    const handleFilterToggle = (filter: keyof ActiveFilters) => {
         // Special case for saved page - don't allow unsaving on saved page
         if (isSavedPage && filter === 'saved') return;
 
@@ -82,7 +113,7 @@ export default function FilterCard({
     };
 
     // Update search term
-    const handleSearchChange = (value) => {
+    const handleSearchChange = (value: string) => {
         setFilters(prev => ({
             ...prev,
             searchTerm: value
@@ -90,7 +121,7 @@ export default function FilterCard({
     };
 
     // Toggle a sector filter
-    const handleSectorChange = (sector) => {
+    const handleSectorChange = (sector: string) => {
         setFilters(prev => {
             const newSectors = prev.sectorFilters.includes(sector)
                 ? prev.sectorFilters.filter(s => s !== sector)
@@ -104,7 +135,7 @@ export default function FilterCard({
     };
 
     // Toggle a region filter
-    const handleRegionChange = (region) => {
+    const handleRegionChange = (region: string) => {
         setFilters(prev => {
             const newRegions = prev.regionFilters.includes(region)
                 ? prev.regionFilters.filter(r => r !== region)
@@ -118,7 +149,7 @@ export default function FilterCard({
     };
 
     // Update date filter
-    const handleDateChange = (value) => {
+    const handleDateChange = (value: string) => {
         setFilters(prev => ({
             ...prev,
             dateFilter: value
@@ -126,7 +157,7 @@ export default function FilterCard({
     };
 
     // Update CPV code filter
-    const handleCpvCodeChange = (value) => {
+    const handleCpvCodeChange = (value: string) => {
         setFilters(prev => ({
             ...prev,
             cpvCodeFilter: value
@@ -240,7 +271,7 @@ export default function FilterCard({
                         <Button
                             type="button"
                             onClick={() => handleFilterToggle('active')}
-                            variant={filters.activeFilters.active ? "default" : "secondary"}
+                            variant={filters.activeFilters.active ? "primary" : "secondary"}
                             className="flex items-center gap-1.5 text-sm"
                         >
                             <CheckCircleIcon size={14} />
@@ -249,7 +280,7 @@ export default function FilterCard({
                         <Button
                             type="button"
                             onClick={() => handleFilterToggle('recommended')}
-                            variant={filters.activeFilters.recommended ? "default" : "secondary"}
+                            variant={filters.activeFilters.recommended ? "primary" : "secondary"}
                             className="flex items-center gap-1.5 text-sm"
                         >
                             <Star size={14} className={filters.activeFilters.recommended ? "text-amber-300" : ""} />
@@ -258,7 +289,7 @@ export default function FilterCard({
                         <Button
                             type="button"
                             onClick={() => handleFilterToggle('viewed')}
-                            variant={filters.activeFilters.viewed ? "default" : "secondary"}
+                            variant={filters.activeFilters.viewed ? "primary" : "secondary"}
                             className="flex items-center gap-1.5 text-sm"
                         >
                             <Eye size={14} />
@@ -267,7 +298,7 @@ export default function FilterCard({
                         <Button
                             type="button"
                             onClick={() => handleFilterToggle('saved')}
-                            variant={filters.activeFilters.saved ? "default" : "secondary"}
+                            variant={filters.activeFilters.saved ? "primary" : "secondary"}
                             disabled={isSavedPage} // Disable on saved page
                             className={`flex items-center gap-1.5 text-sm ${isSavedPage ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
@@ -291,7 +322,7 @@ export default function FilterCard({
                                             key={sector.value}
                                             type="button"
                                             onClick={() => handleSectorChange(sector.value)}
-                                            variant={filters.sectorFilters.includes(sector.value) ? "default" : "secondary"}
+                                            variant={filters.sectorFilters.includes(sector.value) ? "primary" : "secondary"}
                                             className="flex items-center gap-1 text-xs py-1 px-2"
                                         >
                                             {sector.label}
@@ -323,7 +354,7 @@ export default function FilterCard({
                                             key={region.value}
                                             type="button"
                                             onClick={() => handleRegionChange(region.value)}
-                                            variant={filters.regionFilters.includes(region.value) ? "default" : "secondary"}
+                                            variant={filters.regionFilters.includes(region.value) ? "primary" : "secondary"}
                                             className="flex items-center gap-1 text-xs py-1 px-2"
                                         >
                                             {region.label}

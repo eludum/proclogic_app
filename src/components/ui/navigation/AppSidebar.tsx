@@ -41,16 +41,32 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user?: null | SafeUser;
 }
 
-const mainNavigation = [
+// Define a type for navigation items
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  notifications?: boolean | number;
+  disabled?: boolean;
+  hasChildren?: boolean;
+  children?: {
+    name: string;
+    href: string;
+    disabled?: boolean;
+  }[];
+}
+
+const mainNavigation: NavItem[] = [
   {
     name: "Zoeken",
     href: "/search",
     icon: Search,
     notifications: false,
+    hasChildren: false,
   },
-] as const
+];
 
-const secondaryNavigation = [
+const secondaryNavigation: NavItem[] = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -108,9 +124,9 @@ const secondaryNavigation = [
       },
     ],
   },
-] as const
+];
 
-const adminNavigation = [
+const adminNavigation: NavItem[] = [
   {
     name: "Instellingen",
     href: "/settings",
@@ -132,7 +148,7 @@ const adminNavigation = [
       // },
     ],
   },
-] as const
+];
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const [isLoading, setIsLoading] = React.useState(true);
@@ -205,7 +221,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const blurredClass = "filter blur-[0.8px] pointer-events-none opacity-70";
 
   // Render function for sidebar items with children
-  const renderItemWithChildren = (item: any) => {
+  const renderItemWithChildren = (item: NavItem) => {
     const sectionActive = isChildActive(item.children);
 
     // For collapsed view, use a popover instead of expanding in-place
@@ -249,7 +265,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                     </span>
                   )}
                 </div>
-                {item.children.map((child) => (
+                {item.children && item.children.map((child) => (
                   <a
                     key={child.name}
                     href={child.disabled ? "#" : child.href}
