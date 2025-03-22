@@ -1,7 +1,7 @@
 export const siteConfig = {
   name: "ProcLogic",
   url: "https://app.proclogic.be",
-  api_base_url: "http://localhost:8000",
+  api_base_url: process.env.API_URL || "http://proclogic-api:8000",
   description: "ProcLogic: het meest geavanceerde publieke sector aanbiedingen platform.",
 }
 
