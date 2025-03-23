@@ -43,6 +43,9 @@ export const metadata: Metadata = {
     description: siteConfig.description,
     siteName: siteConfig.name,
   },
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default async function RootLayout({
