@@ -20,7 +20,7 @@ import { CompanyData, STEPS } from "./_components/constants"
 // Main onboarding component
 export default function OnboardingPage() {
     const router = useRouter()
-    const { user } = useUser()
+    const { user, isLoaded } = useUser()
     const { getToken } = useAuth()
     const { session } = useSession()
     const { toast } = useToast()
@@ -209,7 +209,6 @@ export default function OnboardingPage() {
     }
 
     // Scrape website for company data
-
     const handleScrapeWebsite = async () => {
         if (!isUrlValid) return
 
@@ -314,13 +313,24 @@ export default function OnboardingPage() {
             }
 
             // Update Clerk metadata to mark onboarding as complete
-            if (session) {
-                await fetch('/api/complete-onboarding', {
-                    method: 'POST',
-                })
-
-                // Reload session to get updated metadata
-                await session.reload()
+            if (isLoaded && user) {
+                try {
+                    await user.update({
+                        unsafeMetadata: {
+                            onboardingComplete: true
+                        }
+                    });
+                    
+                    // Reload session to get updated metadata
+                    if (session) {
+                        await session.reload();
+                    }
+                    
+                    console.log("User metadata updated successfully");
+                } catch (clerkError) {
+                    console.error("Error updating Clerk metadata:", clerkError);
+                    // Continue anyway as this shouldn't block the user experience
+                }
             }
 
             toast({
