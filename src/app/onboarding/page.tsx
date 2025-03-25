@@ -1,7 +1,7 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig"
 import { useToast } from "@/lib/useToast"
-import { useAuth, useSession, useUser } from "@clerk/nextjs"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -22,7 +22,6 @@ export default function OnboardingPage() {
     const router = useRouter()
     const { user, isLoaded } = useUser()
     const { getToken } = useAuth()
-    const { session } = useSession()
     const { toast } = useToast()
 
     // State variables
@@ -103,8 +102,9 @@ export default function OnboardingPage() {
     // Functions to handle sectors
     const toggleSector = (sectorValue: string) => {
         setCompanyData(prev => {
-            const sectorInfo = sectorValue ? { value: sectorValue, label: sectorValue } : null
-            if (!sectorInfo) return prev
+            // Find the sector from the availableSectors array to get the proper label
+            const availableSector = availableSectors.find((s: { value: string }) => s.value === sectorValue)
+            if (!availableSector) return prev
 
             const sectorExists = prev.interested_sectors.some(s => s.cpv_codes.includes(sectorValue))
 
@@ -120,7 +120,7 @@ export default function OnboardingPage() {
                     ...prev,
                     interested_sectors: [
                         ...prev.interested_sectors,
-                        { sector: sectorInfo.label, cpv_codes: [sectorValue] }
+                        { sector: availableSector.label, cpv_codes: [sectorValue] }
                     ]
                 }
             }
@@ -249,11 +249,28 @@ export default function OnboardingPage() {
                 activity_keywords: data.activity_keywords || prev.activity_keywords
             }))
 
-            // Add sectors if available
-            if (data.interested_sectors && data.interested_sectors.length > 0) {
+            // Add sectors if available - ensure they match available sectors
+            if (data.sectors && data.sectors.length > 0) {
+                const validSectors = data.sectors
+                    .filter((sector: { confidence: number }) => sector.confidence > 0.5)
+                    .map((sector: { sector: any }) => {
+                        // Find matching sector from availableSectors
+                        const matchingSector = availableSectors.find(
+                            (                            s: { label: any; value: any }) => s.label === sector.sector || s.value === sector.sector
+                        )
+                        if (matchingSector) {
+                            return {
+                                sector: matchingSector.label,
+                                cpv_codes: [matchingSector.value]
+                            }
+                        }
+                        return null
+                    })
+                    .filter((s: null) => s !== null)
+
                 setCompanyData(prev => ({
                     ...prev,
-                    interested_sectors: data.interested_sectors
+                    interested_sectors: validSectors
                 }))
             }
 
@@ -284,25 +301,18 @@ export default function OnboardingPage() {
         try {
             const token = await getToken()
 
-            // Update Clerk metadata to mark onboarding as complete
-            if (isLoaded && user) {
-                try {
-                    await user.update({
-                        unsafeMetadata: {
-                            onboardingComplete: true
-                        }
-                    });
-                    
-                    // Reload session to get updated metadata
-                    if (session) {
-                        await session.reload();
-                    }
-                    
-                    console.log("User metadata updated successfully");
-                } catch (clerkError) {
-                    console.error("Error updating Clerk metadata:", clerkError);
-                    // Continue anyway as this shouldn't block the user experience
-                }
+            // Create properly formatted company payload that matches backend schema
+            const companyPayload = {
+                vat_number: companyData.vat_number,
+                name: companyData.name,
+                emails: companyData.emails,
+                subscription: "premium", // Default value
+                number_of_employees: companyData.number_of_employees,
+                summary_activities: companyData.summary_activities,
+                max_publication_value: companyData.max_publication_value,
+                activity_keywords: companyData.activity_keywords,
+                operating_regions: companyData.operating_regions,
+                interested_sectors: companyData.interested_sectors
             }
 
             // Create company with all data
@@ -312,7 +322,7 @@ export default function OnboardingPage() {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(companyData),
+                body: JSON.stringify(companyPayload),
             })
 
             // If company already exists, try update instead
@@ -323,7 +333,7 @@ export default function OnboardingPage() {
                         "Authorization": `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(companyData),
+                    body: JSON.stringify(companyPayload),
                 })
 
                 if (!updateResponse.ok) {
@@ -332,6 +342,16 @@ export default function OnboardingPage() {
             } else if (!response.ok) {
                 throw new Error(`API error during creation: ${response.status}`)
             }
+
+            // After successful company creation, update Clerk metadata on server-side
+            // We do this through a custom API endpoint that will handle the Clerk update server-side
+            await fetch(`/api/onboarding/complete`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                }
+            })
 
             toast({
                 title: "Onboarding Voltooid",
@@ -369,10 +389,11 @@ export default function OnboardingPage() {
             setCurrentStep(STEPS.REGIONS)
         } else if (currentStep === STEPS.REGIONS) {
             // Create the company when moving from REGIONS to COMPLETE
+            setCurrentStep(STEPS.COMPLETE)
+        } else if (currentStep === STEPS.COMPLETE) {
             setIsSubmitting(true)
             try {
                 await completeOnboarding()
-                setCurrentStep(STEPS.COMPLETE)
             } catch (error) {
                 console.error("Error creating company:", error)
                 toast({
@@ -383,9 +404,6 @@ export default function OnboardingPage() {
             } finally {
                 setIsSubmitting(false)
             }
-        } else if (currentStep === STEPS.COMPLETE) {
-            // Just navigate to dashboard since company is already created
-            router.push("/dashboard")
         }
     }
 
@@ -429,6 +447,9 @@ export default function OnboardingPage() {
         }
         return false
     }
+
+    // Import the constants here to ensure proper type matching
+    const { availableSectors } = require("./_components/constants")
 
     // Render the components inside the container
     return (
