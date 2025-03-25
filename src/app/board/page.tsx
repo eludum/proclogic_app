@@ -95,7 +95,7 @@ export default function KanbanBoardPage() {
             console.error('Error fetching kanban board:', error);
             toast({
                 title: "Fout bij laden",
-                description: "Het Kanban bord kon niet worden geladen. Probeer het later opnieuw.",
+                description: "Het overzichtsbord kon niet worden geladen. Probeer het later opnieuw.",
                 variant: "error"
             });
         } finally {
@@ -513,7 +513,7 @@ export default function KanbanBoardPage() {
             {/* Main kanban board */}
             {isLoading ? (
                 <div className="flex justify-center items-center h-64">
-                    <Loader loadingtext="Kanban bord laden..." size={32} />
+                    <Loader loadingtext="Overzichtsbord laden..." size={32} />
                 </div>
             ) : (
                 <div className="flex-grow w-full overflow-hidden">

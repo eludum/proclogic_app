@@ -106,7 +106,7 @@ export default function ConversationsList() {
                         <RiChatSmile2Line className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Geen gesprekken gevonden</h3>
                         <p className="text-gray-500 dark:text-gray-400">
-                            U heeft nog geen gesprekken gevoerd met Procy. Start een nieuw gesprek via een aanbesteding.
+                            Je hebt nog geen gesprekken met Procy. Start een nieuw gesprek via een aanbesteding.
                         </p>
                     </div>
                 ) : (

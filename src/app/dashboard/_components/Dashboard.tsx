@@ -336,7 +336,7 @@ export default function InboxList({ initialNotifications, fetchError }: InboxLis
                                 <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    U heeft nog geen berichten in uw inbox.
+                                    Je hebt nog geen berichten. Kijk later even terug.
                                 </p>
                             </div>
                         ) : filteredNotifications.length === 0 ? (
@@ -344,7 +344,7 @@ export default function InboxList({ initialNotifications, fetchError }: InboxLis
                                 <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    {`U heeft geen berichten in de categorie '${filter}'.`}
+                                    {`Je hebt geen berichten in de categorie '${filter}'.`}
                                 </p>
                             </div>
                         ) : (
