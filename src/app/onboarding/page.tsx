@@ -284,6 +284,27 @@ export default function OnboardingPage() {
         try {
             const token = await getToken()
 
+            // Update Clerk metadata to mark onboarding as complete
+            if (isLoaded && user) {
+                try {
+                    await user.update({
+                        unsafeMetadata: {
+                            onboardingComplete: true
+                        }
+                    });
+                    
+                    // Reload session to get updated metadata
+                    if (session) {
+                        await session.reload();
+                    }
+                    
+                    console.log("User metadata updated successfully");
+                } catch (clerkError) {
+                    console.error("Error updating Clerk metadata:", clerkError);
+                    // Continue anyway as this shouldn't block the user experience
+                }
+            }
+
             // Create company with all data
             const response = await fetch(`${siteConfig.api_base_url}/company/`, {
                 method: "POST",
@@ -310,27 +331,6 @@ export default function OnboardingPage() {
                 }
             } else if (!response.ok) {
                 throw new Error(`API error during creation: ${response.status}`)
-            }
-
-            // Update Clerk metadata to mark onboarding as complete
-            if (isLoaded && user) {
-                try {
-                    await user.update({
-                        unsafeMetadata: {
-                            onboardingComplete: true
-                        }
-                    });
-                    
-                    // Reload session to get updated metadata
-                    if (session) {
-                        await session.reload();
-                    }
-                    
-                    console.log("User metadata updated successfully");
-                } catch (clerkError) {
-                    console.error("Error updating Clerk metadata:", clerkError);
-                    // Continue anyway as this shouldn't block the user experience
-                }
             }
 
             toast({
