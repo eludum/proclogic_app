@@ -299,14 +299,23 @@ export default function OnboardingPage() {
         setIsSubmitting(true)
 
         try {
+            
             const token = await getToken()
+
+            await fetch(`/api/onboarding/complete`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                }
+            })
 
             // Create properly formatted company payload that matches backend schema
             const companyPayload = {
                 vat_number: companyData.vat_number,
                 name: companyData.name,
                 emails: companyData.emails,
-                subscription: "premium", // Default value
+                subscription: "starter", // Default value TODO get from clerk
                 number_of_employees: companyData.number_of_employees,
                 summary_activities: companyData.summary_activities,
                 max_publication_value: companyData.max_publication_value,
@@ -343,15 +352,6 @@ export default function OnboardingPage() {
                 throw new Error(`API error during creation: ${response.status}`)
             }
 
-            // After successful company creation, update Clerk metadata on server-side
-            // We do this through a custom API endpoint that will handle the Clerk update server-side
-            await fetch(`/api/onboarding/complete`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                }
-            })
 
             toast({
                 title: "Onboarding Voltooid",
