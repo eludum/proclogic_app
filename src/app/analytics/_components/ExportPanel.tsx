@@ -105,7 +105,7 @@ const ExportPanel: React.FC<ExportPanelProps> = ({ dashboardData, filters, isLoa
                 Exporteer marktgegevens
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Download de marktanalysegegevens voor verder gebruik in uw strategie
+                Download de marktanalysegegevens om ze verder te gebruiken in je strategische planning.
             </p>
             <div className="flex flex-wrap gap-3">
                 <button

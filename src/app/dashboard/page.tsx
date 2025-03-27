@@ -54,7 +54,7 @@ export default async function Inbox() {
                         )}
                     </div>
                     <p className="text-base text-gray-600 dark:text-gray-300">
-                        Bekijk uw berichten, waarschuwingen en aanbevelingen
+                        Bekijk en beheer je berichten, meldingen en gepersonaliseerde aanbevelingen om altijd op de hoogte te blijven.
                     </p>
                 </div>
             </div>

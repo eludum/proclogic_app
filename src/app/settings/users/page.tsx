@@ -177,7 +177,7 @@ export default function UsersSettingsPage() {
                 <div className="w-full">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Gebruikersbeheer</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Beheer de gebruikers die toegang hebben tot dit bedrijfsaccount
+                        Beheer de gebruikers met toegang tot dit bedrijfsaccount.
                     </p>
                 </div>
             </div>

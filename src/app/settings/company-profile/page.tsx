@@ -142,7 +142,7 @@ export default function CompanySettingsPage() {
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6 border-b border-gray-200 dark:border-gray-800">
                 <div className="w-full">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Bedrijfsinstellingen</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Beheer uw bedrijfsgegevens en voorkeuren</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Beheer je bedrijfsgegevens en voorkeuren eenvoudig.</p>
                 </div>
             </div>
 

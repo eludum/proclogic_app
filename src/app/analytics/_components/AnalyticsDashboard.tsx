@@ -206,10 +206,10 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <div className="w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs bg-white dark:bg-slate-900 p-4 sm:p-6">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                        {selectedSector === 'all' ? 'Marktanalyse Aanbestedingen' : `Marktanalyse: ${selectedSector}`}
+                        {selectedSector === 'all' ? 'Inzicht in aanbestedingsmarkten' : `Marktanalyse: ${selectedSector}`}
                     </h1>
                     <p className="text-gray-600 dark:text-gray-400">
-                        Krijg inzicht in gunningen, trends en concurrentie in uw markt
+                        Krijg gedetailleerd inzicht in de gunningen, belangrijke trends en de concurrentie binnen je markt, zodat je beter geïnformeerde strategische keuzes kan maken en kansen kan benutten.
                     </p>
                 </div>
 

@@ -52,10 +52,10 @@ const CompetitorAnalysis: React.FC<CompetitorAnalysisProps> = ({ data, isLoading
 
     return (
         <ChartCard
-            title="Concurrentieanalyse"
+            title="Analyse van de concurrentie."
             description={
                 <div className="flex justify-between items-center">
-                    <span>Inzicht in winnende bedrijven in uw sector</span>
+                    <span>Ontdek wie de winnende bedrijven zijn in je sector.</span>
                     <button
                         onClick={toggleViewMode}
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline"

@@ -44,21 +44,21 @@ export default async function Publications() {
     <section aria-label="Publications">
       <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
         <div className="w-full">
-          <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Overzicht van alle aanbevolen publieke aanbestedingen</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk hieronder aanbevolen publieke aanbestedingen die Procy voor je bedrijf heeft uitgekozen.</p>
+          <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Overzicht aanbevolen aanbestedingen</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Ontdek hieronder de publieke aanbestedingen die Procy speciaal voor je bedrijf heeft geselecteerd op basis van je behoeften.</p>
         </div>
       </div>
 
       <div className="w-full">
         {fetchError ? (
           <div className="p-6 text-center">
-            <p>Fout bij het laden van aanbestedingen: {fetchError}</p>
+            <p>Er is een fout opgetreden bij het laden van de aanbestedingen {fetchError}</p>
             <form action="/publications">
               <button
                 type="submit"
                 className="mt-4 px-4 py-2 bg-astral-500 text-white rounded-md hover:bg-astral-600 transition-colors"
               >
-                Probeer opnieuw
+                Probeer het later opnieuw
               </button>
             </form>
           </div>
@@ -68,9 +68,9 @@ export default async function Publications() {
               <div className="w-16 h-16 flex items-center justify-center rounded-full bg-astral-100 dark:bg-astral-900/30">
                 <Sparkles className="w-8 h-8 text-astral-600 dark:text-astral-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Geen aanbevolen publieke aanbestedingen</h3>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Geen aanbevolen aanbestedingen</h3>
               <p className="text-gray-600 dark:text-gray-300 max-w-md mb-4">
-                Op dit moment zijn er geen aanbevolen publieke aanbestedingen gevonden die passen bij je bedrijf.
+                Momenteel zijn er geen aanbevolen publieke aanbestedingen die bij je bedrijf passen.
               </p>
               <a href="/publications/search" className="px-4 py-2 bg-astral-600 text-white rounded-md hover:bg-astral-700 transition-colors flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

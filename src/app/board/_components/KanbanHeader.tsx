@@ -10,12 +10,13 @@ export default function KanbanHeader({ onAddStatus }: KanbanHeaderProps) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 py-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                    Overzichtsbord
+                    Je overzichtsbord
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Sleep aanbestedingen tussen de verschillende statussen om uw workflow te organiseren
+                    Beheer je workflow efficiënter door publieke aanbestedingen eenvoudig tussen statussen te slepen.
+                    Voeg een nieuwe status toe met een klik op &quot;nieuwe status&quot; en bepaal zelf de statussen voor je overzichtsbord.
                 </p>
-            </div>
+            </div >
 
             <div className="flex flex-shrink-0">
                 <Button
@@ -23,9 +24,9 @@ export default function KanbanHeader({ onAddStatus }: KanbanHeaderProps) {
                     className="flex items-center gap-2 bg-astral-600 hover:bg-astral-700 text-white"
                 >
                     <PlusIcon size={16} />
-                    <span>Nieuwe Status</span>
+                    <span>Nieuwe status</span>
                 </Button>
             </div>
-        </div>
+        </div >
     );
 }

@@ -131,7 +131,7 @@ export default function SectorsForm({ company, onSave, saving }: SectorsFormProp
                     </h3>
 
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Geef aan in welke sectoren uw bedrijf actief is en specificeer relevante CPV-codes voor betere aanbevelingen.
+                        Geef aan in welke sectoren je bedrijf actief is en specificeer relevante CPV-codes voor betere aanbevelingen.
                     </p>
 
                     <div className="mb-6 bg-astral-50 dark:bg-astral-900/20 p-3 rounded-md">

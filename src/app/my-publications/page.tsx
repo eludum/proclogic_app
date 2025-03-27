@@ -43,8 +43,8 @@ export default async function SavedPublications() {
         <section aria-label="Saved Publications">
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
-                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Overzicht van alle opgeslagen publieke aanbestedingen</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Bekijk hieronder de publieke aanbestedingen die je hebt .</p>
+                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Je overzicht van opgeslagen aanbestedingen</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Hieronder vind je jouw opgeslagen publieke aanbestedingen.</p>
                 </div>
             </div>
 
@@ -71,7 +71,7 @@ export default async function SavedPublications() {
                             </div>
                             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Geen opgeslagen aanbestedingen</h3>
                             <p className="text-gray-600 dark:text-gray-300 max-w-md mb-4">
-                                Je hebt nog geen aanbestedingen opgeslagen. Bekijk de aanbevolen aanbestedingen en sla interessante kansen op.
+                                Je hebt nog geen aanbestedingen opgeslagen. Ontdek aanbevolen aanbestedingen en bewaar interessante kansen om later gemakkelijk terug te vinden.
                             </p>
                             <a href="/publications" className="px-4 py-2 bg-astral-600 text-white rounded-md hover:bg-astral-700 transition-colors flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

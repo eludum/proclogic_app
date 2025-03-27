@@ -121,11 +121,11 @@ export default function RegionsForm({ company, onSave, saving }: RegionsFormProp
             <div className="space-y-8">
                 <div>
                     <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
-                        Operationele Regio&apos;s
+                        Operationele regio&apos;s
                     </h3>
 
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Selecteer de regio&apos;s waar uw bedrijf actief is. Dit helpt ons om relevante lokale aanbestedingen te vinden.
+                        Selecteer de regio&apos;s waar je bedrijf actief is. Dit helpt ons om relevante aanbestedingen in je regio te vinden.
                     </p>
 
                     <div className="mb-6 bg-astral-50 dark:bg-astral-900/20 p-3 rounded-md">
@@ -191,7 +191,7 @@ export default function RegionsForm({ company, onSave, saving }: RegionsFormProp
                                 </h3>
                                 {filteredRegions.length === 0 ? (
                                     <p className="text-sm text-gray-500 dark:text-gray-400 py-2">
-                                        Geen regio&apos;sgevonden voor &quot;{searchQuery}&quot;
+                                        Geen regio&apos;s gevonden voor &quot;{searchQuery}&quot;
                                     </p>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
