@@ -22,7 +22,7 @@ export default function NotFound() {
 
                 {/* Error Message */}
                 <p className="mb-8 text-base text-gray-500 dark:text-gray-400">
-                    Sorry, we konden de pagina die u zocht niet vinden. Mogelijk is de URL onjuist of is de pagina verplaatst.
+                    Sorry, we konden de pagina die je zocht niet vinden. Mogelijk is de URL onjuist of is de pagina verplaatst.
                 </p>
 
                 {/* Action Buttons */}
