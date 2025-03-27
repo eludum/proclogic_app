@@ -57,8 +57,8 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
             <section aria-label="Publication Detail">
                 <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                     <div className="w-full">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbesteding Details</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Publication not found</p>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Detail van de aanbesteding</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Aanbesteding niet gevonden</p>
                     </div>
                 </div>
 
@@ -82,7 +82,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
                         </div>
                         <div className="flex justify-center mb-2">
                             <h5 className="text-slate-800 text-2xl font-semibold dark:text-white">
-                                Publication not found
+                                Aanbesteding niet gevonden
                             </h5>
                         </div>
                         <Button
@@ -90,7 +90,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
                             className="mt-4 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                         >
                             <ArrowLeftIcon size={16} />
-                            <span>Back to Publications</span>
+                            <span>Terug naar overzicht</span>
                         </Button>
                     </div>
                 </div>
@@ -115,8 +115,8 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
         <section aria-label="Publication Detail">
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbesteding Details</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Gedetailleerde informatie over deze aanbesteding</p>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Detail van de aanbesteding</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Ontdek alle relevante informatie over deze aanbesteding</p>
                 </div>
             </div>
 
@@ -191,7 +191,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
 
                             {/* Timeline - takes 1/3 of the width on large screens */}
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <h3 className="font-medium text-lg mb-4 text-gray-900 dark:text-white">Tijdlijn Proces</h3>
+                                <h3 className="font-medium text-lg mb-4 text-gray-900 dark:text-white">Tijdlijn</h3>
                                 <div className="relative max-h-100 overflow-y-auto">
                                     {/* Timeline vertical line */}
                                     <div className="absolute left-3.5 top-0 h-full w-0.5 bg-gray-200 dark:bg-gray-700"></div>
@@ -238,12 +238,12 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
                             <div className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
                                 <div className="flex-1">
                                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                                        Wilt u meer informatie over deze aanbesteding?
+                                        Wil je meer informatie over deze aanbesteding?
                                     </h3>
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
                                             <BarChartIcon size={18} className="text-blue-600 dark:text-blue-400" />
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">Bekijk gedetailleerde analyse en insights</span>
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">Bekijk gedetailleerde analyses</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <FileIcon size={18} className="text-blue-600 dark:text-blue-400" />
@@ -335,13 +335,13 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
                             {/* Premium overlay */}
                             <div className="absolute inset-0 bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-[2px] flex flex-col items-center justify-center z-10">
                                 <LockIcon size={24} className="text-gray-500 mb-2" />
-                                <p className="text-gray-700 dark:text-gray-300 font-medium text-center mb-1">Premium Functie</p>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-3">Upgrade naar Premium om documenten te bekijken</p>
+                                <p className="text-gray-700 dark:text-gray-300 font-medium text-center mb-1">Premium functie</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-3">Upgrade naar premium om alle documenten te bekijken. Chat direct met Procy om te ontdekken of dit bij je bedrijf past.</p>
                                 <Button
                                     onClick={() => router.push('/pricing')}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                                 >
-                                    Upgrade Nu
+                                    Upgrade nu
                                 </Button>
                             </div>
 
