@@ -2,11 +2,6 @@ import { siteConfig } from "@/app/siteConfig";
 import { auth } from '@clerk/nextjs/server';
 import AnalyticsDashboard from './_components/AnalyticsDashboard';
 
-export const metadata = {
-    title: 'Sectoranalyse | ProcLogic',
-    description: 'Analyse van gunningstrends, concurrentie en marktontwikkelingen in uw sector',
-};
-
 const API_BASE_URL = siteConfig.api_base_url;
 
 export default async function AnalyticsPage() {

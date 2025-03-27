@@ -256,7 +256,7 @@ export default function OnboardingPage() {
                     .map((sector: { sector: any }) => {
                         // Find matching sector from availableSectors
                         const matchingSector = availableSectors.find(
-                            (                            s: { label: any; value: any }) => s.label === sector.sector || s.value === sector.sector
+                            (s: { label: any; value: any }) => s.label === sector.sector || s.value === sector.sector
                         )
                         if (matchingSector) {
                             return {
@@ -299,7 +299,7 @@ export default function OnboardingPage() {
         setIsSubmitting(true)
 
         try {
-            
+
             const token = await getToken()
 
             await fetch(`/api/onboarding/complete`, {

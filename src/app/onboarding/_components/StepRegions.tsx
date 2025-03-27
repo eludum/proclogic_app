@@ -165,7 +165,7 @@ export default function StepRegions({
                                             onClick={() => selectCategory(category.name)}
                                         >
                                             <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                                            Alles in {category.name.toLowerCase()} selecteren
+                                            Alles in {category.name} selecteren
                                         </Button>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
