@@ -19,13 +19,20 @@ interface UserProfileProps {
 
 export function UserProfile({ user, loading = false }: UserProfileProps) {
   const [mounted, setMounted] = useState(false);
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
   const { signOut } = useClerk();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Helper to close the mobile drawer
+  const closeMobileDrawer = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   // Show skeleton while loading, regardless of user state
   if (loading || !mounted) {
@@ -56,6 +63,7 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
           <Button
             variant="ghost"
             className="size-11 rounded-full"
+            onClick={closeMobileDrawer}
           >
             <RiLoginBoxLine />
           </Button>
@@ -67,12 +75,20 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
       <div className="px-1 py-1">
         <div className="flex flex-col gap-2">
           <SignInButton>
-            <Button variant="light" className="w-full h-10">
+            <Button 
+              variant="light" 
+              className="w-full h-10"
+              onClick={closeMobileDrawer}
+            >
               Aanmelden
               <ArrowAnimated />
             </Button>
           </SignInButton>
-          <Button variant="primary" className="w-full h-10">
+          <Button 
+            variant="primary" 
+            className="w-full h-10"
+            onClick={closeMobileDrawer}
+          >
             Boek een demo
           </Button>
         </div>
@@ -90,7 +106,10 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
         <Button
           variant="ghost"
           className="size-11 rounded-full text-gray-700 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
-          onClick={() => signOut()}
+          onClick={() => {
+            signOut();
+            closeMobileDrawer();
+          }}
           aria-label="Uitloggen"
         >
           <RiLogoutBoxLine />
@@ -119,7 +138,11 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
     <div className="px-1 py-1">
       <div className="flex flex-col gap-2">
         <SignOutButton>
-          <Button variant="light" className="w-full">
+          <Button 
+            variant="light" 
+            className="w-full"
+            onClick={closeMobileDrawer}
+          >
             Afmelden
           </Button>
         </SignOutButton>
