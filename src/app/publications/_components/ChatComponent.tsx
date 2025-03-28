@@ -80,7 +80,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 websocketRef.current.close();
             }
 
-            const wsUrl = `wss://${API_BASE_URL.replace(/^https?:\/\//, '')}/ws/conversation`;
+            const wsUrl = `${API_BASE_URL}/ws/conversation`;
 
             websocketRef.current = new WebSocket(wsUrl);
 
