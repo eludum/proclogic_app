@@ -81,7 +81,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
             }
 
             // Create new WebSocket connection
-            const wsUrl = `${API_BASE_URL.replace('http', 'ws')}/ws/conversation`;
+            const wsUrl = `${API_BASE_URL}/ws/conversation`;
 
             websocketRef.current = new WebSocket(wsUrl);
 
