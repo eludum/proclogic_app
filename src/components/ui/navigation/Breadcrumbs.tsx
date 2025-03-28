@@ -4,21 +4,20 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-// Translation map for converting route segments to display names
+  // Translation map for converting route segments to display names
 const routeTranslations: Record<string, string> = {
   // Main sections
-  // TODO: add new sections and add metadata everywhere
   dashboard: "Dashboard",
   search: "Zoeken",
-
-  publications: "Aanbevolen",
+  publications: "Aanbestedingen",
   "my-publications": "Mijn aanbestedingen",
   board: "Overzichtsbord",
   workspaces: "Werkruimtes",
   analytics: "Analyses",
   procy: "Procy",
   settings: "Instellingen",
-
+  detail: "Detail",
+  free: "Opzoeking",
 
   // Workspaces subsections
   projects: "Projecten",
@@ -34,6 +33,31 @@ interface BreadcrumbItem {
   name: string
   href: string
   isCurrent: boolean
+  isClickable: boolean
+}
+
+// Helper function to check if a segment is likely an ID
+function isIdSegment(segment: string) {
+  // Check if it's numeric or a UUID pattern
+  return (
+    /^\d+$/.test(segment) || // Numeric ID
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment) // UUID format
+  )
+}
+
+// Helper to determine if a segment should be clickable
+function isClickableSegment(segment: string, path: string[], index: number) {
+  // Special case for /publications/free/...
+  if (segment === "free" && index > 0 && path[index-1] === "publications") {
+    return false
+  }
+  
+  // IDs are never clickable
+  if (isIdSegment(segment)) {
+    return false
+  }
+  
+  return true
 }
 
 export function Breadcrumbs() {
@@ -47,8 +71,9 @@ export function Breadcrumbs() {
     const items: BreadcrumbItem[] = [
       {
         name: "Start",
-        href: "/",
-        isCurrent: pathname === "/"
+        href: "/search",
+        isCurrent: pathname === "/",
+        isClickable: true
       }
     ]
 
@@ -66,12 +91,19 @@ export function Breadcrumbs() {
 
       // Get display name from translation map or use the segment with first letter capitalized
       const displayName = routeTranslations[segment] ||
-        segment.charAt(0).toUpperCase() + segment.slice(1)
+        (isIdSegment(segment) ? segment : segment.charAt(0).toUpperCase() + segment.slice(1))
+
+      // Check if this segment is the last segment
+      const isLast = index === segments.length - 1
+      
+      // Determine if this segment should be clickable
+      const isClickable = isClickableSegment(segment, segments, index)
 
       items.push({
         name: displayName,
         href: currentPath,
-        isCurrent: index === segments.length - 1
+        isCurrent: isLast,
+        isClickable: isClickable
       })
     })
 
@@ -87,8 +119,6 @@ export function Breadcrumbs() {
     }
 
     const updateVisibleItems = () => {
-      const containerWidth = containerRef.current?.clientWidth || 0
-
       // Always show first and last two items if we have many breadcrumbs
       if (allBreadcrumbs.length > 3) {
         // Try with all items first
@@ -103,7 +133,12 @@ export function Breadcrumbs() {
             // If overflowing, show first, ellipsis, and last two items
             setVisibleItems([
               allBreadcrumbs[0],
-              { name: "...", href: "", isCurrent: false }, // Ellipsis placeholder
+              { 
+                name: "...", 
+                href: "", 
+                isCurrent: false, 
+                isClickable: false 
+              }, // Ellipsis placeholder
               ...allBreadcrumbs.slice(-2)
             ]);
             setIsOverflowing(true);
@@ -157,7 +192,7 @@ export function Breadcrumbs() {
                 >
                   {item.name}
                 </span>
-              ) : (
+              ) : item.isClickable ? (
                 <Link
                   href={item.href}
                   className="text-gray-500 transition hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 truncate max-w-xs"
@@ -165,6 +200,13 @@ export function Breadcrumbs() {
                 >
                   {item.name}
                 </Link>
+              ) : (
+                <span
+                  className="text-gray-500 dark:text-gray-400 truncate max-w-xs"
+                  title={item.name}
+                >
+                  {item.name}
+                </span>
               )}
             </li>
           ))}
