@@ -296,14 +296,28 @@ const SidebarLink = React.forwardRef<
     isActive?: boolean
     notifications?: number | boolean
   }
->(({ children, isActive, icon, notifications, className, ...props }, ref) => {
-  const { state } = useSidebar()
+>(({ children, isActive, icon, notifications, className, onClick, ...props }, ref) => {
+  const { state, isMobile, setOpenMobile } = useSidebar()
   const Icon = icon
+  
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    // Call the original onClick if provided
+    if (onClick) {
+      onClick(event);
+    }
+    
+    // On mobile, close the drawer when a link is clicked
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+  
   return (
     <a
       ref={ref}
       aria-current={isActive ? "page" : undefined}
       data-active={isActive}
+      onClick={handleClick}
       className={cx(
         "flex items-center transition hover:bg-gray-200/50 sm:text-sm dark:hover:bg-gray-900",
         "text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
@@ -420,17 +434,30 @@ const SidebarSubLink = React.forwardRef<
     children: React.ReactNode
     isActive?: boolean
   }
->(({ isActive, children, className, ...props }, ref) => {
-  const { state } = useSidebar()
+>(({ isActive, children, className, onClick, ...props }, ref) => {
+  const { state, isMobile, setOpenMobile } = useSidebar()
 
   // Don't render sub-links when sidebar is collapsed
   if (state === "collapsed") return null;
+  
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    // Call the original onClick if provided
+    if (onClick) {
+      onClick(event);
+    }
+    
+    // On mobile, close the drawer when a link is clicked
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <a
       ref={ref}
       aria-current={isActive ? "page" : undefined}
       data-active={isActive}
+      onClick={handleClick}
       className={cx(
         "relative flex gap-2 rounded-md py-1.5 pl-9 pr-3 text-base transition sm:text-sm",
         "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
