@@ -8,6 +8,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
 import localFont from "next/font/local"
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { cookies } from "next/headers"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
@@ -75,6 +76,7 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} bg-white-50 h-full antialiased dark:bg-gray-950`}
         >
+          <GoogleAnalytics gaId="G-ZDRV9JZEEW" />
           <ThemeProvider
             defaultTheme="light"
             disableTransitionOnChange
