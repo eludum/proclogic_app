@@ -15,7 +15,7 @@ interface Publication {
     sector: string;
     cpv_code: string;
     region?: string[];
-    lots?: string[];
+    lot_titles?: string[];
     is_recommended?: boolean;
     is_viewed?: boolean;
     is_saved?: boolean;
@@ -214,7 +214,7 @@ export function PublicationCard({
                 </div>
 
                 {/* Lots section (if available) */}
-                {renderItemList(publication.lots, "Percelen", <Layers size={14} />)}
+                {renderItemList(publication.lot_titles, "Percelen", <Layers size={14} />)}
 
                 {/* Action buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-2">

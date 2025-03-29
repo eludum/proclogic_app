@@ -40,7 +40,8 @@ export interface Publication {
     sector: string;
     cpv_code: string;
     region?: string[];
-    lots?: string[];
+    lot_titles?: string[];
+    lot_descriptions?: string[];
     documents?: Record<string, any>;
     estimated_value?: number;
     accreditations?: Record<string, any>;
@@ -70,6 +71,8 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'ai' | 'original'>('ai');
     const [activeChatPublication, setActiveChatPublication] = useState<Publication | null>(null);
+    const [selectedLotIndex, setSelectedLotIndex] = useState<number | null>(null);
+    const [contentTab, setContentTab] = useState<'info' | 'lots' | 'documents'>('info');
 
     if (!publication) {
         return (
@@ -94,7 +97,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                         </div>
                         <div className="flex justify-center mb-2">
                             <h5 className="text-slate-800 text-2xl font-semibold dark:text-white">
-                                Publication not found
+                                Aanbesteding niet gevonden
                             </h5>
                         </div>
                         <Button
@@ -102,7 +105,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                             className="mt-4 flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-2 rounded-md"
                         >
                             <ArrowLeftIcon size={16} />
-                            <span>Back to Publications</span>
+                            <span>Terug naar overzicht</span>
                         </Button>
                     </div>
                 </div>
@@ -146,6 +149,9 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     };
 
     const isRecommended = publication.is_recommended;
+
+    const hasLots = publication.lot_titles && publication.lot_titles.length > 0 && publication.lot_descriptions && publication.lot_descriptions.length > 0;
+    const hasDocuments = publication.documents && Object.keys(publication.documents).length > 0;
 
     return (
         <section aria-label="Publication Detail">
@@ -292,7 +298,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                             <div key={index} className="flex gap-4">
                                                 {/* Event dot with icon */}
                                                 <div className={`relative z-10 flex items-center justify-center w-7 h-7 rounded-full shrink-0 
-                        ${event.status === 'completed'
+                                                    ${event.status === 'completed'
                                                         ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
                                                         : event.status === 'in-progress'
                                                             ? 'bg-astral-100 text-astral-600 dark:bg-astral-900/30 dark:text-astral-400'
@@ -323,143 +329,233 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                             </div>
                         </div>
 
-                        {/* Organization, Sector, Region Information - Card style with consistent layout */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <BuildingIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Organisatie</h3>
-                                </div>
-                                <p className="text-gray-800 dark:text-gray-200">{publication.organisation}</p>
+                        {/* Content tabs: Info, Lots, Documents */}
+                        <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                            <div className="flex border-b border-slate-200 dark:border-slate-800">
+                                <button
+                                    onClick={() => setContentTab('info')}
+                                    className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${contentTab === 'info'
+                                        ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
+                                        : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                        }`}
+                                >
+                                    <BuildingIcon size={14} />
+                                    <span>Informatie</span>
+                                </button>
+                                {hasLots && (
+                                    <button
+                                        onClick={() => {
+                                            setContentTab('lots');
+                                            setSelectedLotIndex(null);
+                                        }}
+                                        className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${contentTab === 'lots'
+                                            ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
+                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        <Layers size={14} />
+                                        <span>Percelen</span>
+                                    </button>
+                                )}
+                                {hasDocuments && (
+                                    <button
+                                        onClick={() => setContentTab('documents')}
+                                        className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${contentTab === 'documents'
+                                            ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
+                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        <FileIcon size={14} />
+                                        <span>Documenten</span>
+                                    </button>
+                                )}
                             </div>
 
-                            <div className={`border ${publication.publication_in_your_sector ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} rounded-lg p-4`}>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <TagIcon size={16} className={`${publication.publication_in_your_sector ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
-                                    <h3 className={`font-medium ${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
-                                        Sector {publication.publication_in_your_sector && <span className="ml-1 text-sm">• In uw sector</span>}
-                                    </h3>
-                                </div>
-                                <p className={`${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'}`}>
-                                    {publication.sector}
-                                </p>
-                            </div>
+                            {/* Tab content area */}
+                            <div className="p-6">
+                                {/* Info tab content */}
+                                {contentTab === 'info' && (
+                                    <div className="space-y-6">
+                                        {/* Organization, Sector, Region Information - Card style with consistent layout */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <BuildingIcon size={16} className="text-gray-400" />
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">Organisatie</h3>
+                                                </div>
+                                                <p className="text-gray-800 dark:text-gray-200">{publication.organisation}</p>
+                                            </div>
 
-                            <div className={`border ${publication.publication_in_your_region ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} rounded-lg p-4`}>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <MapPinIcon size={16} className={`${publication.publication_in_your_region ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
-                                    <h3 className={`font-medium ${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
-                                        Regio {publication.publication_in_your_region && <span className="ml-1 text-sm">• In uw regio</span>}
-                                    </h3>
-                                </div>
-                                <p className={`${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'} truncate`} title={publication.region?.join(", ") || "N/A"}>
-                                    {publication.region?.join(", ") || "N/A"}
-                                </p>
-                            </div>
-                        </div>
+                                            <div className={`border ${publication.publication_in_your_sector ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} rounded-lg p-4`}>
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <TagIcon size={16} className={`${publication.publication_in_your_sector ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
+                                                    <h3 className={`font-medium ${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
+                                                        Sector {publication.publication_in_your_sector && <span className="ml-1 text-sm">• In uw sector</span>}
+                                                    </h3>
+                                                </div>
+                                                <p className={`${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'}`}>
+                                                    {publication.sector}
+                                                </p>
+                                            </div>
 
-                        {/* CPV Codes and Value */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <CodeIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">CPV Codes</h3>
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-sm text-sm">
-                                        <span>{publication.cpv_code}</span>
+                                            <div className={`border ${publication.publication_in_your_region ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} rounded-lg p-4`}>
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <MapPinIcon size={16} className={`${publication.publication_in_your_region ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
+                                                    <h3 className={`font-medium ${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
+                                                        Regio {publication.publication_in_your_region && <span className="ml-1 text-sm">• In uw regio</span>}
+                                                    </h3>
+                                                </div>
+                                                <p className={`${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'} truncate`} title={publication.region?.join(", ") || "N/A"}>
+                                                    {publication.region?.join(", ") || "N/A"}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* CPV Codes and Value */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <CodeIcon size={16} className="text-gray-400" />
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">CPV Codes</h3>
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-sm text-sm">
+                                                        <span>{publication.cpv_code}</span>
+                                                    </div>
+
+                                                    {publication.cpv_additional_codes && publication.cpv_additional_codes.length > 0 && (
+                                                        <div>
+                                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Aanvullende CPV codes:</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {publication.cpv_additional_codes.map((code, index) => (
+                                                                    <span
+                                                                        key={index}
+                                                                        className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-sm text-xs text-gray-700 dark:text-gray-300"
+                                                                    >
+                                                                        {code}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <EuroIcon size={16} className="text-gray-400" />
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">Aanbestedingswaarde</h3>
+                                                </div>
+                                                <p className="text-gray-800 dark:text-gray-200 text-lg font-semibold">
+                                                    {publication.estimated_value
+                                                        ? new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(publication.estimated_value)
+                                                        : "Niet gespecificeerd"}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Accreditations if available */}
+                                        {publication.accreditations && Object.keys(publication.accreditations).length > 0 && (
+                                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <CheckCircleIcon size={16} className="text-gray-400" />
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">Vereiste Accreditaties</h3>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {Object.entries(publication.accreditations).map(([key, value], index) => (
+                                                        <div key={index} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
+                                                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{key}</p>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">{String(value)}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
+                                )}
 
-                                    {publication.cpv_additional_codes && publication.cpv_additional_codes.length > 0 && (
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Aanvullende CPV codes:</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {publication.cpv_additional_codes.map((code, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-sm text-xs text-gray-700 dark:text-gray-300"
+                                {/* Lots tab content */}
+                                {contentTab === 'lots' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Layers size={16} className="text-gray-400" />
+                                            <h3 className="font-medium text-gray-900 dark:text-white">
+                                                Percelen ({publication.lot_titles?.length || 0})
+                                            </h3>
+                                        </div>
+
+                                        {selectedLotIndex !== null ? (
+                                            <div className="space-y-4">
+                                                <button
+                                                    onClick={() => setSelectedLotIndex(null)}
+                                                    className="flex items-center gap-1 text-sm text-astral-600 dark:text-astral-400 hover:underline"
+                                                >
+                                                    <ArrowLeftIcon size={12} />
+                                                    Terug naar percelenoverzicht
+                                                </button>
+
+                                                <div className="border border-astral-200 dark:border-astral-800 bg-astral-50 dark:bg-astral-900/20 rounded-lg p-4">
+                                                    <h4 className="font-medium text-lg text-astral-800 dark:text-astral-300 mb-2">
+                                                        {publication.lot_titles?.[selectedLotIndex]}
+                                                    </h4>
+                                                    <div className="text-sm text-astral-700 dark:text-astral-400 whitespace-pre-line">
+                                                        {publication.lot_descriptions?.[selectedLotIndex] || "Geen beschrijving beschikbaar."}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                                                {publication.lot_titles?.map((title, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-astral-300 dark:hover:border-astral-700 cursor-pointer transition-all duration-150"
+                                                        onClick={() => setSelectedLotIndex(idx)}
                                                     >
-                                                        {code}
-                                                    </span>
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <h4 className="font-medium text-gray-800 dark:text-white text-sm">{title}</h4>
+                                                            <span className="text-xs px-2 py-1 bg-astral-100 dark:bg-astral-900/40 text-astral-700 dark:text-astral-300 rounded-full flex-shrink-0">
+                                                                #{idx + 1}
+                                                            </span>
+                                                        </div>
+                                                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                            Klik voor details en beschrijving
+                                                        </p>
+                                                    </div>
                                                 ))}
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
+                                        )}
+                                    </div>
+                                )}
 
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <EuroIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Aanbestedingswaarde</h3>
-                                </div>
-                                <p className="text-gray-800 dark:text-gray-200 text-lg font-semibold">
-                                    {publication.estimated_value
-                                        ? new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(publication.estimated_value)
-                                        : "Niet gespecificeerd"}
-                                </p>
+                                {/* Documents tab content */}
+                                {contentTab === 'documents' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <FileIcon size={16} className="text-gray-400" />
+                                            <h3 className="font-medium text-gray-900 dark:text-white">
+                                                Documenten ({Object.keys(publication.documents || {}).length})
+                                            </h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                                            {Object.keys(publication.documents || {}).map((doc, index) => (
+                                                <div key={index} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-lg hover:shadow-md hover:border-astral-300 dark:hover:border-astral-700 transition-all duration-150">
+                                                    <div className="flex items-center gap-2 overflow-hidden">
+                                                        <FileIcon size={16} className="text-gray-400 shrink-0" />
+                                                        <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{doc}</span>
+                                                    </div>
+                                                    <Button
+                                                        onClick={() => handleDownload(doc)}
+                                                        className="flex items-center justify-center bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 p-2 rounded-md"
+                                                    >
+                                                        <DownloadIcon size={16} />
+                                                    </Button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-
-                        {/* Lots Section */}
-                        {publication.lots && publication.lots.length > 0 && (
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Layers size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Percelen ({publication.lots.length})</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                                    {publication.lots.map((lot, idx) => (
-                                        <div key={idx} className="text-sm bg-slate-50 dark:bg-slate-800 rounded p-2 truncate" title={lot}>
-                                            {lot}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Documents Section */}
-                        {publication.documents && Object.keys(publication.documents).length > 0 && (
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <FileIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Documenten</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    {Object.keys(publication.documents).map((doc, index) => (
-                                        <div key={index} className="flex items-center justify-between gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                <FileIcon size={14} className="text-gray-400 shrink-0" />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{doc}</span>
-                                            </div>
-                                            <Button
-                                                onClick={() => handleDownload(doc)}
-                                                className="flex items-center justify-center bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-astral-500 dark:text-astral-400 p-1.5 rounded-md">
-                                                <DownloadIcon size={16} />
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Accreditations if available */}
-                        {publication.accreditations && Object.keys(publication.accreditations).length > 0 && (
-                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <CheckCircleIcon size={16} className="text-gray-400" />
-                                    <h3 className="font-medium text-gray-900 dark:text-white">Vereiste Accreditaties</h3>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {Object.entries(publication.accreditations).map(([key, value], index) => (
-                                        <div key={index} className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md">
-                                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{key}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{String(value)}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
 
                         {/* Action buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 mt-2">
