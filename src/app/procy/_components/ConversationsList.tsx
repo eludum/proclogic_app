@@ -22,7 +22,7 @@ export default function ConversationsList() {
     const fetchConversations = async () => {
         setLoading(true);
         try {
-            const token = await await getToken();
+            const token = await getToken();
 
             const response = await fetch(`${API_BASE_URL}/conversations/`, {
                 headers: {

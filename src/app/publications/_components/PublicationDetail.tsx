@@ -18,6 +18,7 @@ import {
     StarIcon,
     TagIcon
 } from 'lucide-react';
+import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -73,6 +74,8 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const [activeChatPublication, setActiveChatPublication] = useState<Publication | null>(null);
     const [selectedLotIndex, setSelectedLotIndex] = useState<number | null>(null);
     const [contentTab, setContentTab] = useState<'info' | 'lots' | 'documents'>('info');
+    const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
+    const { getToken } = useAuth();
 
     if (!publication) {
         return (
@@ -113,19 +116,53 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
         );
     }
 
-    const handleDownload = (filename: string) => {
-        // Construct the document URL
-        const downloadUrl = `${API_BASE_URL}/publications/publication/${publication.workspace_id}/document/${filename}`;
-
-        // Create a temporary link and trigger download
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleDownload = async (filename: string) => {
+        try {
+            // Set loading state for this specific file
+            setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
+            
+            // Get authentication token
+            const token = await getToken();
+            
+            // Construct the document URL
+            const downloadUrl = `${API_BASE_URL}/publications/publication/${publication.workspace_id}/document/${filename}`;
+            
+            // Create a fetch request with authentication to get the file
+            const response = await fetch(downloadUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Download failed: ${response.status}`);
+            }
+            
+            // Get the blob from the response
+            const blob = await response.blob();
+            
+            // Create a download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            
+        } catch (error) {
+            console.error("Error downloading file:", error);
+            // You might want to show a notification to the user here
+        } finally {
+            // Clear loading state for this file
+            setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
+        }
     };
-
+    
+    
     // Start a chat with a publication
     const startChat = async (pub: Publication) => {
         try {
@@ -545,9 +582,14 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                     </div>
                                                     <Button
                                                         onClick={() => handleDownload(doc)}
+                                                        disabled={downloadingFiles[doc]}
                                                         className="flex items-center justify-center bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 p-2 rounded-md"
                                                     >
-                                                        <DownloadIcon size={16} />
+                                                        {downloadingFiles[doc] ? (
+                                                            <div className="animate-spin h-4 w-4 border-2 border-astral-500 border-t-transparent rounded-full" />
+                                                        ) : (
+                                                            <DownloadIcon size={16} />
+                                                        )}
                                                     </Button>
                                                 </div>
                                             ))}
