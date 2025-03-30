@@ -84,14 +84,19 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
     useEffect(() => {
         const fetchDocuments = async () => {
+            // Only fetch if we have a publication ID and documents aren't already loaded
             if (!publication?.workspace_id) return;
             
             // If publication already has documents and they're not loading, use those
-            if (publication.documents && 
-                Object.keys(publication.documents).length > 0 && 
-                !publication.documents_loading) {
+            if (publication.documents && Object.keys(publication.documents).length > 0 && !publication.documents_loading) {
                 setDocuments(publication.documents);
                 setDocumentsLoading(false);
+                return;
+            }
+            
+            // If documents are currently loading according to the publication flag, just set our local loading state
+            if (publication.documents_loading) {
+                setDocumentsLoading(true);
                 return;
             }
             
@@ -122,6 +127,8 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
         };
         
         fetchDocuments();
+        
+        // Only depend on the workspace_id and getToken, not on the documents themselves
     }, [publication?.workspace_id, getToken]);
     
 
