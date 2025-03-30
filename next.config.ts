@@ -1,19 +1,16 @@
 /** @type {import('next').NextConfig} */
 
-module.exports = {
-  output: 'standalone'
-}
-
 const nextConfig = {
+  output: 'standalone',
   redirects: async () => {
     return [
       {
         source: "/",
-        destination: "/dashboard",
+        destination: "/search",
         permanent: true,
       },
     ]
   },
 }
 
-export default nextConfig
+module.exports = nextConfig
