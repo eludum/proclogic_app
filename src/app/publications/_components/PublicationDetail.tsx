@@ -1,5 +1,6 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig";
+import { useEffect } from "react";
 import { Button } from "@/components/Button";
 import { formatDate, getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
 import { RiChatSmile2Line, RiExternalLinkLine } from '@remixicon/react';
@@ -44,6 +45,7 @@ export interface Publication {
     lot_titles?: string[];
     lot_descriptions?: string[];
     documents?: Record<string, any>;
+    documents_loading?: boolean; 
     estimated_value?: number;
     accreditations?: Record<string, any>;
     is_recommended?: boolean;
@@ -76,6 +78,52 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const [contentTab, setContentTab] = useState<'info' | 'lots' | 'documents'>('info');
     const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
     const { getToken } = useAuth();
+    const [documentsLoading, setDocumentsLoading] = useState<boolean>(true);
+    const [documents, setDocuments] = useState<Record<string, any>>({});
+
+
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            if (!publication?.workspace_id) return;
+            
+            // If publication already has documents and they're not loading, use those
+            if (publication.documents && 
+                Object.keys(publication.documents).length > 0 && 
+                !publication.documents_loading) {
+                setDocuments(publication.documents);
+                setDocumentsLoading(false);
+                return;
+            }
+            
+            try {
+                setDocumentsLoading(true);
+                const token = await getToken();
+                
+                const response = await fetch(
+                    `${API_BASE_URL}/publications/publication/${publication.workspace_id}/documents`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    setDocuments(data.documents);
+                } else {
+                    console.error('Failed to fetch documents:', response.status);
+                }
+            } catch (error) {
+                console.error('Error fetching documents:', error);
+            } finally {
+                setDocumentsLoading(false);
+            }
+        };
+        
+        fetchDocuments();
+    }, [publication?.workspace_id, getToken]);
+    
 
     if (!publication) {
         return (
@@ -126,7 +174,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
             
             // Construct the document URL
             const downloadUrl = `${API_BASE_URL}/publications/publication/${publication.workspace_id}/document/${filename}`;
-            
+                
             // Create a fetch request with authentication to get the file
             const response = await fetch(downloadUrl, {
                 headers: {
@@ -155,7 +203,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
             
         } catch (error) {
             console.error("Error downloading file:", error);
-            // You might want to show a notification to the user here
+            // TODO: You might want to show a notification to the user here
         } finally {
             // Clear loading state for this file
             setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
@@ -188,7 +236,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const isRecommended = publication.is_recommended;
 
     const hasLots = publication.lot_titles && publication.lot_titles.length > 0 && publication.lot_descriptions && publication.lot_descriptions.length > 0;
-    const hasDocuments = publication.documents && Object.keys(publication.documents).length > 0;
+    const hasDocuments = documents && Object.keys(documents).length > 0;
 
     return (
         <section aria-label="Publication Detail">
@@ -570,30 +618,43 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         <div className="flex items-center gap-2 mb-2">
                                             <FileIcon size={16} className="text-gray-400" />
                                             <h3 className="font-medium text-gray-900 dark:text-white">
-                                                Documenten ({Object.keys(publication.documents || {}).length})
+                                                Documenten {documentsLoading ? "(Laden...)" : `(${Object.keys(documents || {}).length})`}
                                             </h3>
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                                            {Object.keys(publication.documents || {}).map((doc, index) => (
-                                                <div key={index} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-lg hover:shadow-md hover:border-astral-300 dark:hover:border-astral-700 transition-all duration-150">
-                                                    <div className="flex items-center gap-2 overflow-hidden">
-                                                        <FileIcon size={16} className="text-gray-400 shrink-0" />
-                                                        <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{doc}</span>
+                                        
+                                        {documentsLoading ? (
+                                            <div className="flex justify-center items-center h-40">
+                                                <div className="animate-spin h-8 w-8 border-4 border-astral-500 border-t-transparent rounded-full"></div>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                                                {Object.keys(documents || {}).length > 0 ? (
+                                                    Object.keys(documents || {}).map((doc, index) => (
+                                                        <div key={index} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-lg hover:shadow-md hover:border-astral-300 dark:hover:border-astral-700 transition-all duration-150">
+                                                            <div className="flex items-center gap-2 overflow-hidden">
+                                                                <FileIcon size={16} className="text-gray-400 shrink-0" />
+                                                                <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{doc}</span>
+                                                            </div>
+                                                            <Button
+                                                                onClick={() => handleDownload(doc)}
+                                                                disabled={downloadingFiles[doc]}
+                                                                className="flex items-center justify-center bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 p-2 rounded-md"
+                                                            >
+                                                                {downloadingFiles[doc] ? (
+                                                                    <div className="animate-spin h-4 w-4 border-2 border-astral-500 border-t-transparent rounded-full" />
+                                                                ) : (
+                                                                    <DownloadIcon size={16} />
+                                                                )}
+                                                            </Button>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="col-span-2 text-center p-4 text-gray-500 dark:text-gray-400">
+                                                        Geen documenten beschikbaar.
                                                     </div>
-                                                    <Button
-                                                        onClick={() => handleDownload(doc)}
-                                                        disabled={downloadingFiles[doc]}
-                                                        className="flex items-center justify-center bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 p-2 rounded-md"
-                                                    >
-                                                        {downloadingFiles[doc] ? (
-                                                            <div className="animate-spin h-4 w-4 border-2 border-astral-500 border-t-transparent rounded-full" />
-                                                        ) : (
-                                                            <DownloadIcon size={16} />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
