@@ -1,259 +1,185 @@
-"use client";
-
+"use client"
+import { siteConfig } from "@/app/siteConfig";
+import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { Card } from "@/components/Card";
 import { Toaster } from '@/components/Toaster';
 import { useToast } from '@/lib/useToast';
-import { useAuth } from "@clerk/nextjs";
-import { useCallback, useEffect, useState } from 'react';
+import InfoCards from "./InfoCards";
+import AnalyticsTable from "./AnalyticsTable";
+import AnalyticsChart from "./AnalyticsCharts";
+import AnalyticsFilters from "./AnalyticsFilters";
+import { AwardSummary, AwardSectorItem, ContractItem } from "../types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
 
-import AnalyticsSummary from './AnalyticsSummary';
-import CompetitorAnalysis from './CompetitorAnalysis';
-import ExportPanel from './ExportPanel';
-import FilterPanel from './FilterPanel';
+const API_BASE_URL = siteConfig.api_base_url;
 
-interface AnalyticsDashboardProps {
-    initialData?: {
-        years?: number[];
-        companySectors?: { name: string; cpvCodes?: string[] }[];
-        totalValue?: number;
-        sectorData?: Array<any>;
-    };
-    error: string | null;
-    apiBaseUrl: string;
+interface AnalyticsClientProps {
+  initialSummaryData: AwardSummary | null;
+  initialSectorData: AwardSectorItem[];
 }
 
-const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
-    initialData = {},
-    error: initialError,
-    apiBaseUrl
-}) => {
-    const { getToken } = useAuth();
-    const { toast } = useToast();
+export default function AnalyticsDashboard({ 
+  initialSummaryData, 
+  initialSectorData 
+}: AnalyticsClientProps) {
+  const { getToken } = useAuth();
+  const { toast } = useToast();
+  
+  // State for various data
+  const [summaryData, setSummaryData] = useState<AwardSummary | null>(initialSummaryData);
+  const [sectorData, setSectorData] = useState<AwardSectorItem[]>(initialSectorData || []);
+  const [contractsData, setContractsData] = useState<ContractItem[]>([]);
+  const [viewMode, setViewMode] = useState<'table' | 'chart'>('table');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Filtering state
+  const [filters, setFilters] = useState({
+    year: new Date().getFullYear(),
+    quarter: null as number | null,
+    month: null as number | null,
+    sector: "" as string,
+    winner: "" as string,
+    supplier: "" as string,
+  });
 
-    // State for filters
-    const [selectedYear, setSelectedYear] = useState<number | null>(null);
-    const [timeframe, setTimeframe] = useState('monthly');
-    const [selectedSector, setSelectedSector] = useState('all');
-    const [availableYears, setAvailableYears] = useState<number[]>(initialData?.years || []);
-    const [companySectors, setCompanySectors] = useState(initialData?.companySectors || []);
+  // Fetch data with the current filters
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast({
+          title: "Authenticatie fout",
+          description: "Kon niet authentiseren. Log opnieuw in.",
+          variant: "error",
+        });
+        return;
+      }
 
-    // State for data
-    const [dashboardData, setDashboardData] = useState({
-        totalValue: initialData?.totalValue || 0,
-        sectorData: initialData?.sectorData || [],
-        winnerData: [],
-        organisationData: [],
-        timeSeriesData: [],
-        regionalData: []
-    });
+      // Build query params
+      const params = new URLSearchParams();
+      if (filters.year) params.append('year', filters.year.toString());
+      if (filters.quarter) params.append('quarter', filters.quarter.toString());
+      if (filters.month) params.append('month', filters.month.toString());
+      if (filters.sector) params.append('sector_code', filters.sector);
+      if (filters.winner) params.append('winner', filters.winner);
+      if (filters.supplier) params.append('supplier', filters.supplier);
 
-    // State for loading and error
-    const [isLoading, setIsLoading] = useState({
-        total: false,
-        sectors: false,
-        winners: false,
-        organisations: false,
-        timeSeries: false,
-        valueRanges: false,
-        regional: false
-    });
+      // Fetch summary data
+      const summaryResponse = await fetch(`${API_BASE_URL}/awards/summary?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-    const [errors, setErrors] = useState<{
-        total: string | null;
-        sectors: string | null;
-        winners: string | null;
-        organisations: string | null;
-        timeSeries: string | null;
-        valueRanges: string | null;
-        regional: string | null;
-    }>({
-        total: initialError,
-        sectors: initialError,
-        winners: null,
-        organisations: null,
-        timeSeries: null,
-        valueRanges: null,
-        regional: null
-    });
+      if (!summaryResponse.ok) {
+        throw new Error(`API error: ${summaryResponse.status}`);
+      }
+      
+      const summaryResult = await summaryResponse.json();
+      setSummaryData(summaryResult);
 
-    // Helper function to fetch data from API
-    const fetchData = useCallback(async (endpoint: string, params: Record<string, any> = {}) => {
-        try {
-            // Build query string from params
-            const queryString = Object.keys(params)
-                .filter(key => params[key] !== null && params[key] !== undefined)
-                .map(key => {
-                    if (Array.isArray(params[key])) {
-                        return params[key].map((value: string) =>
-                            `${key}=${encodeURIComponent(value)}`).join('&');
-                    }
-                    return `${key}=${encodeURIComponent(params[key])}`;
-                })
-                .join('&');
+      // Fetch sector data
+      const sectorResponse = await fetch(`${API_BASE_URL}/awards/by-sector?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-            const url = `${apiBaseUrl}${endpoint}${queryString ? `?${queryString}` : ''}`;
+      if (!sectorResponse.ok) {
+        throw new Error(`API error: ${sectorResponse.status}`);
+      }
+      
+      const sectorResult = await sectorResponse.json();
+      setSectorData(sectorResult);
 
-            // Get auth token
-            const token = await getToken();
-            if (!token) {
-                throw new Error("Authentication token not available");
-            }
+      // Get contracts
+      // We're using sector to filter, because backend doesn't have a direct /contracts endpoint
+      // In a real app, you might want to add such an endpoint
+      let winnerParam = "";
+      if (filters.winner) {
+        winnerParam = `/${encodeURIComponent(filters.winner)}`;
+      }
 
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+      const contractsResponse = await fetch(`${API_BASE_URL}/awards/winner${winnerParam}?${params.toString()}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-            if (!response.ok) {
-                throw new Error(`API request failed with status ${response.status}`);
-            }
+      if (contractsResponse.ok) {
+        const contractsResult = await contractsResponse.json();
+        setContractsData(contractsResult.contracts || []);
+      }
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+      toast({
+        title: "Fout bij ophalen data",
+        description: error instanceof Error ? error.message : "Er is een fout opgetreden",
+        variant: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            return await response.json();
-        } catch (error) {
-            console.error(`Error fetching data from ${endpoint}:`, error);
-            throw error;
-        }
-    }, [apiBaseUrl, getToken]);
+  // Fetch data when filters change
+  useEffect(() => {
+    fetchData();
+  }, [filters]);
 
-    // Load data when filters change
-    useEffect(() => {
-        const loadData = async () => {
-            // Sector filtering params
-            const sectorParams: { sector?: string[] } = {};
-            if (selectedSector !== 'all') {
-                // Find the selected sector in the company sectors
-                const sector = companySectors.find(s => s.name === selectedSector);
-                if (sector && sector.cpvCodes) {
-                    // Apply CPV code filter - assuming backend supports this filter
-                    sectorParams.sector = sector.cpvCodes;
-                }
-            }
+  // Handle filter changes
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
 
-            // Total value
-            setIsLoading(prev => ({ ...prev, total: true }));
-            try {
-                const totalValueData = await fetchData('/analytics/total-value', {
-                    year: selectedYear ?? 0,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, totalValue: totalValueData.total_value }));
-                setErrors(prev => ({ ...prev, total: null }));
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                setErrors(prev => ({ ...prev, total: errorMessage }));
-                toast({
-                    title: "Fout bij laden",
-                    description: "De totale waarde kon niet worden geladen.",
-                    variant: "error"
-                });
-            } finally {
-                setIsLoading(prev => ({ ...prev, total: false }));
-            }
+  return (
+    <>
+      <Toaster />
+      
+      {/* Summary Cards at the top */}
+      <InfoCards 
+        summaryData={summaryData} 
+        sectorData={sectorData.slice(0, 3)} 
+        isLoading={isLoading}
+      />
 
-            // Sectors
-            setIsLoading(prev => ({ ...prev, sectors: true }));
-            try {
-                const sectorsData = await fetchData('/analytics/by-sector', {
-                    year: selectedYear ?? 0,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, sectorData: sectorsData }));
-                setErrors(prev => ({ ...prev, sectors: null }));
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                setErrors(prev => ({ ...prev, sectors: errorMessage }));
-                toast({
-                    title: "Fout bij laden",
-                    description: "De sectorgegevens konden niet worden geladen.",
-                    variant: "error"
-                });
-            } finally {
-                setIsLoading(prev => ({ ...prev, sectors: false }));
-            }
+      {/* Filters */}
+      <div className="mb-6">
+        <AnalyticsFilters 
+          currentFilters={filters}
+          onFilterChange={handleFilterChange}
+          isLoading={isLoading}
+        />
+      </div>
 
-            // Winners (competitors)
-            setIsLoading(prev => ({ ...prev, winners: true }));
-            try {
-                const winnersData = await fetchData('/analytics/by-winner', {
-                    year: selectedYear,
-                    limit: 15,
-                    ...sectorParams
-                });
-                setDashboardData(prev => ({ ...prev, winnerData: winnersData }));
-                setErrors(prev => ({ ...prev, winners: null }));
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                setErrors(prev => ({ ...prev, winners: errorMessage }));
-                toast({
-                    title: "Fout bij laden",
-                    description: "De gegevens over concurrenten konden niet worden geladen.",
-                    variant: "error"
-                });
-            } finally {
-                setIsLoading(prev => ({ ...prev, winners: false }));
-            }
+      {/* Toggle between table and chart view */}
+      <Tabs defaultValue="table" className="w-full mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Toegekende aanbestedingen
+          </h2>
+          <TabsList>
+            <TabsTrigger value="table" onClick={() => setViewMode('table')}>
+              Tabel
+            </TabsTrigger>
+            <TabsTrigger value="chart" onClick={() => setViewMode('chart')}>
+              Grafiek
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        };
+        <TabsContent value="table" className="space-y-4">
+          <AnalyticsTable 
+            contracts={contractsData}
+            isLoading={isLoading}
+          />
+        </TabsContent>
 
-        loadData();
-    }, [selectedYear, timeframe, selectedSector, fetchData, toast, companySectors]);
-
-    return (
-        <>
-            <Toaster />
-
-            <div className="w-full border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-xs bg-white dark:bg-slate-900 p-4 sm:p-6">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                        {selectedSector === 'all' ? 'Inzicht in aanbestedingsmarkten' : `Marktanalyse: ${selectedSector}`}
-                    </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Krijg gedetailleerd inzicht in de gunningen, belangrijke trends en de concurrentie binnen je markt, zodat je beter geïnformeerde strategische keuzes kan maken en kansen kan benutten.
-                    </p>
-                </div>
-
-                <FilterPanel
-                    selectedYear={selectedYear}
-                    setSelectedYear={setSelectedYear}
-                    timeframe={timeframe}
-                    setTimeframe={setTimeframe}
-                    selectedSector={selectedSector}
-                    setSelectedSector={setSelectedSector}
-                    availableYears={availableYears}
-                    companySectors={companySectors}
-                    isLoading={Object.values(isLoading).some(state => state)}
-                />
-
-                <AnalyticsSummary
-                    totalValue={dashboardData.totalValue}
-                    sectorData={dashboardData.sectorData}
-                    isLoading={isLoading.total || isLoading.sectors}
-                    error={errors.total || errors.sectors}
-                />
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-                    <CompetitorAnalysis
-                        data={dashboardData.winnerData}
-                        isLoading={isLoading.winners}
-                        error={errors.winners}
-                        className="xl:col-span-2"
-
-                    />
-                </div>
-
-                <ExportPanel
-                    dashboardData={dashboardData}
-                    filters={{
-                        year: selectedYear,
-                        timeframe: timeframe,
-                        sector: selectedSector
-                    }}
-                    isLoading={Object.values(isLoading).some(state => state)}
-                />
-            </div>
-        </>
-    );
-};
-
-export default AnalyticsDashboard;
+        <TabsContent value="chart" className="space-y-4">
+          <Card className="p-4">
+            <AnalyticsChart 
+              sectorData={sectorData}
+              isLoading={isLoading}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </>
+  );
+}
