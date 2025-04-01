@@ -1,3 +1,5 @@
+"use client"
+
 import { siteConfig } from "@/app/siteConfig";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
