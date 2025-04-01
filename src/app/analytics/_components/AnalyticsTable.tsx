@@ -1,5 +1,4 @@
-"use client"
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -26,6 +25,26 @@ export default function AnalyticsTable({ contracts, isLoading }: AnalyticsTableP
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof ContractItem>("value");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  
+  // For fixed header
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
+  
+  // Detect header height on mount and window resize
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (tableHeaderRef.current) {
+        setHeaderHeight(tableHeaderRef.current.offsetHeight);
+      }
+    };
+    
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, []);
   
   // Format currency
   const formatCurrency = (value: number) => {
@@ -93,13 +112,13 @@ export default function AnalyticsTable({ contracts, isLoading }: AnalyticsTableP
   if (isLoading) {
     return (
       <Card>
-        <div className="p-4">
-          <Skeleton className="h-10 w-full mb-4" />
+        <div className="p-3">
+          <Skeleton className="h-8 w-full mb-4" />
           <div className="space-y-2">
             {Array(5)
               .fill(0)
               .map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
+                <Skeleton key={i} className="h-12 w-full" />
               ))}
           </div>
         </div>
@@ -108,24 +127,24 @@ export default function AnalyticsTable({ contracts, isLoading }: AnalyticsTableP
   }
 
   return (
-    <Card>
-      <div className="p-4">
+    <Card className="overflow-hidden">
+      <div className="p-3">
         {/* Search bar */}
-        <div className="flex mb-4">
+        <div className="flex mb-3">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
               placeholder="Zoek op titel, winnaar, koper of sector..."
-              className="pl-10"
+              className="pl-10 py-1 h-8 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Table with fixed header */}
+        <div className="overflow-x-auto overflow-y-auto" style={{ maxHeight: '400px' }}>
           <Table>
             <TableCaption>
               {filteredAndSortedContracts.length === 0
@@ -133,46 +152,46 @@ export default function AnalyticsTable({ contracts, isLoading }: AnalyticsTableP
                 : `Totaal ${filteredAndSortedContracts.length} contracten`}
             </TableCaption>
             
-            <TableHeaderCell>
+            <TableHead ref={tableHeaderRef} className="sticky top-0 z-10 bg-white dark:bg-slate-900">
               <TableRow>
-                <TableHead 
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                <TableHeaderCell 
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 py-2 text-xs"
                   onClick={() => handleSort("title")}
                 >
                   Titel{renderSortIndicator("title")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                </TableHeaderCell>
+                <TableHeaderCell 
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 py-2 text-xs"
                   onClick={() => handleSort("award_date")}
                 >
                   Datum{renderSortIndicator("award_date")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                </TableHeaderCell>
+                <TableHeaderCell 
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 py-2 text-xs"
                   onClick={() => handleSort("winner")}
                 >
                   Winnaar{renderSortIndicator("winner")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                </TableHeaderCell>
+                <TableHeaderCell 
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 py-2 text-xs"
                   onClick={() => handleSort("buyer")}
                 >
                   Opdrachtgever{renderSortIndicator("buyer")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                </TableHeaderCell>
+                <TableHeaderCell 
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 py-2 text-xs"
                   onClick={() => handleSort("sector")}
                 >
                   Sector{renderSortIndicator("sector")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 text-right"
+                </TableHeaderCell>
+                <TableHeaderCell 
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 py-2 text-xs text-right"
                   onClick={() => handleSort("value")}
                 >
                   Waarde{renderSortIndicator("value")}
-                </TableHead>
+                </TableHeaderCell>
               </TableRow>
-            </TableHeaderCell>
+            </TableHead>
             
             <TableBody>
               {filteredAndSortedContracts.length === 0 ? (
@@ -184,7 +203,7 @@ export default function AnalyticsTable({ contracts, isLoading }: AnalyticsTableP
               ) : (
                 filteredAndSortedContracts.map((contract) => (
                   <TableRow key={contract.publication_id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium py-2 text-xs">
                       <a
                         href={`/publications/detail/${contract.publication_id}`}
                         className="text-blue-600 dark:text-blue-400 hover:underline"
@@ -196,19 +215,19 @@ export default function AnalyticsTable({ contracts, isLoading }: AnalyticsTableP
                           : contract.title}
                       </a>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-2 text-xs">
                       {contract.award_date
                         ? formatDate(new Date(contract.award_date))
                         : "Onbekend"}
                     </TableCell>
-                    <TableCell>{contract.winner}</TableCell>
-                    <TableCell>{contract.buyer}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getSectorColor(contract.cpv_code)}`}>
+                    <TableCell className="py-2 text-xs">{contract.winner}</TableCell>
+                    <TableCell className="py-2 text-xs">{contract.buyer}</TableCell>
+                    <TableCell className="py-2 text-xs">
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${getSectorColor(contract.cpv_code)}`}>
                         {getCpvSectorName(contract.cpv_code)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className="text-right font-semibold py-2 text-xs">
                       {formatCurrency(contract.value)}
                     </TableCell>
                   </TableRow>

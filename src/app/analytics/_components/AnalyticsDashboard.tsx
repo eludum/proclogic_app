@@ -1,4 +1,3 @@
-"use client"
 import { siteConfig } from "@/app/siteConfig";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
@@ -139,8 +138,8 @@ export default function AnalyticsDashboard({
         isLoading={isLoading}
       />
 
-      {/* Filters */}
-      <div className="mb-6">
+      {/* Filters - Now smaller */}
+      <div className="mb-4">
         <AnalyticsFilters 
           currentFilters={filters}
           onFilterChange={handleFilterChange}
@@ -150,8 +149,8 @@ export default function AnalyticsDashboard({
 
       {/* Toggle between table and chart view */}
       <Tabs defaultValue="table" className="w-full mb-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             Toegekende aanbestedingen
           </h2>
           <TabsList>
@@ -172,7 +171,7 @@ export default function AnalyticsDashboard({
         </TabsContent>
 
         <TabsContent value="chart" className="space-y-4">
-          <Card className="p-4">
+          <Card className="p-3">
             <AnalyticsChart 
               sectorData={sectorData}
               isLoading={isLoading}
