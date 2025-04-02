@@ -243,8 +243,8 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const isRecommended = publication.is_recommended;
 
     const hasLots = publication.lot_titles && publication.lot_titles.length > 0 && publication.lot_descriptions && publication.lot_descriptions.length > 0;
-    const hasDocuments = documents && Object.keys(documents).length > 0;
-
+    const hasDocuments = (documents && Object.keys(documents).length > 0) || documentsLoading;
+    
     return (
         <section aria-label="Publication Detail">
             <div className="px-4 sm:px-6 pb-6 pt-6">
