@@ -211,7 +211,6 @@ export default function FilterCard({
         { value: "BE23", label: "Oost-Vlaanderen" },
         { value: "BE24", label: "Vlaams-Brabant" },
         { value: "BE25", label: "West-Vlaanderen" },
-        { value: "BE25", label: "West-Vlaanderen" },
         { value: "BE31", label: "Brabant Wallon" },
         { value: "BE32", label: "Hainaut" },
         { value: "BE33", label: "Liège" },
