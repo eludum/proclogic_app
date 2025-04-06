@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-  // Translation map for converting route segments to display names
+// Translation map for converting route segments to display names
 const routeTranslations: Record<string, string> = {
   // Main sections
   dashboard: "Dashboard",
@@ -48,15 +48,15 @@ function isIdSegment(segment: string) {
 // Helper to determine if a segment should be clickable
 function isClickableSegment(segment: string, path: string[], index: number) {
   // Special case for /publications/free/...
-  if (segment === "free" && index > 0 && path[index-1] === "publications") {
+  if (segment === "free" && index > 0 && path[index - 1] === "publications") {
     return false
   }
-  
+
   // IDs are never clickable
   if (isIdSegment(segment)) {
     return false
   }
-  
+
   return true
 }
 
@@ -95,7 +95,7 @@ export function Breadcrumbs() {
 
       // Check if this segment is the last segment
       const isLast = index === segments.length - 1
-      
+
       // Determine if this segment should be clickable
       const isClickable = isClickableSegment(segment, segments, index)
 
@@ -133,11 +133,11 @@ export function Breadcrumbs() {
             // If overflowing, show first, ellipsis, and last two items
             setVisibleItems([
               allBreadcrumbs[0],
-              { 
-                name: "...", 
-                href: "", 
-                isCurrent: false, 
-                isClickable: false 
+              {
+                name: "...",
+                href: "",
+                isCurrent: false,
+                isClickable: false
               }, // Ellipsis placeholder
               ...allBreadcrumbs.slice(-2)
             ]);

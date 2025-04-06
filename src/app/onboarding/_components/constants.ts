@@ -26,6 +26,7 @@ export const STEP_LABELS = {
 }
 
 // Available sectors based on CPV codes
+// TODO: include more sectors
 export const availableSectors = [
     { value: "03000000", label: "Landbouw, veeteelt, visserij, bosbouw" },
     { value: "09000000", label: "Aardolieproducten, brandstof, elektriciteit" },

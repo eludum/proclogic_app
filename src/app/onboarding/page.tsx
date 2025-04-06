@@ -4,6 +4,7 @@ import { useToast } from "@/lib/useToast"
 import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { completeOnboardingClerk, setCookiePath } from './_actions/complete-onboarding'
 
 // Import components
 import OnboardingContainer from "./_components/OnboardingContainer"
@@ -207,7 +208,6 @@ export default function OnboardingPage() {
             }))
         }
     }
-
     // Scrape website for company data
     const handleScrapeWebsite = async () => {
         if (!isUrlValid) return
@@ -249,19 +249,23 @@ export default function OnboardingPage() {
                 activity_keywords: data.activity_keywords || prev.activity_keywords
             }))
 
-            // Add sectors if available - ensure they match available sectors
-            if (data.sectors && data.sectors.length > 0) {
-                const validSectors = data.sectors
-                    .filter((sector: { confidence: number }) => sector.confidence > 0.5)
-                    .map((sector: { sector: any }) => {
+            // Add sectors if available
+            if (data.interested_sectors && data.interested_sectors.length > 0) {
+                // Process and match sectors with the available sectors in the system
+                const validSectors = data.interested_sectors
+                    .map((sector: { sector: any; cpv_codes: string | any[] }) => {
                         // Find matching sector from availableSectors
                         const matchingSector = availableSectors.find(
-                            (s: { label: any; value: any }) => s.label === sector.sector || s.value === sector.sector
+                            (s: { label: any; value: any }) => s.label === sector.sector || s.value === sector.cpv_codes[0]
                         )
+
                         if (matchingSector) {
                             return {
                                 sector: matchingSector.label,
-                                cpv_codes: [matchingSector.value]
+                                // If the sector has CPV codes, use them, otherwise use the matching sector value
+                                cpv_codes: sector.cpv_codes && sector.cpv_codes.length > 0
+                                    ? sector.cpv_codes
+                                    : [matchingSector.value]
                             }
                         }
                         return null
@@ -274,21 +278,11 @@ export default function OnboardingPage() {
                 }))
             }
 
-            toast({
-                title: "Website Geanalyseerd",
-                description: "We hebben informatie van je website verzameld.",
-                variant: "success",
-            })
-
             // Move to next step
             setCurrentStep(STEPS.COMPANY_INFO)
         } catch (error) {
+            // TODO: show error
             console.error("Error scraping website:", error)
-            toast({
-                title: "Fout bij Analyse",
-                description: "Er is een fout opgetreden bij het analyseren van de website.",
-                variant: "error",
-            })
         } finally {
             setIsScraping(false)
         }
@@ -296,82 +290,124 @@ export default function OnboardingPage() {
 
     // Complete onboarding by creating company
     const completeOnboarding = async () => {
-        setIsSubmitting(true)
+        setIsSubmitting(true);
 
         try {
-
-            const token = await getToken()
-
-            await fetch(`/api/onboarding/complete`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                }
-            })
+            // Get authentication token
+            const token = await getToken();
+            if (!token) {
+                throw new Error("Authentication token not available");
+            }
 
             // Create properly formatted company payload that matches backend schema
             const companyPayload = {
                 vat_number: companyData.vat_number,
                 name: companyData.name,
                 emails: companyData.emails,
-                subscription: "starter", // Default value TODO get from clerk
+                subscription: "starter", // Default value
                 number_of_employees: companyData.number_of_employees,
                 summary_activities: companyData.summary_activities,
                 max_publication_value: companyData.max_publication_value,
                 activity_keywords: companyData.activity_keywords,
                 operating_regions: companyData.operating_regions,
-                interested_sectors: companyData.interested_sectors
-            }
+                interested_sectors: companyData.interested_sectors.map(sector => ({
+                    sector: sector.sector,
+                    cpv_codes: sector.cpv_codes
+                }))
+            };
 
-            // Create company with all data
-            const response = await fetch(`${siteConfig.api_base_url}/company/`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(companyPayload),
-            })
-
-            // If company already exists, try update instead
-            if (response.status === 400) {
-                const updateResponse = await fetch(`${siteConfig.api_base_url}/company/`, {
-                    method: "PATCH",
+            // First, create the company
+            let companyCreated = false;
+            try {
+                const response = await fetch(`${siteConfig.api_base_url}/company/`, {
+                    method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify(companyPayload),
-                })
+                });
 
-                if (!updateResponse.ok) {
-                    throw new Error(`API error during update: ${updateResponse.status}`)
+                // Check if company creation was successful
+                if (!response.ok) {
+                    // If the error is that the company already exists, try updating it instead
+                    if (response.status === 400) {
+                        const updateResponse = await fetch(`${siteConfig.api_base_url}/company/`, {
+                            method: "PATCH",
+                            headers: {
+                                "Authorization": `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(companyPayload),
+                        });
+
+                        if (updateResponse.ok) {
+                            companyCreated = true;
+                        } else {
+                            const errorData = await updateResponse.json();
+                            throw new Error(errorData.detail || "Failed to update company");
+                        }
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || "Failed to create company");
+                    }
+                } else {
+                    companyCreated = true;
                 }
-            } else if (!response.ok) {
-                throw new Error(`API error during creation: ${response.status}`)
+            } catch (error) {
+                console.error("Error creating/updating company:", error);
+                toast({
+                    title: "Fout bij het maken van bedrijfsprofiel",
+                    description: error instanceof Error ? error.message : "Onbekende fout opgetreden, contacteer support@proclogic.be",
+                    variant: "error",
+                });
+                setIsSubmitting(false);
+                return; // Stop here if company creation failed
             }
 
+            // Only update the user's metadata if company was successfully created/updated
+            if (companyCreated) {
+                try {
+                    await completeOnboardingClerk()
 
-            toast({
-                title: "Onboarding Voltooid",
-                description: "Je bedrijfsprofiel is succesvol aangemaakt.",
-                variant: "success",
-            })
+                    toast({
+                        title: "Onboarding voltooid",
+                        description: "Je bedrijfsprofiel is succesvol aangemaakt.",
+                        variant: "success",
+                    });
 
-            // Go to dashboard
-            router.push("/dashboard")
+                    await setCookiePath();
+
+                    router.push("/dashboard");
+                    router.refresh()
+
+                } catch (error) {
+                    console.error("Error updating user metadata:", error);
+                    toast({
+                        title: "Onboarding deels voltooid",
+                        description: "Je bedrijfsprofiel is aangemaakt, maar er was een probleem met het bijwerken van je gebruikersgegevens.",
+                        variant: "warning",
+                    });
+
+                    await setCookiePath();
+
+                    router.push("/dashboard");
+                    router.refresh()
+
+                }
+            }
         } catch (error) {
-            console.error("Error completing onboarding:", error)
+            console.error("Error completing onboarding:", error);
             toast({
                 title: "Fout bij Voltooien",
                 description: "Er is een fout opgetreden bij het voltooien van onboarding.",
                 variant: "error",
-            })
+            });
         } finally {
-            setIsSubmitting(false)
+            setIsSubmitting(false);
         }
-    }
+    };
+
 
     // Navigation handlers
     const goToNextStep = async () => {

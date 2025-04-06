@@ -1,5 +1,4 @@
 import { BarChart3, CheckCircle2, Clock, SearchIcon, Sparkles } from "lucide-react"
-import Image from "next/image"
 
 interface StepCompleteProps {
     companyName: string
@@ -62,15 +61,6 @@ export default function StepComplete({ companyName }: StepCompleteProps) {
                         Houd al je aanbestedingen bij in een duidelijk dashboard.
                     </p>
                 </div>
-            </div>
-
-            <div className="mt-6 relative h-40 w-full max-w-lg">
-                <Image
-                    src="/dash-preview.png"
-                    alt="Dashboard Preview"
-                    fill
-                    className="object-contain rounded-lg border border-gray-200 dark:border-gray-800 shadow-md"
-                />
             </div>
         </div>
     )

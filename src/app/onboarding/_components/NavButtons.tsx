@@ -60,7 +60,7 @@ export default function NavButtons({
                         </>
                     ) : (
                         <>
-                            <span>Naar het Dashboard</span>
+                            <span>Naar het dashboard</span>
                             <ArrowRight className="h-4 w-4" />
                         </>
                     )}

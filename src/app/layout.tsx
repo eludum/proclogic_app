@@ -5,10 +5,10 @@ import { extractSafeUser } from "@/lib/clerkUserUtils"
 import { nlBE } from '@clerk/localizations'
 import { ClerkProvider } from '@clerk/nextjs'
 import { currentUser } from '@clerk/nextjs/server'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
 import localFont from "next/font/local"
-import { GoogleAnalytics } from '@next/third-parties/google'
 import { cookies } from "next/headers"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
@@ -68,7 +68,7 @@ export default async function RootLayout({
   const safeUser = extractSafeUser(user)
 
   // Check if current path is for onboarding
-  const isOnboarding = cookieStore.get('current-path')?.value?.includes('/onboarding') || false;
+  const isOnboarding = cookieStore.get('current-path')?.value === '/onboarding';
 
   return (
     <ClerkProvider localization={nlBE}>
