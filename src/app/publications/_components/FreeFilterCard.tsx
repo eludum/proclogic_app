@@ -116,7 +116,12 @@ export default function FreeFilterCard({
         { value: "BE22", label: "Limburg" },
         { value: "BE23", label: "Oost-Vlaanderen" },
         { value: "BE24", label: "Vlaams-Brabant" },
-        { value: "BE25", label: "West-Vlaanderen" }
+        { value: "BE25", label: "West-Vlaanderen" },
+        { value: "BE31", label: "Brabant Wallon" },
+        { value: "BE32", label: "Hainaut" },
+        { value: "BE33", label: "Liège" },
+        { value: "BE34", label: "Luxembourg" },
+        { value: "BE35", label: "Namur" }
     ];
 
     // Handle search on Enter key

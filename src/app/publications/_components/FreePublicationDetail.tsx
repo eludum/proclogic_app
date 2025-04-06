@@ -257,13 +257,13 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <Button
-                                        onClick={() => router.push('/pricing')}
+                                        onClick={() => router.push('https://www.proclogic.be/pricing')}
                                         className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-md shadow-xs"
                                     >
                                         Registreer
                                     </Button>
                                     <Button
-                                        onClick={() => router.push('/demo')}
+                                        onClick={() => router.push('https://www.proclogic.be/contact')}
                                         className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-200 font-medium px-5 py-2.5 rounded-md shadow-xs"
                                     >
                                         Meer informatie

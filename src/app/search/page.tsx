@@ -78,7 +78,7 @@ export default async function PublicSearch() {
                             </p>
                         </div>
                         <a
-                            href="/register"
+                            href="https://www.proclogic.be/pricing"
                             className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-astral-600 hover:bg-astral-700 transition-colors duration-200"
                         >
                             Registreren

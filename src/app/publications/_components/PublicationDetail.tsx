@@ -1,8 +1,8 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig";
-import { useEffect } from "react";
 import { Button } from "@/components/Button";
 import { formatDate, getTimeRemaining, getTimeRemainingStyles } from "@/lib/publicationUtils";
+import { useAuth } from "@clerk/nextjs";
 import { RiChatSmile2Line, RiExternalLinkLine } from '@remixicon/react';
 import {
     ArrowLeftIcon,
@@ -15,11 +15,11 @@ import {
     EuroIcon,
     FileIcon,
     Layers,
+    LinkIcon,
     MapPinIcon,
     StarIcon,
     TagIcon
 } from 'lucide-react';
-import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,7 +28,6 @@ import ChatComponent from "./ChatComponent";
 const API_BASE_URL = siteConfig.api_base_url;
 
 // TODO: make one uniform interface
-// Define interfaces for the component
 export interface Publication {
     publication_date: any;
     dispatch_date: any;
@@ -44,8 +43,7 @@ export interface Publication {
     region?: string[];
     lot_titles?: string[];
     lot_descriptions?: string[];
-    documents?: Record<string, any>;
-    documents_loading?: boolean; 
+    documents?: string[];
     estimated_value?: number;
     accreditations?: Record<string, any>;
     is_recommended?: boolean;
@@ -54,6 +52,7 @@ export interface Publication {
     publication_in_your_region?: boolean;
     ai_summary_without_documents?: string;
     ai_summary_with_documents?: string;
+    external_links?: string[];
 }
 
 interface TimelineEvent {
@@ -69,7 +68,6 @@ interface PublicationDetailProps {
     timelineEvents: TimelineEvent[];
 }
 
-// Modified getCompany hook to use server-side data
 export default function PublicationDetail({ publication, timelineEvents }: PublicationDetailProps) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<'ai' | 'original'>('ai');
@@ -78,59 +76,61 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const [contentTab, setContentTab] = useState<'info' | 'lots' | 'documents'>('info');
     const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
     const { getToken } = useAuth();
-    const [documentsLoading, setDocumentsLoading] = useState<boolean>(true);
-    const [documents, setDocuments] = useState<Record<string, any>>({});
 
+    const handleDownload = async (filename: string) => {
+        try {
+            // Set loading state for this specific file
+            setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
 
-    useEffect(() => {
-        const fetchDocuments = async () => {
-            // Only fetch if we have a publication ID and documents aren't already loaded
-            if (!publication?.workspace_id) return;
-            
-            // If publication already has documents and they're not loading, use those
-            if (publication.documents && Object.keys(publication.documents).length > 0 && !publication.documents_loading) {
-                setDocuments(publication.documents);
-                setDocumentsLoading(false);
-                return;
-            }
-            
-            // If documents are currently loading according to the publication flag, just set our local loading state
-            if (publication.documents_loading) {
-                setDocumentsLoading(true);
-                return;
-            }
-            
-            try {
-                setDocumentsLoading(true);
-                const token = await getToken();
-                
-                const response = await fetch(
-                    `${API_BASE_URL}/publications/publication/${publication.workspace_id}/documents`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
-                );
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    setDocuments(data.documents);
-                } else {
-                    console.error('Failed to fetch documents:', response.status);
+            // Get authentication token
+            const token = await getToken();
+
+            // Construct the document URL
+            const downloadUrl = `${API_BASE_URL}/publications/publication/${publication?.workspace_id}/document/${filename}`;
+
+            // Create a fetch request with authentication to get the file
+            const response = await fetch(downloadUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
-            } catch (error) {
-                console.error('Error fetching documents:', error);
-            } finally {
-                setDocumentsLoading(false);
+            });
+
+            if (!response.ok) {
+                throw new Error(`Download failed: ${response.status}`);
             }
-        };
-        
-        fetchDocuments();
-        
-        // Only depend on the workspace_id and getToken, not on the documents themselves
-    }, [publication?.workspace_id, getToken]);
-    
+
+            // Get the blob from the response
+            const blob = await response.blob();
+
+            // Create a download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+
+        } catch (error) {
+            console.error("Error downloading file:", error);
+            // TODO: You might want to show a notification to the user here
+        } finally {
+            // Clear loading state for this file
+            setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
+        }
+    };
+
+    // Start a chat with a publication
+    const startChat = async (pub: Publication) => {
+        try {
+            setActiveChatPublication(pub);
+        } catch (error) {
+            console.error("Error starting chat:", error);
+        }
+    };
 
     if (!publication) {
         return (
@@ -171,62 +171,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
         );
     }
 
-    const handleDownload = async (filename: string) => {
-        try {
-            // Set loading state for this specific file
-            setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
-            
-            // Get authentication token
-            const token = await getToken();
-            
-            // Construct the document URL
-            const downloadUrl = `${API_BASE_URL}/publications/publication/${publication.workspace_id}/document/${filename}`;
-                
-            // Create a fetch request with authentication to get the file
-            const response = await fetch(downloadUrl, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Download failed: ${response.status}`);
-            }
-            
-            // Get the blob from the response
-            const blob = await response.blob();
-            
-            // Create a download link
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            
-            // Clean up
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(link);
-            
-        } catch (error) {
-            console.error("Error downloading file:", error);
-            // TODO: You might want to show a notification to the user here
-        } finally {
-            // Clear loading state for this file
-            setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
-        }
-    };
-    
-    
-    // Start a chat with a publication
-    const startChat = async (pub: Publication) => {
-        try {
-            setActiveChatPublication(pub);
-        } catch (error) {
-            console.error("Error starting chat:", error);
-        }
-    };
-
     const timeRemaining = getTimeRemaining(publication.submission_deadline);
 
     // Helper function to render icon based on string name
@@ -243,7 +187,11 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const isRecommended = publication.is_recommended;
 
     const hasLots = publication.lot_titles && publication.lot_titles.length > 0 && publication.lot_descriptions && publication.lot_descriptions.length > 0;
-    const hasDocuments = documents && Object.keys(documents).length > 0;
+    const hasDocuments = publication.documents && Array.isArray(publication.documents) && publication.documents.length > 0;
+    const hasExternalLinks = publication.external_links && Array.isArray(publication.external_links) && publication.external_links.length > 0;
+
+    // Determine if we should show the documents tab
+    const showDocumentsTab = hasDocuments || hasExternalLinks;
 
     return (
         <section aria-label="Publication Detail">
@@ -449,7 +397,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         <span>Percelen</span>
                                     </button>
                                 )}
-                                {hasDocuments && (
+                                {showDocumentsTab && (
                                     <button
                                         onClick={() => setContentTab('documents')}
                                         className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${contentTab === 'documents'
@@ -622,21 +570,16 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                 {/* Documents tab content */}
                                 {contentTab === 'documents' && (
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <FileIcon size={16} className="text-gray-400" />
-                                            <h3 className="font-medium text-gray-900 dark:text-white">
-                                                Documenten {documentsLoading ? "(Laden...)" : `(${Object.keys(documents || {}).length})`}
-                                            </h3>
-                                        </div>
-                                        
-                                        {documentsLoading ? (
-                                            <div className="flex justify-center items-center h-40">
-                                                <div className="animate-spin h-8 w-8 border-4 border-astral-500 border-t-transparent rounded-full"></div>
-                                            </div>
-                                        ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                                                {Object.keys(documents || {}).length > 0 ? (
-                                                    Object.keys(documents || {}).map((doc, index) => (
+                                        {hasDocuments && (
+                                            <>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <FileIcon size={16} className="text-gray-400" />
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">
+                                                        Documenten ({publication.documents?.length})
+                                                    </h3>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                                                    {publication.documents?.map((doc, index) => (
                                                         <div key={index} className="flex items-center justify-between gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-lg hover:shadow-md hover:border-astral-300 dark:hover:border-astral-700 transition-all duration-150">
                                                             <div className="flex items-center gap-2 overflow-hidden">
                                                                 <FileIcon size={16} className="text-gray-400 shrink-0" />
@@ -654,12 +597,39 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                                 )}
                                                             </Button>
                                                         </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="col-span-2 text-center p-4 text-gray-500 dark:text-gray-400">
-                                                        Geen documenten beschikbaar.
-                                                    </div>
-                                                )}
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {hasExternalLinks && (
+                                            <>
+                                                <div className="flex items-center gap-2 mt-6 mb-2">
+                                                    <LinkIcon size={16} className="text-gray-400" />
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">
+                                                        Externe links ({publication.external_links?.length})
+                                                    </h3>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                                                    {publication.external_links?.map((link, index) => (
+                                                        <div key={index} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-lg">
+                                                            <Link
+                                                                href={link}
+                                                                target="_blank"
+                                                                className="flex items-center gap-2 text-astral-600 dark:text-astral-400 hover:underline"
+                                                            >
+                                                                <RiExternalLinkLine className="size-4" />
+                                                                <span className="text-sm truncate">{link}</span>
+                                                            </Link>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {!hasDocuments && !hasExternalLinks && (
+                                            <div className="text-center p-4 text-gray-500 dark:text-gray-400">
+                                                Geen documenten of externe links beschikbaar.
                                             </div>
                                         )}
                                     </div>
