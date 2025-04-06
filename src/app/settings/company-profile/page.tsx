@@ -81,10 +81,7 @@ export default function CompanySettingsPage() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    ...company,
-                    ...updatedData
-                })
+                body: JSON.stringify(updatedData) // Only send what changed
             });
 
             if (!response.ok) {
