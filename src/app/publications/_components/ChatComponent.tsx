@@ -51,7 +51,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
     const [loading, setLoading] = useState(false);
     const [streamingMessage, setStreamingMessage] = useState<Message | null>(null);
     const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
-    const [availableFiles, setAvailableFiles] = useState<Record<string, FileInfo>>({});
+    const [availableFiles, setAvailableFiles] = useState<string[]>([]);
     const [connectionError, setConnectionError] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -338,10 +338,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     const data = await response.json();
 
                     if (data.documents) {
-                        const fileMap: Record<string, FileInfo> = {};
-                        Object.keys(data.documents).forEach(key => {
-                            fileMap[key] = { name: key };
-                        });
+                        const fileMap: string[] = data.documents;
                         setAvailableFiles(fileMap);
                     }
                 } else {
@@ -630,10 +627,10 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 {Object.keys(availableFiles).length > 0 && (
                     <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800">
                         <div className="flex flex-wrap items-center gap-2 text-xs">
-                            {Object.values(availableFiles).map((file, index) => (
+                            {Object.values(availableFiles).map((doc, index) => (
                                 <div key={index} className="flex items-center gap-1 bg-white dark:bg-blue-800 text-blue-700 dark:text-blue-200 px-2 py-1 rounded-full shadow-xs">
                                     <FileTextIcon size={12} />
-                                    <span className="truncate max-w-[150px]">{file.name}</span>
+                                    <span className="truncate max-w-[150px]">{doc}</span>
                                 </div>
                             ))}
                         </div>
