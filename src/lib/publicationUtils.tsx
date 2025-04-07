@@ -1,5 +1,5 @@
 export const getTimeRemaining = (deadline: string | number | Date | null | undefined) => {
-    if (!deadline) return { text: "No deadline", variant: "neutral" };
+    if (!deadline) return { text: "Verlopen", variant: "neutral" };
 
     const now = new Date();
     const dueDate = new Date(deadline);

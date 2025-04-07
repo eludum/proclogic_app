@@ -22,7 +22,7 @@ export default async function AnalyticsPage() {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      cache: 'no-store' // Ensure we get fresh data
+      cache: 'no-store'
     });
 
     if (!summaryResponse.ok) {
@@ -55,7 +55,7 @@ export default async function AnalyticsPage() {
         <div className="w-full">
           <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Aanbestedingsanalyse</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Inzichten in aanbestedingsgegevens, contractwaarden en markttrends.
+            Inzichten in toegekende aanbestedingen en contractwaarden.
           </p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default async function AnalyticsPage() {
             <p>Er is een fout opgetreden bij het laden van de analysegegevens: {fetchError}</p>
           </div>
         ) : (
-          <AnalyticsClient 
+          <AnalyticsClient
             initialSummaryData={summaryData}
             initialSectorData={sectorData}
           />
