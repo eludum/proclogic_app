@@ -10,41 +10,33 @@ const isPublicRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
     const { userId, sessionClaims, redirectToSignIn } = await auth()
-
-    // Store current path in a cookie for layout detection
-    const response = NextResponse.next()
-    response.cookies.set('current-path', req.nextUrl.pathname, {
-        maxAge: 60 * 5, // 5 minutes
-        path: '/'
-    });
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-pathname", req.nextUrl.pathname);
 
     // For users visiting /onboarding, don't try to redirect
     if (userId && isOnboardingRoute(req)) {
-        return response
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
     }
 
     // If the user isn't signed in and the route is private, redirect to sign-in
     if (!userId && !isPublicRoute(req)) {
-        return redirectToSignIn({ returnBackUrl: req.url })
+        return redirectToSignIn({ returnBackUrl: "/search" })
     }
 
     // Catch users who do not have `onboardingComplete: true` in their publicMetadata
     // Redirect them to the /onboarding route to complete onboarding
     if (userId && !sessionClaims?.metadata?.onboardingComplete) {
         const onboardingUrl = new URL('/onboarding', req.url)
-        // When redirecting to onboarding, update the cookie
-        const redirectResponse = NextResponse.redirect(onboardingUrl)
-        redirectResponse.cookies.set('current-path', '/onboarding', {
-            maxAge: 60 * 5,
-            path: '/'
-        })
-        return redirectResponse
+        return NextResponse.redirect(onboardingUrl)
     }
 
     // If the user is logged in and the route is protected, let them view.
-    if (userId && !isPublicRoute(req)) return response
+    if (userId && !isPublicRoute(req)) return NextResponse.next()
 
-    return response
 })
 
 export const config = {

@@ -4,7 +4,7 @@ import { useToast } from "@/lib/useToast"
 import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { completeOnboardingClerk, setCookiePath } from './_actions/complete-onboarding'
+import { completeOnboardingClerk } from './_actions/complete-onboarding'
 
 // Import components
 import OnboardingContainer from "./_components/OnboardingContainer"
@@ -376,8 +376,6 @@ export default function OnboardingPage() {
                         variant: "success",
                     });
 
-                    await setCookiePath();
-
                     router.push("/dashboard");
                     router.refresh()
 
@@ -388,8 +386,6 @@ export default function OnboardingPage() {
                         description: "Je bedrijfsprofiel is aangemaakt, maar er was een probleem met het bijwerken van je gebruikersgegevens.",
                         variant: "warning",
                     });
-
-                    await setCookiePath();
 
                     router.push("/dashboard");
                     router.refresh()

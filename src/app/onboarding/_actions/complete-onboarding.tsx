@@ -1,7 +1,6 @@
 'use server'
 
 import { auth, clerkClient } from '@clerk/nextjs/server'
-import { cookies } from "next/headers"
 
 export const completeOnboardingClerk = async () => {
     const { userId } = await auth()
@@ -22,9 +21,4 @@ export const completeOnboardingClerk = async () => {
     } catch (err) {
         return { error: 'There was an error updating the user metadata.' }
     }
-}
-
-export const setCookiePath = async () => {
-    const cookieStore = await cookies()
-    cookieStore.set('current-path', '/dashboard')
 }

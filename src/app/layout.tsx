@@ -9,7 +9,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
 import localFont from "next/font/local"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
 
@@ -67,8 +67,10 @@ export default async function RootLayout({
   // Extract only the safe properties to pass to the client component
   const safeUser = extractSafeUser(user)
 
-  // Check if current path is for onboarding
-  const isOnboarding = cookieStore.get('current-path')?.value === '/onboarding';
+  const headersList = headers();
+  const pathname = (await headersList).get("x-pathname");
+
+  const isOnboarding = pathname === "/onboarding"
 
   return (
     <ClerkProvider localization={nlBE}>
