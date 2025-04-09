@@ -19,6 +19,6 @@ export const completeOnboardingClerk = async () => {
         })
         return { message: res.publicMetadata }
     } catch (err) {
-        return { error: 'There was an error updating the user metadata.' }
+        throw new Error("Failed updating the user metadata");
     }
 }

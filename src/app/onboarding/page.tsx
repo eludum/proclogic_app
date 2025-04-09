@@ -1,27 +1,27 @@
 "use client"
-import { siteConfig } from "@/app/siteConfig"
-import { useToast } from "@/lib/useToast"
-import { useAuth, useUser } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { completeOnboardingClerk } from './_actions/complete-onboarding'
+import { siteConfig } from "@/app/siteConfig";
+import { useToast } from "@/lib/useToast";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { completeOnboardingClerk } from './_actions/ClerkOnboarding';
 
 // Import components
-import OnboardingContainer from "./_components/OnboardingContainer"
-import StepCompanyInfo from "./_components/StepCompanyInfo"
-import StepComplete from "./_components/StepComplete"
-import StepRegions from "./_components/StepRegions"
-import StepSectors from "./_components/StepSectors"
-import StepWebsiteParser from "./_components/StepWebsiteParser"
-import StepWelcome from "./_components/StepWelcome"
+import OnboardingContainer from "./_components/OnboardingContainer";
+import StepCompanyInfo from "./_components/StepCompanyInfo";
+import StepComplete from "./_components/StepComplete";
+import StepRegions from "./_components/StepRegions";
+import StepSectors from "./_components/StepSectors";
+import StepWebsiteParser from "./_components/StepWebsiteParser";
+import StepWelcome from "./_components/StepWelcome";
 
 // Import constants
-import { CompanyData, STEPS } from "./_components/constants"
+import { CompanyData, STEPS } from "./_components/constants";
 
 // Main onboarding component
 export default function OnboardingPage() {
     const router = useRouter()
-    const { user, isLoaded } = useUser()
+    const { user } = useUser()
     const { getToken } = useAuth()
     const { toast } = useToast()
 
@@ -363,42 +363,16 @@ export default function OnboardingPage() {
                 });
                 setIsSubmitting(false);
                 return; // Stop here if company creation failed
+                // TODO let user retry
             }
 
             // Only update the user's metadata if company was successfully created/updated
             if (companyCreated) {
-                try {
-                    await completeOnboardingClerk()
-
-                    toast({
-                        title: "Onboarding voltooid",
-                        description: "Je bedrijfsprofiel is succesvol aangemaakt.",
-                        variant: "success",
-                    });
-
-                    router.push("/dashboard");
-                    router.refresh()
-
-                } catch (error) {
-                    console.error("Error updating user metadata:", error);
-                    toast({
-                        title: "Onboarding deels voltooid",
-                        description: "Je bedrijfsprofiel is aangemaakt, maar er was een probleem met het bijwerken van je gebruikersgegevens.",
-                        variant: "warning",
-                    });
-
-                    router.push("/dashboard");
-                    router.refresh()
-
-                }
+                await completeOnboardingClerk()
             }
         } catch (error) {
+            // TODO: show error
             console.error("Error completing onboarding:", error);
-            toast({
-                title: "Fout bij Voltooien",
-                description: "Er is een fout opgetreden bij het voltooien van onboarding.",
-                variant: "error",
-            });
         } finally {
             setIsSubmitting(false);
         }
@@ -422,20 +396,12 @@ export default function OnboardingPage() {
         } else if (currentStep === STEPS.REGIONS) {
             // Create the company when moving from REGIONS to COMPLETE
             setCurrentStep(STEPS.COMPLETE)
+            completeOnboarding()
         } else if (currentStep === STEPS.COMPLETE) {
-            setIsSubmitting(true)
-            try {
-                await completeOnboarding()
-            } catch (error) {
-                console.error("Error creating company:", error)
-                toast({
-                    title: "Fout bij Voltooien",
-                    description: "Er is een fout opgetreden bij het aanmaken van je bedrijfsprofiel.",
-                    variant: "error",
-                })
-            } finally {
-                setIsSubmitting(false)
-            }
+            setIsSubmitting(true);
+            await user?.reload();
+            router.push('/dashboard')
+            setIsSubmitting(false);
         }
     }
 
@@ -464,6 +430,7 @@ export default function OnboardingPage() {
             return selectedOption !== null
         } else if (currentStep === STEPS.WEBSITE_PARSER) {
             // Can always proceed (either with or without scraped data)
+            // TODO validate data more strictly vies check?
             return true
         } else if (currentStep === STEPS.COMPANY_INFO) {
             return companyData.name.trim() !== "" &&

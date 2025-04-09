@@ -1,20 +1,22 @@
 "use client"
+// import { useSession } from "@clerk/nextjs"
 import { ThemeProvider } from "next-themes"
+// import { useRouter } from "next/navigation"
 
 export default function OnboardingLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // uncomment if you dont want people to redo onboarding
+  // comment if you dont want people to redo onboarding
   // const { session, isLoaded } = useSession()
   // const router = useRouter()
 
-  // // If onboarding is already complete, redirect to dashboard
+  // If onboarding is already complete, redirect to dashboard
   // useEffect(() => {
   //   if (isLoaded && session?.user?.publicMetadata?.onboardingComplete === true) {
-  //     router.push("/dashboard")
-  //     router.refresh()
+  //     router.refresh();
+  //     router.push("/dashboard");
   //   }
   // }, [isLoaded, session, router])
 

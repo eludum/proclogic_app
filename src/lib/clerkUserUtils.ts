@@ -6,6 +6,7 @@ export interface SafeUser {
     lastName: string | null;
     fullName: string | null;
     emailAddress: string | null;
+    publicMetadata: UserPublicMetadata;
 }
 
 export function extractSafeUser(user: User | null | undefined): SafeUser | null {
@@ -17,6 +18,7 @@ export function extractSafeUser(user: User | null | undefined): SafeUser | null 
         lastName: user.lastName,
         fullName: user.fullName,
         emailAddress: user.emailAddresses[0]?.emailAddress || null,
+        publicMetadata: user.publicMetadata,
     };
 }
 
