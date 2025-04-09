@@ -369,6 +369,7 @@ export default function OnboardingPage() {
             // Only update the user's metadata if company was successfully created/updated
             if (companyCreated) {
                 await completeOnboardingClerk()
+                await user?.reload();
             }
         } catch (error) {
             // TODO: show error
@@ -398,10 +399,7 @@ export default function OnboardingPage() {
             setCurrentStep(STEPS.COMPLETE)
             completeOnboarding()
         } else if (currentStep === STEPS.COMPLETE) {
-            setIsSubmitting(true);
-            await user?.reload();
             router.push('/dashboard')
-            setIsSubmitting(false);
         }
     }
 
