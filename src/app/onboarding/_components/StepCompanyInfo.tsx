@@ -69,7 +69,7 @@ export default function StepCompanyInfo({
                 {/* Company Activities */}
                 <div className="mb-6">
                     <label htmlFor="summary_activities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Omschrijving Bedrijfsactiviteiten <span className="text-red-500">*</span>
+                        Omschrijving bedrijfsactiviteiten <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                         <Textarea
@@ -89,7 +89,7 @@ export default function StepCompanyInfo({
                 {/* Number of Employees */}
                 <div className="mb-6">
                     <label htmlFor="number_of_employees" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Aantal Medewerkers <span className="text-red-500">*</span>
+                        Aantal medewerkers <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                         <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

@@ -14,11 +14,11 @@ export default function StepComplete({ companyName }: StepCompleteProps) {
             </div>
 
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                Onboarding Voltooid!
+                Onboarding voltooid!
             </h1>
 
             <p className="text-lg text-gray-700 dark:text-gray-300 max-w-lg">
-                Gefeliciteerd! {companyName} is nu klaar om van ProcLogic gebruik te maken.
+                Je bedrijf,{companyName},is nu klaar om van ProcLogic gebruik te maken.
             </p>
 
             <div className="w-full max-w-lg mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -38,27 +38,27 @@ export default function StepComplete({ companyName }: StepCompleteProps) {
                         Geavanceerd zoeken
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        Vind precies wat je zoekt met onze uitgebreide zoekfunctionaliteit.
+                        Vind precies wat je zoekt met onze uitgebreide zoekfunctionaliteiten.
                     </p>
                 </div>
 
                 <div className="flex flex-col items-center p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
                     <Clock className="text-astral-500 dark:text-astral-400 mb-3" size={24} />
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        Deadline reminders
+                        Deadline herinneringen
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        Mis nooit meer een deadline met automatische herinneringen.
+                        Mis nooit meer een deadline van een interessante aanbesteding, want met ProcLogic word je hieraan herinnerd.
                     </p>
                 </div>
 
                 <div className="flex flex-col items-center p-5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900">
                     <BarChart3 className="text-astral-500 dark:text-astral-400 mb-3" size={24} />
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        Inzichtelijk dashboard
+                        Jouw overzichtsbord
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        Houd al je aanbestedingen bij in een duidelijk dashboard.
+                        Houd je aanbestedingen bij in een overzichtsbord dat je zelf beheert.
                     </p>
                 </div>
             </div>

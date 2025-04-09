@@ -32,7 +32,7 @@ export default function StepSectors({
         <div className="flex flex-col space-y-6 animate-fadeIn">
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Sectoren Selecteren
+                    Sectoren selecteren
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
                     Kies de sectoren waarin je bedrijf actief is voor betere aanbevelingen.

@@ -30,7 +30,7 @@ export default function StepWelcome({
                 </h1>
 
                 <p className="mt-4 text-base text-gray-600 dark:text-gray-300 max-w-md mx-auto">
-                    We helpen je de beste aanbestedingen te vinden die passen bij jouw bedrijf.
+                    We helpen je aanbestedingen te vinden die het best passen bij jouw bedrijf.
                     Laten we even je profiel instellen.
                 </p>
 
@@ -50,7 +50,7 @@ export default function StepWelcome({
                             <Wand className="h-6 w-6" />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                            AI Magic
+                            AI magic
                         </h2>
                         <p className="text-sm text-gray-600 dark:text-gray-300 flex-1">
                             ProcLogic analyseert je website en vult automatisch zoveel mogelijk informatie in.

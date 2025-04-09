@@ -22,7 +22,7 @@ export default function StepWebsiteParser({
         <div className="flex flex-col space-y-6 animate-fadeIn">
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                    Website Analyse
+                    Website analyse
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
                     Voer je website URL in, dan analyseren wij je website en vullen automatisch zoveel mogelijk informatie in.
@@ -80,7 +80,7 @@ export default function StepWebsiteParser({
                 )}
 
                 <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-                    <p>Je kunt ook doorgaan zonder website analyse door op de knop &quot;Overslaan&quot; te klikken.</p>
+                    <p>Je kan ook doorgaan zonder website analyse door op de knop &quot;Overslaan&quot; te klikken.</p>
                 </div>
             </div>
         </div>
