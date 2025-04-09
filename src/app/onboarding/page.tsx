@@ -399,6 +399,7 @@ export default function OnboardingPage() {
             setCurrentStep(STEPS.COMPLETE)
             completeOnboarding()
         } else if (currentStep === STEPS.COMPLETE) {
+            setIsSubmitting(true);
             router.push('/dashboard')
         }
     }
