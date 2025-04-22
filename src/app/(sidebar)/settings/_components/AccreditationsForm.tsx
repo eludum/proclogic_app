@@ -146,7 +146,7 @@ export default function AccreditationsForm({ company, onSave, saving }: Accredit
                     </h3>
 
                     <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                        Voeg uw bedrijfsaccreditaties en certificeringen toe. Deze worden gebruikt voor het vinden van aanbestedingen waarvoor u gekwalificeerd bent.
+                        Voeg je bedrijfsaccreditaties en certificeringen toe. Deze worden gebruikt voor het vinden van aanbestedingen waarvoor je gekwalificeerd bent.
                     </p>
 
                     <div className="mb-6 bg-astral-50 dark:bg-astral-900/20 p-3 rounded-md">
@@ -155,8 +155,8 @@ export default function AccreditationsForm({ company, onSave, saving }: Accredit
                             <div className="text-sm text-astral-700 dark:text-astral-200">
                                 <p className="font-medium">Waarom accreditaties toevoegen?</p>
                                 <p className="mt-1">
-                                    Veel aanbestedingen vereisen specifieke certificeringen. Door uw accreditaties toe te voegen,
-                                    kunnen we u aanbestedingen tonen waarvoor uw bedrijf in aanmerking komt.
+                                    Veel aanbestedingen vereisen specifieke certificeringen. Door je accreditaties toe te voegen,
+                                    kunnen we je aanbestedingen tonen waarvoor jouw bedrijf in aanmerking komt.
                                 </p>
                             </div>
                         </div>

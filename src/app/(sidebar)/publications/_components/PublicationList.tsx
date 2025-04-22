@@ -283,7 +283,7 @@ export default function PublicationList({
 
                 toast({
                     title: "Opgeslagen!",
-                    description: "Aanbesteding is opgeslagen in uw lijst.",
+                    description: "Aanbesteding is opgeslagen in jouw lijst.",
                     variant: "success"
                 });
 
@@ -337,7 +337,7 @@ export default function PublicationList({
 
                 toast({
                     title: "Verwijderd",
-                    description: "Aanbesteding is verwijderd uit uw lijst.",
+                    description: "Aanbesteding is verwijderd uit jouw lijst.",
                     variant: "info"
                 });
 

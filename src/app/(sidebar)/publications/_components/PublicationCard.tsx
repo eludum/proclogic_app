@@ -192,7 +192,7 @@ export function PublicationCard({
                         label="Sector"
                         value={
                             <span className={`${inYourSector ? 'px-2 py-0.5 rounded-full border border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-medium' : ''}`}>
-                                {publication.sector} {inYourSector && <span className="ml-1">• In uw sector</span>}
+                                {publication.sector} {inYourSector && <span className="ml-1">• In je sector</span>}
                             </span>
                         }
                     />
@@ -206,7 +206,7 @@ export function PublicationCard({
                         label="Regio"
                         value={
                             <span className={`${inYourRegion ? 'px-2 py-0.5 rounded-full border border-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-medium' : ''}`}>
-                                {publication.region?.join(", ") || "N/A"} {inYourRegion && <span className="ml-1">• In uw regio</span>}
+                                {publication.region?.join(", ") || "N/A"} {inYourRegion && <span className="ml-1">• In je regio</span>}
                             </span>
                         }
                         truncate={true}

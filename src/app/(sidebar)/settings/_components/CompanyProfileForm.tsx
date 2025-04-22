@@ -100,7 +100,7 @@ export default function CompanyProfileForm({ company, onSave, saving }: CompanyP
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-astral-500"
                             value={summaryActivities}
                             onChange={(e) => setSummaryActivities(e.target.value)}
-                            placeholder="Beschrijf de kernactiviteiten van uw bedrijf..."
+                            placeholder="Beschrijf de kernactiviteiten van je bedrijf..."
                             required
                         />
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">

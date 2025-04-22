@@ -88,7 +88,7 @@ export default function PublicationNotesDialog({
                         onChange={(e) => setNotes(e.target.value)}
                         rows={5}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-astral-500 dark:bg-gray-800 dark:text-white resize-none"
-                        placeholder="Voeg hier uw notities toe..."
+                        placeholder="Voeg hier je notities toe..."
                         disabled={isLoading}
                     />
                 </div>

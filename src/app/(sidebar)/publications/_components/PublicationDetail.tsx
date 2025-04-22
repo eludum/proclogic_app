@@ -430,7 +430,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <TagIcon size={16} className={`${publication.publication_in_your_sector ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
                                                     <h3 className={`font-medium ${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
-                                                        Sector {publication.publication_in_your_sector && <span className="ml-1 text-sm">• In uw sector</span>}
+                                                        Sector {publication.publication_in_your_sector && <span className="ml-1 text-sm">• In je sector</span>}
                                                     </h3>
                                                 </div>
                                                 <p className={`${publication.publication_in_your_sector ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'}`}>
@@ -442,7 +442,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <MapPinIcon size={16} className={`${publication.publication_in_your_region ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'}`} />
                                                     <h3 className={`font-medium ${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-900 dark:text-white'}`}>
-                                                        Regio {publication.publication_in_your_region && <span className="ml-1 text-sm">• In uw regio</span>}
+                                                        Regio {publication.publication_in_your_region && <span className="ml-1 text-sm">• In je regio</span>}
                                                     </h3>
                                                 </div>
                                                 <p className={`${publication.publication_in_your_region ? 'text-emerald-700 dark:text-emerald-300 font-medium' : 'text-gray-800 dark:text-gray-200'} truncate`} title={publication.region?.join(", ") || "N/A"}>

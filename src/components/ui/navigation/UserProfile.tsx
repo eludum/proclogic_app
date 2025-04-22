@@ -87,7 +87,7 @@ export function UserProfile({ user, loading = false }: UserProfileProps) {
           <Button 
             variant="primary" 
             className="w-full h-10"
-            onClick={closeMobileDrawer}
+            onClick={() => window.open("https://calendly.com/koselogic-info/30min", "_blank")}
           >
             Boek een demo
           </Button>
