@@ -141,6 +141,10 @@ const adminNavigation: NavItem[] = [
         name: "Gebruikersbeheer",
         href: "/settings/users",
       },
+      {
+        name: "Administratie",
+        href: "https://billing.stripe.com/p/login/fZe4iqc3r0Te3G85kk",
+      },
       // TODO: implement notification settings
       // {
       //   name: "Notificatie-instellingen",
