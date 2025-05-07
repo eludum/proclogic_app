@@ -546,8 +546,8 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
             : citations;
 
         return (
-            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Bronnen:</p>
+            
+            <div className="mt-3 pt-2">
                 <ul className="space-y-1">
                     {citationsArray.map((citation, index) => (
                         <li key={index} className="text-xs text-gray-600 dark:text-gray-400 flex items-start gap-1">
