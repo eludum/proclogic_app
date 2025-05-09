@@ -1,8 +1,9 @@
 "use client"
+
 import { siteConfig } from "@/app/siteConfig";
 import { formatDate } from "@/lib/publicationUtils";
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, CodeIcon, MapPinIcon, TagIcon } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import FreeFilterCard from "./FreeFilterCard";
 import { Pagination } from "./Pagination";
 
@@ -41,41 +42,16 @@ interface FreePublicationListProps {
 
 export default function FreePublicationList({ initialPublications }: FreePublicationListProps) {
     const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
-    const [publications, setPublications] = useState<Publication[]>([]);
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [totalPages, setTotalPages] = useState<number>(1);
-    const [totalItems, setTotalItems] = useState<number>(0);
+    const [publications, setPublications] = useState<Publication[]>(initialPublications?.items || []);
+    const [currentPage, setCurrentPage] = useState<number>(initialPublications?.page || 1);
+    const [totalPages, setTotalPages] = useState<number>(initialPublications?.pages || 1);
+    const [totalItems, setTotalItems] = useState<number>(initialPublications?.total || 0);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [currentFilters, setCurrentFilters] = useState<FilterState>({
+    const [filters, setFilters] = useState<FilterState>({
         searchTerm: "",
         sectorFilters: [],
         regionFilters: []
     });
-
-    // Track if this is the initial load
-    const isInitialLoad = useRef<boolean>(true);
-    // Track current API request to cancel if another is made
-    const currentRequestController = useRef<AbortController | null>(null);
-
-    // Initialize state from initialPublications prop
-    useEffect(() => {
-        if (initialPublications) {
-            setPublications(initialPublications.items || []);
-            setCurrentPage(initialPublications.page || 1);
-            setTotalPages(initialPublications.pages || 1);
-            setTotalItems(initialPublications.total || 0);
-
-            // Extract initial filters from URL if available
-            if (typeof window !== 'undefined') {
-                const url = new URL(window.location.href);
-                setCurrentFilters({
-                    searchTerm: url.searchParams.get('q') || "",
-                    sectorFilters: url.searchParams.getAll('sector') || [],
-                    regionFilters: url.searchParams.getAll('region') || []
-                });
-            }
-        }
-    }, [initialPublications]);
 
     // Toggle description expansion for a publication
     const toggleDescription = (id: string) => {
@@ -85,127 +61,112 @@ export default function FreePublicationList({ initialPublications }: FreePublica
         }));
     };
 
-    // Load publications with filters and pagination using useCallback for stable reference
-    const loadPublications = useCallback(async (page = 1, filters = currentFilters) => {
-        // Skip loading on initial render since we already have server-side data
-        if (isInitialLoad.current) {
-            isInitialLoad.current = false;
-            return;
-        }
-
+    // Load publications from API
+    const fetchPublications = async (page: number, filterState: FilterState) => {
         setIsLoading(true);
-
-        // Cancel any in-flight request
-        if (currentRequestController.current) {
-            currentRequestController.current.abort();
-        }
-
-        // Create a new AbortController for this request
-        currentRequestController.current = new AbortController();
-        const signal = currentRequestController.current.signal;
-
+        
         try {
             const params = new URLSearchParams();
-
-            // Add pagination params
+            
+            // Add pagination
             params.append('page', page.toString());
-            params.append('size', '10'); // Default page size
-
-            // Add search term if present
-            if (filters.searchTerm) {
-                params.append('q', filters.searchTerm);
+            params.append('size', '10');
+            
+            // Add search term
+            if (filterState.searchTerm) {
+                params.append('q', filterState.searchTerm);
             }
-
+            
             // Add sector filters
-            filters.sectorFilters.forEach(sector => {
+            filterState.sectorFilters.forEach(sector => {
                 params.append('sector', sector);
             });
-
+            
             // Add region filters
-            filters.regionFilters.forEach(region => {
+            filterState.regionFilters.forEach(region => {
                 params.append('region', region);
             });
-
-            // Fetch data from API
-            const response = await fetch(`${API_BASE_URL}/publications/free/search/?${params.toString()}`, {
-                signal // Pass the abort signal
-            });
-
+            
+            // Fetch data
+            const response = await fetch(`${API_BASE_URL}/publications/free/search/?${params.toString()}`);
+            
             if (!response.ok) {
-                if (!signal.aborted) {
-                    throw new Error(`API error: ${response.status}`);
-                }
-                return;
+                throw new Error(`API error: ${response.status}`);
             }
-
-            const data = await response.json() as PaginatedResponse;
-
-            // Only update state if the request wasn't aborted
-            if (!signal.aborted) {
-                // Update state with new data
-                setPublications(data.items || []);
-                setCurrentPage(data.page || 1);
-                setTotalPages(data.pages || 1);
-                setTotalItems(data.total || 0);
-
-                // Update URL without page reload (for browser history)
-                if (typeof window !== 'undefined') {
-                    const url = new URL(window.location.href);
-
-                    // Reset URL params
-                    url.search = '';
-
-                    // Add current filters to URL
-                    if (filters.searchTerm) url.searchParams.set('q', filters.searchTerm);
-                    if (page > 1) url.searchParams.set('page', page.toString());
-
-                    filters.sectorFilters.forEach(sector => {
-                        url.searchParams.append('sector', sector);
-                    });
-
-                    filters.regionFilters.forEach(region => {
-                        url.searchParams.append('region', region);
-                    });
-
-                    // Update URL without reload
-                    window.history.pushState({}, '', url.toString());
-                }
+            
+            const data: PaginatedResponse = await response.json();
+            
+            // Update state
+            setPublications(data.items || []);
+            setCurrentPage(data.page);
+            setTotalPages(data.pages);
+            setTotalItems(data.total);
+            
+            // Update URL for browser history
+            if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                
+                // Reset URL params
+                url.search = '';
+                
+                // Add filters to URL
+                if (filterState.searchTerm) url.searchParams.set('q', filterState.searchTerm);
+                if (page > 1) url.searchParams.set('page', page.toString());
+                
+                filterState.sectorFilters.forEach(sector => {
+                    url.searchParams.append('sector', sector);
+                });
+                
+                filterState.regionFilters.forEach(region => {
+                    url.searchParams.append('region', region);
+                });
+                
+                window.history.pushState({}, '', url.toString());
             }
         } catch (error) {
-            // Only log errors if the request wasn't aborted
-            if (error instanceof Error && error.name !== 'AbortError') {
-                console.error('Error fetching publications:', error);
-            }
+            console.error('Error fetching publications:', error);
         } finally {
-            // Only update loading state if the request wasn't aborted
-            if (currentRequestController.current && !currentRequestController.current.signal.aborted) {
-                setIsLoading(false);
-                currentRequestController.current = null;
-            }
+            setIsLoading(false);
         }
-    }, [currentFilters]);
+    };
 
-    // Handle page change
-    const handlePageChange = useCallback((newPage: number) => {
-        if (newPage >= 1 && newPage <= totalPages && !isLoading) {
-            setCurrentPage(newPage);
-            loadPublications(newPage);
+    // Handle page change from pagination component
+    const handlePageChange = (page: number) => {
+        if (page !== currentPage && page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+            fetchPublications(page, filters);
         }
-    }, [totalPages, isLoading, loadPublications]);
+    };
 
-    // Handle filter changes
-    const handleFiltersChange = useCallback((newFilters: FilterState) => {
-        setCurrentFilters(newFilters);
-        loadPublications(1, newFilters);
-    }, [loadPublications]);
+    // Handle filter changes from filter component
+    const handleFiltersChange = (newFilters: FilterState) => {
+        setFilters(newFilters);
+        // Reset to page 1 when filters change
+        setCurrentPage(1);
+        fetchPublications(1, newFilters);
+    };
 
-    // Clean up any pending requests on unmount
+    // Initialize filters from URL on first load
     useEffect(() => {
-        return () => {
-            if (currentRequestController.current) {
-                currentRequestController.current.abort();
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            const urlFilters: FilterState = {
+                searchTerm: url.searchParams.get('q') || "",
+                sectorFilters: url.searchParams.getAll('sector') || [],
+                regionFilters: url.searchParams.getAll('region') || []
+            };
+            
+            setFilters(urlFilters);
+            
+            // Get page from URL if present
+            const pageParam = url.searchParams.get('page');
+            if (pageParam) {
+                const page = parseInt(pageParam, 10);
+                if (!isNaN(page) && page > 0) {
+                    setCurrentPage(page);
+                }
             }
-        };
+        }
     }, []);
 
     return (
@@ -213,7 +174,7 @@ export default function FreePublicationList({ initialPublications }: FreePublica
             {/* Filter component */}
             <FreeFilterCard
                 onFiltersChange={handleFiltersChange}
-                initialFilters={currentFilters}
+                initialFilters={filters}
             />
 
             {/* Results count */}
