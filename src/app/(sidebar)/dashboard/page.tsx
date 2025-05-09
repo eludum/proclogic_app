@@ -6,9 +6,19 @@ import InboxList from "./_components/Dashboard";
 const API_BASE_URL = siteConfig.api_base_url;
 
 export default async function Inbox() {
+    // Extract query parameters with defaults
+    const page = 1;
+    const pageSize = 10; // Default items per page
+    
+    // Calculate offset based on page number
+    const offset = (page - 1) * pageSize;
+    
+    // Limit should never exceed 100 (backend maximum)
+    const limit = Math.min(pageSize, 100);
+
     const { getToken } = await auth();
 
-    // Fetch notifications using authenticated endpoint
+    // Fetch notifications using authenticated endpoint with limit and offset
     let notificationsData = {
         items: [],
         total: 0,
@@ -19,8 +29,14 @@ export default async function Inbox() {
     try {
         const token = await getToken();
 
-        // Use notifications endpoint instead of messages
-        const response = await fetch(`${API_BASE_URL}/notifications/`, {
+        // Construct URL with proper limit/offset parameters
+        const params = new URLSearchParams({
+            limit: limit.toString(),
+            offset: offset.toString()
+        });
+
+        // Use notifications endpoint with pagination
+        const response = await fetch(`${API_BASE_URL}/notifications/?${params.toString()}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -40,6 +56,9 @@ export default async function Inbox() {
         }
         console.error("Error fetching notifications:", error);
     }
+
+    // Calculate total pages based on total items and page size
+    const totalPages = Math.ceil(notificationsData.total / pageSize) || 1;
 
     return (
         <section aria-label="Inbox Notifications">
@@ -63,6 +82,10 @@ export default async function Inbox() {
                 <InboxList
                     initialNotifications={notificationsData.items}
                     fetchError={fetchError}
+                    totalNotifications={notificationsData.total}
+                    unreadNotifications={notificationsData.unread}
+                    currentPage={page}
+                    totalPages={totalPages}
                 />
             </div>
         </section>

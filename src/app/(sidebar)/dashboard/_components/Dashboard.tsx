@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Pagination } from "../../publications/_components/Pagination";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
@@ -37,16 +38,45 @@ interface Notification {
     related_entity_id: string | null;
 }
 
+interface PaginationState {
+    page: number;
+    pageSize: number;
+    total: number;
+    pages: number;
+}
+
 interface InboxListProps {
     initialNotifications: Notification[];
     fetchError: string | null;
+    totalNotifications?: number;
+    unreadNotifications?: number;
+    currentPage?: number;
+    totalPages?: number;
 }
 
-export default function InboxList({ initialNotifications, fetchError }: InboxListProps) {
+export default function InboxList({ 
+    initialNotifications, 
+    fetchError, 
+    totalNotifications = 0,
+    unreadNotifications = 0,
+    currentPage = 1,
+    totalPages = 1
+}: InboxListProps) {
     const [notifications, setNotifications] = useState<Notification[]>(initialNotifications || []);
     const [isLoading, setIsLoading] = useState(false);
     const [filter, setFilter] = useState<string>('all');
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
+    
+    // Default page size to 10 (can be adjusted)
+    const PAGE_SIZE = 10;
+    
+    const [pagination, setPagination] = useState<PaginationState>({
+        page: currentPage,
+        pageSize: PAGE_SIZE,
+        total: totalNotifications,
+        pages: Math.ceil(totalNotifications / PAGE_SIZE) || 1
+    });
+    
     const { getToken } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
@@ -60,13 +90,89 @@ export default function InboxList({ initialNotifications, fetchError }: InboxLis
 
     // Calculate stats
     const stats = {
-        all: notifications.length,
-        unread: notifications.filter(msg => !msg.is_read).length,
+        all: pagination.total,
+        unread: unreadNotifications,
         recommendation: notifications.filter(msg => msg.type === 'recommendation').length,
         deadline: notifications.filter(msg => msg.type === 'deadline').length,
         system: notifications.filter(msg => msg.type === 'system').length,
         forum: notifications.filter(msg => msg.type === 'forum').length,
         account: notifications.filter(msg => msg.type === 'account').length
+    };
+
+    // Convert page number to offset for API calls
+    const pageToOffset = (page: number) => {
+        return (page - 1) * pagination.pageSize;
+    };
+    
+    // Load notifications with pagination and filters
+    const loadNotifications = async (page = 1, filterType = filter) => {
+        setIsLoading(true);
+        try {
+            const token = await getToken();
+            const params = new URLSearchParams();
+            
+            // Calculate offset from page number
+            const offset = pageToOffset(page);
+            
+            // Add pagination parameters using limit/offset
+            params.append('limit', pagination.pageSize.toString());
+            params.append('offset', offset.toString());
+            
+            // Add filter parameters (if API supports this)
+            // Note: The backend API might need to be updated to support filtering
+            // by notification type and read status
+            
+            const response = await fetch(`${API_BASE_URL}/notifications/?${params.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setNotifications(data.items || []);
+                
+                // Update pagination state
+                const totalPages = Math.ceil(data.total / pagination.pageSize) || 1;
+                setPagination({
+                    page: page,
+                    pageSize: pagination.pageSize,
+                    total: data.total || 0,
+                    pages: totalPages
+                });
+            } else {
+                console.error('Failed to fetch notifications:', await response.text());
+                toast({
+                    title: "Fout bij laden",
+                    description: "De berichten konden niet worden geladen. Probeer het later opnieuw.",
+                    variant: "error"
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+            toast({
+                title: "Fout bij laden",
+                description: "Er is een fout opgetreden bij het laden van berichten.",
+                variant: "error"
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle page change from pagination component
+    const handlePageChange = (newPage: number) => {
+        if (newPage !== pagination.page) {
+            loadNotifications(newPage, filter);
+            
+            // Update URL to preserve state
+            if (typeof window !== 'undefined') {
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', newPage.toString());
+                window.history.pushState({}, '', url.toString());
+            }
+        }
     };
 
     // Format date for display
@@ -147,14 +253,22 @@ export default function InboxList({ initialNotifications, fetchError }: InboxLis
         setIsLoading(true);
         try {
             const token = await getToken();
-            await fetch(`${API_BASE_URL}/notifications/mark-read`, {
+            // Convert string IDs to integers and send as direct array
+            const notificationIdsAsIntegers = Array.from(selectedNotifications).map(id => parseInt(id, 10));
+            
+            const response = await fetch(`${API_BASE_URL}/notifications/mark-read`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ notification_ids: Array.from(selectedNotifications) })
+                body: JSON.stringify(notificationIdsAsIntegers) // Send as direct array, not wrapped in object
             });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.detail || `Error: ${response.status}`);
+            }
 
             const updatedNotifications = notifications.map(msg =>
                 selectedNotifications.has(msg.id) ? { ...msg, is_read: true } : msg
@@ -167,50 +281,62 @@ export default function InboxList({ initialNotifications, fetchError }: InboxLis
                 variant: "success"
             });
         } catch (error) {
+            console.error("Error marking as read:", error);
             toast({
                 title: "Fout bij markeren als gelezen",
-                description: "Er is een fout opgetreden. Probeer het later opnieuw.",
+                description: error instanceof Error ? error.message : "Er is een fout opgetreden. Probeer het later opnieuw.",
                 variant: "error"
             });
         } finally {
             setIsLoading(false);
         }
     };
+
 
     // Delete selected notifications
-    const deleteNotifications = async () => {
-        if (selectedNotifications.size === 0) return;
+// Delete selected notifications
+const deleteNotifications = async () => {
+    if (selectedNotifications.size === 0) return;
 
-        setIsLoading(true);
-        try {
-            const token = await getToken();
-            await fetch(`${API_BASE_URL}/notifications/delete`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ notification_ids: Array.from(selectedNotifications) })
-            });
-
-            const updatedNotifications = notifications.filter(msg => !selectedNotifications.has(msg.id));
-            setNotifications(updatedNotifications);
-            setSelectedNotifications(new Set());
-
-            toast({
-                title: "Berichten verwijderd",
-                variant: "success"
-            });
-        } catch (error) {
-            toast({
-                title: "Fout bij verwijderen",
-                description: "Er is een fout opgetreden. Probeer het later opnieuw.",
-                variant: "error"
-            });
-        } finally {
-            setIsLoading(false);
+    setIsLoading(true);
+    try {
+        const token = await getToken();
+        // Convert string IDs to integers and send as direct array
+        const notificationIdsAsIntegers = Array.from(selectedNotifications).map(id => parseInt(id, 10));
+        
+        const response = await fetch(`${API_BASE_URL}/notifications/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(notificationIdsAsIntegers) // Send as direct array, not wrapped in object
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.detail || `Error: ${response.status}`);
         }
-    };
+
+        const updatedNotifications = notifications.filter(msg => !selectedNotifications.has(msg.id));
+        setNotifications(updatedNotifications);
+        setSelectedNotifications(new Set());
+
+        toast({
+            title: "Berichten verwijderd",
+            variant: "success"
+        });
+    } catch (error) {
+        console.error("Error deleting notifications:", error);
+        toast({
+            title: "Fout bij verwijderen",
+            description: error instanceof Error ? error.message : "Er is een fout opgetreden. Probeer het later opnieuw.",
+            variant: "error"
+        });
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     // Handle notification click - navigate to link
     const handleNotificationClick = async (notification: Notification) => {
@@ -427,6 +553,17 @@ export default function InboxList({ initialNotifications, fetchError }: InboxLis
                             </>
                         )}
                     </div>
+                    
+                    {/* Pagination */}
+                    {pagination.pages > 1 && filteredNotifications.length > 0 && (
+                        <Pagination
+                            currentPage={pagination.page}
+                            totalPages={pagination.pages}
+                            totalItems={pagination.total}
+                            onPageChange={handlePageChange}
+                            isLoading={isLoading}
+                        />
+                    )}
                 </div>
             </div>
         </>
