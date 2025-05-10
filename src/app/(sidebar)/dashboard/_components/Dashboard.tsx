@@ -33,7 +33,7 @@ interface Notification {
     content: string;
     created_at: string;
     is_read: boolean;
-    type: 'recommendation' | 'deadline' | 'system' | 'forum' | 'account';
+    notification_type: 'recommendation' | 'deadline' | 'system' | 'forum' | 'account';
     link: string;
     related_entity_id: string | null;
 }
@@ -97,7 +97,7 @@ export default function InboxList({
     const filteredNotifications = notifications.filter(notification => {
         if (filter === 'all') return true;
         if (filter === 'unread') return !notification.is_read;
-        return notification.type === filter;
+        return notification.notification_type === filter;
     });
 
     // Update pagination based on filtered items
@@ -126,11 +126,11 @@ export default function InboxList({
         const newStats = {
             all: totalNotifications,
             unread: notifications.filter(msg => !msg.is_read).length,
-            recommendation: notifications.filter(msg => msg.type === 'recommendation').length,
-            deadline: notifications.filter(msg => msg.type === 'deadline').length,
-            system: notifications.filter(msg => msg.type === 'system').length,
-            forum: notifications.filter(msg => msg.type === 'forum').length,
-            account: notifications.filter(msg => msg.type === 'account').length
+            recommendation: notifications.filter(msg => msg.notification_type === 'recommendation').length,
+            deadline: notifications.filter(msg => msg.notification_type === 'deadline').length,
+            system: notifications.filter(msg => msg.notification_type === 'system').length,
+            forum: notifications.filter(msg => msg.notification_type === 'forum').length,
+            account: notifications.filter(msg => msg.notification_type === 'account').length
         };
         setStats(newStats);
     }, [notifications, totalNotifications]);
@@ -267,8 +267,11 @@ export default function InboxList({
     };
 
     // Get icon for notification type
-    const getNotificationIcon = (type: string, isRead: boolean) => {
-        switch (type) {
+    const getNotificationIcon = (notification_type: string, isRead: boolean) => {
+        if (isRead) {
+            return <MailOpenIcon size={18} className="text-gray-400" />
+        }
+        switch (notification_type) {
             case 'recommendation':
                 return <StarIcon size={18} className="text-amber-500" />;
             case 'deadline':
@@ -280,9 +283,7 @@ export default function InboxList({
             case 'account':
                 return <UserIcon size={18} className="text-purple-500" />;
             default:
-                return isRead ?
-                    <MailOpenIcon size={18} className="text-gray-400" /> :
-                    <BellIcon size={18} className="text-astral-500" />;
+                return <BellIcon size={18} className="text-astral-500" />;
         }
     };
 
@@ -629,7 +630,7 @@ export default function InboxList({
                                                     <div className="flex items-center gap-2">
                                                         {/* Type icon */}
                                                         <div className="shrink-0">
-                                                            {getNotificationIcon(notification.type, notification.is_read)}
+                                                            {getNotificationIcon(notification.notification_type, notification.is_read)}
                                                         </div>
 
                                                         {/* Title */}
