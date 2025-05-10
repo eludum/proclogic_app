@@ -449,7 +449,7 @@ export default function InboxList({
     return (
         <>
             <Toaster />
-            <div className="space-y-6">
+            <div className="space-y-6 pb-4">
                 {/* Filters and actions */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xs">
                     <div className="p-4 border-b border-slate-200 dark:border-slate-800">
