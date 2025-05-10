@@ -78,6 +78,13 @@ export default function InboxList({
         pages: Math.ceil(totalNotifications / PAGE_SIZE) || 1
     });
 
+    const [filteredPagination, setFilteredPagination] = useState<PaginationState>({
+        page: 1,
+        pageSize: PAGE_SIZE,
+        total: 0,
+        pages: 1
+    });
+
     // Filtered stats for different categories
     const [stats, setStats] = useState({
         all: totalNotifications,
@@ -100,26 +107,32 @@ export default function InboxList({
         return notification.notification_type === filter;
     });
 
-    // Update pagination based on filtered items
+    // Update filtered pagination based on filtered items
     useEffect(() => {
         if (filter === 'all') {
             // For 'all' filter, use the original pagination data
-            setPagination(prev => ({
-                ...prev,
-                total: totalNotifications,
-                pages: Math.ceil(totalNotifications / PAGE_SIZE) || 1
-            }));
+            setFilteredPagination({
+                page: pagination.page,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                pages: pagination.pages
+            });
         } else {
             // For other filters, calculate based on filtered count
             const filteredCount = filteredNotifications.length;
-            setPagination(prev => ({
-                ...prev,
-                page: 1, // Reset to first page when filter changes
+            const filteredPages = Math.ceil(filteredCount / PAGE_SIZE) || 1;
+            
+            // Reset to page 1 if current page is now out of bounds
+            const newPage = pagination.page > filteredPages ? 1 : pagination.page;
+            
+            setFilteredPagination({
+                page: newPage,
+                pageSize: PAGE_SIZE,
                 total: filteredCount, 
-                pages: Math.ceil(filteredCount / PAGE_SIZE) || 1
-            }));
+                pages: filteredPages
+            });
         }
-    }, [filter, filteredNotifications.length, totalNotifications]);
+    }, [filter, filteredNotifications.length, pagination.page, pagination.pageSize, pagination.total, pagination.pages]);
 
     // Calculate stats for each category
     useEffect(() => {
@@ -213,14 +226,26 @@ export default function InboxList({
 
     // Handle page change from pagination component
     const handlePageChange = (newPage: number) => {
-        if (newPage !== pagination.page) {
+        // Determine which pagination to use based on filter
+        const paginationToUse = filter === 'all' ? pagination : filteredPagination;
+        
+        if (newPage !== paginationToUse.page && newPage >= 1 && newPage <= paginationToUse.pages) {
             setIsPaginationLoading(true); // Set pagination-specific loading
-            setPagination(prev => ({
-                ...prev,
-                page: newPage
-            }));
             
-            loadNotifications(newPage, filter);
+            if (filter === 'all') {
+                setPagination(prev => ({
+                    ...prev,
+                    page: newPage
+                }));
+                loadNotifications(newPage, filter);
+            } else {
+                setFilteredPagination(prev => ({
+                    ...prev,
+                    page: newPage
+                }));
+                // For client-side pagination, no need to load from server
+                setIsPaginationLoading(false);
+            }
         }
     };
 
@@ -231,8 +256,8 @@ export default function InboxList({
             return filteredNotifications;
         } else {
             // For client-side pagination
-            const startIndex = (pagination.page - 1) * pagination.pageSize;
-            const endIndex = startIndex + pagination.pageSize;
+            const startIndex = (filteredPagination.page - 1) * filteredPagination.pageSize;
+            const endIndex = startIndex + filteredPagination.pageSize;
             return filteredNotifications.slice(startIndex, endIndex);
         }
     };
@@ -327,7 +352,7 @@ export default function InboxList({
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(notificationIdsAsIntegers) // Send as direct array, not wrapped in object
+                body: JSON.stringify(notificationIdsAsIntegers)
             });
             
             if (!response.ok) {
@@ -378,7 +403,7 @@ export default function InboxList({
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(notificationIdsAsIntegers) // Send as direct array, not wrapped in object
+                body: JSON.stringify(notificationIdsAsIntegers)
             });
             
             if (!response.ok) {
@@ -474,6 +499,12 @@ export default function InboxList({
             <NotificationSkeleton key={index} />
         ));
     };
+
+    // Determine which pagination to use based on filter
+    const paginationToUse = filter === 'all' ? pagination : filteredPagination;
+    
+    // Determine if pagination should be shown
+    const shouldShowPagination = paginationToUse.pages > 1;
 
     return (
         <>
@@ -670,12 +701,12 @@ export default function InboxList({
                         )}
                     </div>
                     
-                    {/* Pagination - now using correct total based on filtered notifications */}
-                    {pagination.pages > 1 && filteredNotifications.length > 0 && (
+                    {/* Only show pagination if there are multiple pages */}
+                    {shouldShowPagination && filteredNotifications.length > 0 && (
                         <Pagination
-                            currentPage={pagination.page}
-                            totalPages={pagination.pages}
-                            totalItems={pagination.total}
+                            currentPage={paginationToUse.page}
+                            totalPages={paginationToUse.pages}
+                            totalItems={paginationToUse.total}
                             onPageChange={handlePageChange}
                             isLoading={isLoading || isPaginationLoading}
                         />
