@@ -64,6 +64,7 @@ export default function InboxList({
 }: InboxListProps) {
     const [notifications, setNotifications] = useState<Notification[]>(initialNotifications || []);
     const [isLoading, setIsLoading] = useState(false);
+    const [isPaginationLoading, setIsPaginationLoading] = useState(false); // Separate loading state for pagination
     const [filter, setFilter] = useState<string>('all');
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
     
@@ -198,6 +199,7 @@ export default function InboxList({
             });
         } finally {
             setIsLoading(false);
+            setIsPaginationLoading(false);
         }
     };
 
@@ -212,19 +214,13 @@ export default function InboxList({
     // Handle page change from pagination component
     const handlePageChange = (newPage: number) => {
         if (newPage !== pagination.page) {
+            setIsPaginationLoading(true); // Set pagination-specific loading
             setPagination(prev => ({
                 ...prev,
                 page: newPage
             }));
             
             loadNotifications(newPage, filter);
-            
-            // Update URL to preserve state
-            if (typeof window !== 'undefined') {
-                const url = new URL(window.location.href);
-                url.searchParams.set('page', newPage.toString());
-                window.history.pushState({}, '', url.toString());
-            }
         }
     };
 
@@ -442,8 +438,40 @@ export default function InboxList({
 
         // Navigate to linked resource
         if (notification.link) {
-            window.open(notification.link, "_blank")
+            window.open(notification.link, "_blank");
         }
+    };
+
+    // Skeleton loader component for notifications
+    const NotificationSkeleton = () => (
+        <div className="px-4 py-4 animate-pulse">
+            <div className="flex items-start">
+                <div className="w-6 mt-1 shrink-0">
+                    <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+                <div className="ml-3 flex-1 min-w-0">
+                    <div className="flex flex-wrap justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                            <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded-full shrink-0"></div>
+                            <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        </div>
+                        <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    </div>
+                    <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-1"></div>
+                    <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="flex justify-end">
+                        <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    // Render multiple skeleton loaders
+    const renderSkeletons = (count: number) => {
+        return Array(count).fill(0).map((_, index) => (
+            <NotificationSkeleton key={index} />
+        ));
     };
 
     return (
@@ -520,7 +548,7 @@ export default function InboxList({
 
                     {/* Notification list */}
                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                        {isLoading ? (
+                        {isLoading && !isPaginationLoading ? (
                             <div className="py-8">
                                 <Loader loadingtext={"Berichten laden..."} size={32} />
                             </div>
@@ -572,64 +600,71 @@ export default function InboxList({
                                     </div>
                                 </div>
 
-                                {currentItems.map((notification) => (
-                                    <div
-                                        key={notification.id}
-                                        className={`flex items-start px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-astral-50 dark:bg-astral-900/10' : ''}`}
-                                    >
-                                        <div className="w-6 mt-1 shrink-0">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedNotifications.has(notification.id)}
-                                                onChange={() => toggleSelectNotification(notification.id)}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="h-4 w-4 rounded border-gray-300 text-astral-600"
-                                            />
-                                        </div>
+                                {/* Show skeleton loaders when pagination is loading */}
+                                {isPaginationLoading ? (
+                                    <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                                        {renderSkeletons(5)}
+                                    </div>
+                                ) : (
+                                    currentItems.map((notification) => (
                                         <div
-                                            className="ml-3 flex-1 min-w-0"
-                                            onClick={() => handleNotificationClick(notification)}
+                                            key={notification.id}
+                                            className={`flex items-start px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-astral-50 dark:bg-astral-900/10' : ''}`}
                                         >
-                                            {/* Notification header */}
-                                            <div className="flex flex-wrap justify-between gap-2 mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    {/* Type icon */}
-                                                    <div className="shrink-0">
-                                                        {getNotificationIcon(notification.type, notification.is_read)}
+                                            <div className="w-6 mt-1 shrink-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedNotifications.has(notification.id)}
+                                                    onChange={() => toggleSelectNotification(notification.id)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="h-4 w-4 rounded border-gray-300 text-astral-600"
+                                                />
+                                            </div>
+                                            <div
+                                                className="ml-3 flex-1 min-w-0"
+                                                onClick={() => handleNotificationClick(notification)}
+                                            >
+                                                {/* Notification header */}
+                                                <div className="flex flex-wrap justify-between gap-2 mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        {/* Type icon */}
+                                                        <div className="shrink-0">
+                                                            {getNotificationIcon(notification.type, notification.is_read)}
+                                                        </div>
+
+                                                        {/* Title */}
+                                                        <h3 className={`text-sm font-medium ${notification.is_read ? 'text-gray-900 dark:text-gray-200' : 'text-astral-900 dark:text-astral-100 font-semibold'}`}>
+                                                            {notification.title}
+                                                        </h3>
+
+                                                        {/* Unread indicator */}
+                                                        {!notification.is_read && (
+                                                            <span className="inline-block w-2 h-2 bg-astral-500 rounded-full"></span>
+                                                        )}
                                                     </div>
 
-                                                    {/* Title */}
-                                                    <h3 className={`text-sm font-medium ${notification.is_read ? 'text-gray-900 dark:text-gray-200' : 'text-astral-900 dark:text-astral-100 font-semibold'}`}>
-                                                        {notification.title}
-                                                    </h3>
-
-                                                    {/* Unread indicator */}
-                                                    {!notification.is_read && (
-                                                        <span className="inline-block w-2 h-2 bg-astral-500 rounded-full"></span>
-                                                    )}
+                                                    {/* Date */}
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+                                                        {formatNotificationDate(notification.created_at)}
+                                                    </div>
                                                 </div>
 
-                                                {/* Date */}
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
-                                                    {formatNotificationDate(notification.created_at)}
+                                                {/* Notification content */}
+                                                <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                                    {notification.content}
+                                                </p>
+
+                                                {/* Link indicator */}
+                                                <div className="flex items-center justify-end">
+                                                    <span className="text-xs text-astral-600 dark:text-astral-400 flex items-center">
+                                                        Bekijk details
+                                                        <ChevronRightIcon size={14} className="ml-1" />
+                                                    </span>
                                                 </div>
-                                            </div>
-
-                                            {/* Notification content */}
-                                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                                                {notification.content}
-                                            </p>
-
-                                            {/* Link indicator */}
-                                            <div className="flex items-center justify-end">
-                                                <span className="text-xs text-astral-600 dark:text-astral-400 flex items-center">
-                                                    Bekijk details
-                                                    <ChevronRightIcon size={14} className="ml-1" />
-                                                </span>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
                             </>
                         )}
                     </div>
@@ -641,7 +676,7 @@ export default function InboxList({
                             totalPages={pagination.pages}
                             totalItems={pagination.total}
                             onPageChange={handlePageChange}
-                            isLoading={isLoading}
+                            isLoading={isLoading || isPaginationLoading}
                         />
                     )}
                 </div>

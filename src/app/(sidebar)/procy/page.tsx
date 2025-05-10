@@ -34,7 +34,7 @@ export default async function Conversations() {
     }
 
     return (
-        <section aria-label="AI Conversations Overview" className="max-w-6xl mx-auto">
+        <section aria-label="AI Conversations Overview" className="max-w-6xl mx-auto pb-4">
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
                     <div className="flex items-center gap-3 mb-3">
