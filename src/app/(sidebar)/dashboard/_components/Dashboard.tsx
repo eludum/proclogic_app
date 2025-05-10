@@ -22,7 +22,7 @@ import {
     UserIcon
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pagination } from "../../publications/_components/Pagination";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -76,6 +76,17 @@ export default function InboxList({
         total: totalNotifications,
         pages: Math.ceil(totalNotifications / PAGE_SIZE) || 1
     });
+
+    // Filtered stats for different categories
+    const [stats, setStats] = useState({
+        all: totalNotifications,
+        unread: unreadNotifications,
+        recommendation: 0,
+        deadline: 0,
+        system: 0,
+        forum: 0,
+        account: 0
+    });
     
     const { getToken } = useAuth();
     const { toast } = useToast();
@@ -88,16 +99,40 @@ export default function InboxList({
         return notification.type === filter;
     });
 
-    // Calculate stats
-    const stats = {
-        all: pagination.total,
-        unread: unreadNotifications,
-        recommendation: notifications.filter(msg => msg.type === 'recommendation').length,
-        deadline: notifications.filter(msg => msg.type === 'deadline').length,
-        system: notifications.filter(msg => msg.type === 'system').length,
-        forum: notifications.filter(msg => msg.type === 'forum').length,
-        account: notifications.filter(msg => msg.type === 'account').length
-    };
+    // Update pagination based on filtered items
+    useEffect(() => {
+        if (filter === 'all') {
+            // For 'all' filter, use the original pagination data
+            setPagination(prev => ({
+                ...prev,
+                total: totalNotifications,
+                pages: Math.ceil(totalNotifications / PAGE_SIZE) || 1
+            }));
+        } else {
+            // For other filters, calculate based on filtered count
+            const filteredCount = filteredNotifications.length;
+            setPagination(prev => ({
+                ...prev,
+                page: 1, // Reset to first page when filter changes
+                total: filteredCount, 
+                pages: Math.ceil(filteredCount / PAGE_SIZE) || 1
+            }));
+        }
+    }, [filter, filteredNotifications.length, totalNotifications]);
+
+    // Calculate stats for each category
+    useEffect(() => {
+        const newStats = {
+            all: totalNotifications,
+            unread: notifications.filter(msg => !msg.is_read).length,
+            recommendation: notifications.filter(msg => msg.type === 'recommendation').length,
+            deadline: notifications.filter(msg => msg.type === 'deadline').length,
+            system: notifications.filter(msg => msg.type === 'system').length,
+            forum: notifications.filter(msg => msg.type === 'forum').length,
+            account: notifications.filter(msg => msg.type === 'account').length
+        };
+        setStats(newStats);
+    }, [notifications, totalNotifications]);
 
     // Convert page number to offset for API calls
     const pageToOffset = (page: number) => {
@@ -119,8 +154,13 @@ export default function InboxList({
             params.append('offset', offset.toString());
             
             // Add filter parameters (if API supports this)
-            // Note: The backend API might need to be updated to support filtering
-            // by notification type and read status
+            if (filterType !== 'all') {
+                if (filterType === 'unread') {
+                    params.append('unread', 'true');
+                } else {
+                    params.append('type', filterType);
+                }
+            }
             
             const response = await fetch(`${API_BASE_URL}/notifications/?${params.toString()}`, {
                 headers: {
@@ -133,7 +173,7 @@ export default function InboxList({
                 const data = await response.json();
                 setNotifications(data.items || []);
                 
-                // Update pagination state
+                // Update pagination state with server-provided values
                 const totalPages = Math.ceil(data.total / pagination.pageSize) || 1;
                 setPagination({
                     page: page,
@@ -161,9 +201,22 @@ export default function InboxList({
         }
     };
 
+    // Load notifications when filter changes
+    useEffect(() => {
+        if (filter !== 'all') {
+            // Only make a new API call if we're not showing "all" 
+            loadNotifications(1, filter);
+        }
+    }, [filter]);
+
     // Handle page change from pagination component
     const handlePageChange = (newPage: number) => {
         if (newPage !== pagination.page) {
+            setPagination(prev => ({
+                ...prev,
+                page: newPage
+            }));
+            
             loadNotifications(newPage, filter);
             
             // Update URL to preserve state
@@ -174,6 +227,21 @@ export default function InboxList({
             }
         }
     };
+
+    // Calculate current items to show based on pagination
+    const getCurrentItems = () => {
+        if (filter === 'all') {
+            // For server-side pagination
+            return filteredNotifications;
+        } else {
+            // For client-side pagination
+            const startIndex = (pagination.page - 1) * pagination.pageSize;
+            const endIndex = startIndex + pagination.pageSize;
+            return filteredNotifications.slice(startIndex, endIndex);
+        }
+    };
+
+    const currentItems = getCurrentItems();
 
     // Format date for display
     const formatNotificationDate = (dateString: string) => {
@@ -235,13 +303,13 @@ export default function InboxList({
 
     // Select/deselect all filtered notifications
     const toggleSelectAll = () => {
-        if (selectedNotifications.size === filteredNotifications.length) {
+        if (selectedNotifications.size === currentItems.length) {
             // Deselect all
             setSelectedNotifications(new Set());
         } else {
-            // Select all filtered notifications
+            // Select all currently visible notifications
             const newSelected = new Set<string>();
-            filteredNotifications.forEach(msg => newSelected.add(msg.id));
+            currentItems.forEach(msg => newSelected.add(msg.id));
             setSelectedNotifications(newSelected);
         }
     };
@@ -280,6 +348,11 @@ export default function InboxList({
                 title: "Berichten gemarkeerd als gelezen",
                 variant: "success"
             });
+            
+            // Reload notifications if we're on unread filter to update the list
+            if (filter === 'unread') {
+                loadNotifications(1, filter);
+            }
         } catch (error) {
             console.error("Error marking as read:", error);
             toast({
@@ -292,51 +365,52 @@ export default function InboxList({
         }
     };
 
-
     // Delete selected notifications
-// Delete selected notifications
-const deleteNotifications = async () => {
-    if (selectedNotifications.size === 0) return;
+    const deleteNotifications = async () => {
+        if (selectedNotifications.size === 0) return;
 
-    setIsLoading(true);
-    try {
-        const token = await getToken();
-        // Convert string IDs to integers and send as direct array
-        const notificationIdsAsIntegers = Array.from(selectedNotifications).map(id => parseInt(id, 10));
-        
-        const response = await fetch(`${API_BASE_URL}/notifications/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(notificationIdsAsIntegers) // Send as direct array, not wrapped in object
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.detail || `Error: ${response.status}`);
+        setIsLoading(true);
+        try {
+            const token = await getToken();
+            // Convert string IDs to integers and send as direct array
+            const notificationIdsAsIntegers = Array.from(selectedNotifications).map(id => parseInt(id, 10));
+            
+            const response = await fetch(`${API_BASE_URL}/notifications/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(notificationIdsAsIntegers) // Send as direct array, not wrapped in object
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.detail || `Error: ${response.status}`);
+            }
+
+            const updatedNotifications = notifications.filter(msg => !selectedNotifications.has(msg.id));
+            setNotifications(updatedNotifications);
+            setSelectedNotifications(new Set());
+
+            toast({
+                title: "Berichten verwijderd",
+                variant: "success"
+            });
+            
+            // Reload notifications to update the counts
+            loadNotifications(1, filter);
+        } catch (error) {
+            console.error("Error deleting notifications:", error);
+            toast({
+                title: "Fout bij verwijderen",
+                description: error instanceof Error ? error.message : "Er is een fout opgetreden. Probeer het later opnieuw.",
+                variant: "error"
+            });
+        } finally {
+            setIsLoading(false);
         }
-
-        const updatedNotifications = notifications.filter(msg => !selectedNotifications.has(msg.id));
-        setNotifications(updatedNotifications);
-        setSelectedNotifications(new Set());
-
-        toast({
-            title: "Berichten verwijderd",
-            variant: "success"
-        });
-    } catch (error) {
-        console.error("Error deleting notifications:", error);
-        toast({
-            title: "Fout bij verwijderen",
-            description: error instanceof Error ? error.message : "Er is een fout opgetreden. Probeer het later opnieuw.",
-            variant: "error"
-        });
-    } finally {
-        setIsLoading(false);
-    }
-};
+    };
 
     // Handle notification click - navigate to link
     const handleNotificationClick = async (notification: Notification) => {
@@ -355,6 +429,12 @@ const deleteNotifications = async () => {
                     msg.id === notification.id ? { ...msg, is_read: true } : msg
                 );
                 setNotifications(updatedNotifications);
+                
+                // Update unread count
+                setStats(prev => ({
+                    ...prev,
+                    unread: prev.unread - 1
+                }));
             } catch (error) {
                 console.error("Error marking notification as read:", error);
             }
@@ -362,7 +442,7 @@ const deleteNotifications = async () => {
 
         // Navigate to linked resource
         if (notification.link) {
-            router.push(notification.link);
+            window.open(notification.link, "_blank")
         }
     };
 
@@ -470,7 +550,7 @@ const deleteNotifications = async () => {
                                 <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    {`Je hebt geen berichten in de categorie '${filter}'.`}
+                                    {`Je hebt geen berichten in de geselecteerde categorie.`}
                                 </p>
                             </div>
                         ) : (
@@ -480,7 +560,7 @@ const deleteNotifications = async () => {
                                     <div className="w-6 shrink-0">
                                         <input
                                             type="checkbox"
-                                            checked={selectedNotifications.size === filteredNotifications.length && filteredNotifications.length > 0}
+                                            checked={selectedNotifications.size === currentItems.length && currentItems.length > 0}
                                             onChange={toggleSelectAll}
                                             className="h-4 w-4 rounded border-gray-300 text-astral-600"
                                         />
@@ -492,7 +572,7 @@ const deleteNotifications = async () => {
                                     </div>
                                 </div>
 
-                                {filteredNotifications.map((notification) => (
+                                {currentItems.map((notification) => (
                                     <div
                                         key={notification.id}
                                         className={`flex items-start px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-astral-50 dark:bg-astral-900/10' : ''}`}
@@ -554,7 +634,7 @@ const deleteNotifications = async () => {
                         )}
                     </div>
                     
-                    {/* Pagination */}
+                    {/* Pagination - now using correct total based on filtered notifications */}
                     {pagination.pages > 1 && filteredNotifications.length > 0 && (
                         <Pagination
                             currentPage={pagination.page}

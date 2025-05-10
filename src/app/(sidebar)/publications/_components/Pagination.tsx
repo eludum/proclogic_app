@@ -32,7 +32,7 @@ export function Pagination({ currentPage, totalPages, totalItems, onPageChange, 
 
     return (
         <>
-            <div className="flex justify-center mt-8 mb-4">
+            <div className="flex justify-center mt-8 mb-4 p-4">
                 <div className="flex items-center space-x-2">
                     <Button
                         onClick={() => onPageChange(currentPage - 1)}
@@ -70,7 +70,7 @@ export function Pagination({ currentPage, totalPages, totalItems, onPageChange, 
 
             {/* Page info */}
             <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Pagina {currentPage} van {totalPages} &middot; Totaal {totalItems} aanbestedingen
+                Pagina {currentPage} van {totalPages} &middot; Totaal {totalItems}
             </div>
         </>
     );
