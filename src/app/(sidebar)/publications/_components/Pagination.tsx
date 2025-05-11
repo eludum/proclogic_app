@@ -70,7 +70,9 @@ export function Pagination({ currentPage, totalPages, totalItems, onPageChange, 
 
             {/* Page info */}
             {isLoading ? (
-                null
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2 mb-2">
+                    <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto"></div>
+                </div>
             ) : (
                 <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2 mb-2">
                     Pagina {currentPage} van {totalPages} &middot; Totaal {totalItems}
