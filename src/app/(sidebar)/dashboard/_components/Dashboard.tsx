@@ -22,7 +22,7 @@ import {
     UserIcon
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pagination } from "../../publications/_components/Pagination";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -36,6 +36,25 @@ interface Notification {
     notification_type: 'recommendation' | 'deadline' | 'system' | 'forum' | 'account';
     link: string;
     related_entity_id: string | null;
+}
+
+interface NotificationCounts {
+    total: number;
+    unread: number;
+    categories: {
+        recommendation: number;
+        deadline: number;
+        system: number;
+        forum: number;
+        account: number;
+    };
+    unread_categories: {
+        recommendation: number;
+        deadline: number;
+        system: number;
+        forum: number;
+        account: number;
+    };
 }
 
 interface PaginationState {
@@ -64,9 +83,31 @@ export default function InboxList({
 }: InboxListProps) {
     const [notifications, setNotifications] = useState<Notification[]>(initialNotifications || []);
     const [isLoading, setIsLoading] = useState(false);
-    const [isPaginationLoading, setIsPaginationLoading] = useState(false); // Separate loading state for pagination
+    const [isPaginationLoading, setIsPaginationLoading] = useState(false);
     const [filter, setFilter] = useState<string>('all');
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
+    // Ref to track if filter has been changed
+    const hasFilterChanged = useRef(false);
+    
+    // Initialize counts state with server-provided data
+    const [counts, setCounts] = useState<NotificationCounts>({
+        total: totalNotifications,
+        unread: unreadNotifications,
+        categories: {
+            recommendation: 0,
+            deadline: 0,
+            system: 0,
+            forum: 0,
+            account: 0
+        },
+        unread_categories: {
+            recommendation: 0,
+            deadline: 0,
+            system: 0,
+            forum: 0,
+            account: 0
+        }
+    });
     
     // Default page size to 10 (can be adjusted)
     const PAGE_SIZE = 10;
@@ -78,105 +119,67 @@ export default function InboxList({
         pages: Math.ceil(totalNotifications / PAGE_SIZE) || 1
     });
 
-    const [filteredPagination, setFilteredPagination] = useState<PaginationState>({
-        page: 1,
-        pageSize: PAGE_SIZE,
-        total: 0,
-        pages: 1
-    });
-
-    // Filtered stats for different categories
-    const [stats, setStats] = useState({
-        all: totalNotifications,
-        unread: unreadNotifications,
-        recommendation: 0,
-        deadline: 0,
-        system: 0,
-        forum: 0,
-        account: 0
-    });
-    
     const { getToken } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
 
-    // Filter notifications based on current filter
-    const filteredNotifications = notifications.filter(notification => {
-        if (filter === 'all') return true;
-        if (filter === 'unread') return !notification.is_read;
-        return notification.notification_type === filter;
-    });
-
-    // Update filtered pagination based on filtered items
+    // Load notification counts on component mount - but only if not provided in props
     useEffect(() => {
-        if (filter === 'all') {
-            // For 'all' filter, use the original pagination data
-            setFilteredPagination({
-                page: pagination.page,
-                pageSize: pagination.pageSize,
-                total: pagination.total,
-                pages: pagination.pages
-            });
-        } else {
-            // For other filters, calculate based on filtered count
-            const filteredCount = filteredNotifications.length;
-            const filteredPages = Math.ceil(filteredCount / PAGE_SIZE) || 1;
-            
-            // Reset to page 1 if current page is now out of bounds
-            const newPage = pagination.page > filteredPages ? 1 : pagination.page;
-            
-            setFilteredPagination({
-                page: newPage,
-                pageSize: PAGE_SIZE,
-                total: filteredCount, 
-                pages: filteredPages
-            });
+        // Only fetch counts if we don't already have them from server-side props
+        if (counts.total === 0 && totalNotifications === 0) {
+            fetchNotificationCounts();
         }
-    }, [filter, filteredNotifications.length, pagination.page, pagination.pageSize, pagination.total, pagination.pages]);
+    }, []);
 
-    // Calculate stats for each category
-    useEffect(() => {
-        const newStats = {
-            all: totalNotifications,
-            unread: notifications.filter(msg => !msg.is_read).length,
-            recommendation: notifications.filter(msg => msg.notification_type === 'recommendation').length,
-            deadline: notifications.filter(msg => msg.notification_type === 'deadline').length,
-            system: notifications.filter(msg => msg.notification_type === 'system').length,
-            forum: notifications.filter(msg => msg.notification_type === 'forum').length,
-            account: notifications.filter(msg => msg.notification_type === 'account').length
-        };
-        setStats(newStats);
-    }, [notifications, totalNotifications]);
+    // Fetch notification counts 
+    const fetchNotificationCounts = async () => {
+        try {
+            const token = await getToken();
+            const response = await fetch(`${API_BASE_URL}/notifications/counts`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                }
+            });
+
+            if (response.ok) {
+                const countsData: NotificationCounts = await response.json();
+                setCounts(countsData);
+            } else {
+                console.error('Failed to fetch notification counts:', await response.text());
+            }
+        } catch (error) {
+            console.error('Error fetching notification counts:', error);
+        }
+    };
 
     // Convert page number to offset for API calls
     const pageToOffset = (page: number) => {
         return (page - 1) * pagination.pageSize;
     };
     
-    // Load notifications with pagination and filters
+    // Load notifications based on current filter and page
     const loadNotifications = async (page = 1, filterType = filter) => {
         setIsLoading(true);
         try {
             const token = await getToken();
+            let endpoint = `${API_BASE_URL}/notifications/`;
             const params = new URLSearchParams();
             
             // Calculate offset from page number
             const offset = pageToOffset(page);
             
-            // Add pagination parameters using limit/offset
+            // Add pagination parameters
             params.append('limit', pagination.pageSize.toString());
             params.append('offset', offset.toString());
             
-            // Add filter parameters (if API supports this)
-            if (filterType !== 'all') {
-                if (filterType === 'unread') {
-                    params.append('unread', 'true');
-                } else {
-                    params.append('type', filterType);
-                }
+            // Determine the endpoint based on filter type
+            if (filterType === 'unread') {
+                endpoint = `${API_BASE_URL}/notifications/unread`;
+            } else if (filterType !== 'all') {
+                endpoint = `${API_BASE_URL}/notifications/by-type/${filterType}`;
             }
             
-            const response = await fetch(`${API_BASE_URL}/notifications/?${params.toString()}`, {
+            const response = await fetch(`${endpoint}?${params.toString()}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -216,53 +219,28 @@ export default function InboxList({
         }
     };
 
-    // Load notifications when filter changes
+    // Load notifications when filter changes, but avoid duplicate initial load
     useEffect(() => {
-        if (filter !== 'all') {
-            // Only make a new API call if we're not showing "all" 
-            loadNotifications(1, filter);
+        // Skip the initial load as we already have data from server
+        if (filter === 'all' && notifications.length > 0 && !hasFilterChanged.current) {
+            hasFilterChanged.current = true;
+            return;
         }
-    }, [filter]);
-
-    // Handle page change from pagination component
-    const handlePageChange = (newPage: number) => {
-        // Determine which pagination to use based on filter
-        const paginationToUse = filter === 'all' ? pagination : filteredPagination;
         
-        if (newPage !== paginationToUse.page && newPage >= 1 && newPage <= paginationToUse.pages) {
-            setIsPaginationLoading(true); // Set pagination-specific loading
-            
-            if (filter === 'all') {
-                setPagination(prev => ({
-                    ...prev,
-                    page: newPage
-                }));
-                loadNotifications(newPage, filter);
-            } else {
-                setFilteredPagination(prev => ({
-                    ...prev,
-                    page: newPage
-                }));
-                // For client-side pagination, no need to load from server
-                setIsPaginationLoading(false);
-            }
+        loadNotifications(1, filter);
+    }, [filter]);
+    
+    // Handle page change
+    const handlePageChange = (newPage: number) => {
+        if (newPage !== pagination.page && newPage >= 1 && newPage <= pagination.pages) {
+            setIsPaginationLoading(true);
+            setPagination(prev => ({
+                ...prev,
+                page: newPage
+            }));
+            loadNotifications(newPage, filter);
         }
     };
-
-    // Calculate current items to show based on pagination
-    const getCurrentItems = () => {
-        if (filter === 'all') {
-            // For server-side pagination
-            return filteredNotifications;
-        } else {
-            // For client-side pagination
-            const startIndex = (filteredPagination.page - 1) * filteredPagination.pageSize;
-            const endIndex = startIndex + filteredPagination.pageSize;
-            return filteredNotifications.slice(startIndex, endIndex);
-        }
-    };
-
-    const currentItems = getCurrentItems();
 
     // Format date for display
     const formatNotificationDate = (dateString: string) => {
@@ -325,13 +303,13 @@ export default function InboxList({
 
     // Select/deselect all filtered notifications
     const toggleSelectAll = () => {
-        if (selectedNotifications.size === currentItems.length) {
+        if (selectedNotifications.size === notifications.length) {
             // Deselect all
             setSelectedNotifications(new Set());
         } else {
             // Select all currently visible notifications
             const newSelected = new Set<string>();
-            currentItems.forEach(msg => newSelected.add(msg.id));
+            notifications.forEach(msg => newSelected.add(msg.id));
             setSelectedNotifications(newSelected);
         }
     };
@@ -371,10 +349,11 @@ export default function InboxList({
                 variant: "success"
             });
             
-            // Reload notifications if we're on unread filter to update the list
-            if (filter === 'unread') {
-                loadNotifications(1, filter);
-            }
+            // Reload current filter to update the list
+            loadNotifications(1, filter);
+            
+            // Refresh counts after marking as read
+            fetchNotificationCounts();
         } catch (error) {
             console.error("Error marking as read:", error);
             toast({
@@ -422,6 +401,9 @@ export default function InboxList({
             
             // Reload notifications to update the counts
             loadNotifications(1, filter);
+            
+            // Refresh counts after deletion
+            fetchNotificationCounts();
         } catch (error) {
             console.error("Error deleting notifications:", error);
             toast({
@@ -452,11 +434,8 @@ export default function InboxList({
                 );
                 setNotifications(updatedNotifications);
                 
-                // Update unread count
-                setStats(prev => ({
-                    ...prev,
-                    unread: prev.unread - 1
-                }));
+                // Refresh notification counts after marking as read
+                fetchNotificationCounts();
             } catch (error) {
                 console.error("Error marking notification as read:", error);
             }
@@ -500,11 +479,8 @@ export default function InboxList({
         ));
     };
 
-    // Determine which pagination to use based on filter
-    const paginationToUse = filter === 'all' ? pagination : filteredPagination;
-    
     // Determine if pagination should be shown
-    const shouldShowPagination = paginationToUse.pages > 1;
+    const shouldShowPagination = pagination.pages > 1;
 
     return (
         <>
@@ -523,7 +499,7 @@ export default function InboxList({
                                 >
                                     <BellIcon size={14} className="mr-1" />
                                     Alle berichten
-                                    {stats.all > 0 && <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">{stats.all}</span>}
+                                    {counts.total > 0 && <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">{counts.total}</span>}
                                 </Button>
                                 <Button
                                     onClick={() => setFilter('unread')}
@@ -532,7 +508,7 @@ export default function InboxList({
                                 >
                                     <BellOffIcon size={14} className="mr-1" />
                                     Ongelezen
-                                    {stats.unread > 0 && <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">{stats.unread}</span>}
+                                    {counts.unread > 0 && <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">{counts.unread}</span>}
                                 </Button>
                                 <Button
                                     onClick={() => setFilter('recommendation')}
@@ -541,7 +517,11 @@ export default function InboxList({
                                 >
                                     <StarIcon size={14} className="mr-1" />
                                     Aanbevelingen
-                                    {stats.recommendation > 0 && <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">{stats.recommendation}</span>}
+                                    {counts.categories.recommendation > 0 && (
+                                        <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">
+                                            {counts.categories.recommendation}
+                                        </span>
+                                    )}
                                 </Button>
                                 <Button
                                     onClick={() => setFilter('deadline')}
@@ -550,7 +530,11 @@ export default function InboxList({
                                 >
                                     <CalendarIcon size={14} className="mr-1" />
                                     Deadlines
-                                    {stats.deadline > 0 && <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">{stats.deadline}</span>}
+                                    {counts.categories.deadline > 0 && (
+                                        <span className="ml-1 bg-white/20 px-1.5 py-0.5 rounded-full">
+                                            {counts.categories.deadline}
+                                        </span>
+                                    )}
                                 </Button>
                             </div>
 
@@ -602,15 +586,10 @@ export default function InboxList({
                                 <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    Er zijn momenteel geen nieuwe berichten. Kom later terug om te zien of er updates of belangrijke meldingen zijn.
-                                </p>
-                            </div>
-                        ) : filteredNotifications.length === 0 ? (
-                            <div className="p-6 text-center">
-                                <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
-                                <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
-                                <p className="text-gray-500 dark:text-gray-400">
-                                    {`Je hebt geen berichten in de geselecteerde categorie.`}
+                                    {filter === 'all' 
+                                        ? "Er zijn momenteel geen nieuwe berichten. Kom later terug om te zien of er updates of belangrijke meldingen zijn."
+                                        : `Je hebt geen berichten in de geselecteerde categorie.`
+                                    }
                                 </p>
                             </div>
                         ) : (
@@ -620,7 +599,7 @@ export default function InboxList({
                                     <div className="w-6 shrink-0">
                                         <input
                                             type="checkbox"
-                                            checked={selectedNotifications.size === currentItems.length && currentItems.length > 0}
+                                            checked={selectedNotifications.size === notifications.length && notifications.length > 0}
                                             onChange={toggleSelectAll}
                                             className="h-4 w-4 rounded border-gray-300 text-astral-600"
                                         />
@@ -638,7 +617,7 @@ export default function InboxList({
                                         {renderSkeletons(5)}
                                     </div>
                                 ) : (
-                                    currentItems.map((notification) => (
+                                    notifications.map((notification) => (
                                         <div
                                             key={notification.id}
                                             className={`flex items-start px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer ${!notification.is_read ? 'bg-astral-50 dark:bg-astral-900/10' : ''}`}
@@ -702,11 +681,11 @@ export default function InboxList({
                     </div>
                     
                     {/* Only show pagination if there are multiple pages */}
-                    {shouldShowPagination && filteredNotifications.length > 0 && (
+                    {shouldShowPagination && notifications.length > 0 && (
                         <Pagination
-                            currentPage={paginationToUse.page}
-                            totalPages={paginationToUse.pages}
-                            totalItems={paginationToUse.total}
+                            currentPage={pagination.page}
+                            totalPages={pagination.pages}
+                            totalItems={pagination.total}
                             onPageChange={handlePageChange}
                             isLoading={isLoading || isPaginationLoading}
                         />

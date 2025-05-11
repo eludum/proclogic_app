@@ -15,6 +15,12 @@ export default async function Inbox() {
     
     // Limit should never exceed 100 (backend maximum)
     const limit = Math.min(pageSize, 100);
+    const params = new URLSearchParams();
+
+    // Add pagination parameters
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+    
 
     const { getToken } = await auth();
 
@@ -24,30 +30,50 @@ export default async function Inbox() {
         total: 0,
         unread: 0
     };
+    
+    // Fetch notification counts
+    let notificationCounts = {
+        total: 0,
+        unread: 0,
+        categories: {
+            recommendation: 0,
+            deadline: 0,
+            system: 0,
+            forum: 0,
+            account: 0
+        },
+        unread_categories: {
+            recommendation: 0,
+            deadline: 0,
+            system: 0,
+            forum: 0,
+            account: 0
+        }
+    };
+    
     let fetchError = null;
 
     try {
         const token = await getToken();
 
-        // Construct URL with proper limit/offset parameters
-        const params = new URLSearchParams({
-            limit: limit.toString(),
-            offset: offset.toString()
-        });
-
-        // Use notifications endpoint with pagination
-        const response = await fetch(`${API_BASE_URL}/notifications/?${params.toString()}`, {
+        // Create a combined endpoint to fetch both notifications and counts in one request
+        const combinedEndpoint = `${API_BASE_URL}/notifications/combined?${params.toString()}`;
+        
+        const combinedResponse = await fetch(combinedEndpoint, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
             cache: 'no-store' // Ensure we get fresh data
         });
 
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+        if (!combinedResponse.ok) {
+            throw new Error(`API error: ${combinedResponse.status}`);
         }
 
-        notificationsData = await response.json();
+        const combinedData = await combinedResponse.json();
+        notificationsData = combinedData.notifications;
+        notificationCounts = combinedData.counts;
+        
     } catch (error) {
         if (error instanceof Error) {
             fetchError = error.message;
@@ -66,9 +92,9 @@ export default async function Inbox() {
                 <div className="w-full">
                     <div className="flex items-center gap-3 mb-3">
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inbox</h1>
-                        {notificationsData.unread > 0 && (
+                        {notificationCounts.unread > 0 && (
                             <span className="bg-astral-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                                {notificationsData.unread} nieuwe berichten
+                                {notificationCounts.unread} nieuwe berichten
                             </span>
                         )}
                     </div>
@@ -82,8 +108,8 @@ export default async function Inbox() {
                 <InboxList
                     initialNotifications={notificationsData.items}
                     fetchError={fetchError}
-                    totalNotifications={notificationsData.total}
-                    unreadNotifications={notificationsData.unread}
+                    totalNotifications={notificationCounts.total}
+                    unreadNotifications={notificationCounts.unread}
                     currentPage={page}
                     totalPages={totalPages}
                 />
