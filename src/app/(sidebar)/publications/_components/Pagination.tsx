@@ -69,9 +69,13 @@ export function Pagination({ currentPage, totalPages, totalItems, onPageChange, 
             </div>
 
             {/* Page info */}
-            <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2 mb-2">
-                Pagina {currentPage} van {totalPages} &middot; Totaal {totalItems}
-            </div>
+            {isLoading ? (
+                null
+            ) : (
+                <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2 mb-2">
+                    Pagina {currentPage} van {totalPages} &middot; Totaal {totalItems}
+                </div>
+            )}
         </>
     );
 }

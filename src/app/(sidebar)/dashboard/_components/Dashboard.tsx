@@ -614,7 +614,7 @@ export default function InboxList({
                                 {/* Show skeleton loaders when pagination is loading */}
                                 {isPaginationLoading ? (
                                     <div className="divide-y divide-slate-200 dark:divide-slate-800">
-                                        {renderSkeletons(5)}
+                                        {renderSkeletons(10)}
                                     </div>
                                 ) : (
                                     notifications.map((notification) => (
