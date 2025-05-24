@@ -64,63 +64,63 @@ export default function FreePublicationList({ initialPublications }: FreePublica
     // Load publications from API
     const fetchPublications = async (page: number, filterState: FilterState) => {
         setIsLoading(true);
-        
+
         try {
             const params = new URLSearchParams();
-            
+
             // Add pagination
             params.append('page', page.toString());
             params.append('size', '10');
-            
+
             // Add search term
             if (filterState.searchTerm) {
-                params.append('q', filterState.searchTerm);
+                params.append('search_term', filterState.searchTerm);
             }
-            
+
             // Add sector filters
             filterState.sectorFilters.forEach(sector => {
                 params.append('sector', sector);
             });
-            
+
             // Add region filters
             filterState.regionFilters.forEach(region => {
                 params.append('region', region);
             });
-            
+
             // Fetch data
             const response = await fetch(`${API_BASE_URL}/publications/free/search/?${params.toString()}`);
-            
+
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);
             }
-            
+
             const data: PaginatedResponse = await response.json();
-            
+
             // Update state
             setPublications(data.items || []);
             setCurrentPage(data.page);
             setTotalPages(data.pages);
             setTotalItems(data.total);
-            
+
             // Update URL for browser history
             if (typeof window !== 'undefined') {
                 const url = new URL(window.location.href);
-                
+
                 // Reset URL params
                 url.search = '';
-                
+
                 // Add filters to URL
                 if (filterState.searchTerm) url.searchParams.set('q', filterState.searchTerm);
                 if (page > 1) url.searchParams.set('page', page.toString());
-                
+
                 filterState.sectorFilters.forEach(sector => {
                     url.searchParams.append('sector', sector);
                 });
-                
+
                 filterState.regionFilters.forEach(region => {
                     url.searchParams.append('region', region);
                 });
-                
+
                 window.history.pushState({}, '', url.toString());
             }
         } catch (error) {
@@ -155,9 +155,9 @@ export default function FreePublicationList({ initialPublications }: FreePublica
                 sectorFilters: url.searchParams.getAll('sector') || [],
                 regionFilters: url.searchParams.getAll('region') || []
             };
-            
+
             setFilters(urlFilters);
-            
+
             // Get page from URL if present
             const pageParam = url.searchParams.get('page');
             if (pageParam) {
