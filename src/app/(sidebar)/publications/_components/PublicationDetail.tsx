@@ -18,11 +18,14 @@ import {
     LinkIcon,
     MapPinIcon,
     StarIcon,
-    TagIcon
+    TagIcon,
+    TrendingUpIcon,
+    UsersIcon,
+    ExternalLinkIcon
 } from 'lucide-react';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatComponent from "./ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -63,6 +66,41 @@ interface TimelineEvent {
     icon: 'calendar' | 'file' | 'clock' | 'check-circle';
 }
 
+// Related content interfaces
+interface RelatedContractItem {
+    publication_id: string;
+    title: string;
+    award_date?: string;
+    winner: string;
+    value: number;
+    sector: string;
+    cpv_code: string;
+    buyer: string;
+    similarity_score: number;
+    similarity_reason: string;
+}
+
+interface RelatedPublicationItem {
+    workspace_id: string;
+    title: string;
+    organisation: string;
+    publication_date: string;
+    submission_deadline?: string;
+    cpv_code: string;
+    sector: string;
+    estimated_value?: number;
+    similarity_score: number;
+    similarity_reason: string;
+    match_percentage?: number;
+}
+
+interface RelatedContentResponse {
+    related_contracts: RelatedContractItem[];
+    related_publications: RelatedPublicationItem[];
+    total_contracts: number;
+    total_publications: number;
+}
+
 interface PublicationDetailProps {
     publication: Publication | null;
     timelineEvents: TimelineEvent[];
@@ -75,20 +113,74 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const [selectedLotIndex, setSelectedLotIndex] = useState<number | null>(null);
     const [contentTab, setContentTab] = useState<'info' | 'lots' | 'documents'>('info');
     const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
+    const [relatedTab, setRelatedTab] = useState<'publications' | 'contracts'>('publications');
+    const [relatedContent, setRelatedContent] = useState<RelatedContentResponse | null>(null);
+    const [loadingRelated, setLoadingRelated] = useState(false);
     const { getToken } = useAuth();
+
+    // Fetch related content when publication changes
+    useEffect(() => {
+        if (publication?.workspace_id) {
+            fetchRelatedContent();
+        }
+    }, [publication?.workspace_id]);
+
+    const fetchRelatedContent = async () => {
+        if (!publication?.workspace_id) return;
+
+        try {
+            setLoadingRelated(true);
+            const token = await getToken();
+
+            const response = await fetch(
+                `${API_BASE_URL}/publications/publication/${publication.workspace_id}/related?contracts_limit=5&publications_limit=8`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                setRelatedContent(data);
+            }
+        } catch (error) {
+            console.error("Error fetching related content:", error);
+        } finally {
+            setLoadingRelated(false);
+        }
+    };
+
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat('nl-NL', {
+            style: 'currency',
+            currency: 'EUR',
+            maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    const getSimilarityColor = (score: number) => {
+        if (score >= 70) return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+        if (score >= 50) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+    };
+
+    const getMatchColor = (percentage?: number) => {
+        if (!percentage) return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+        if (percentage >= 80) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
+        if (percentage >= 60) return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+        if (percentage >= 40) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    };
 
     const handleDownload = async (filename: string) => {
         try {
-            // Set loading state for this specific file
             setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
-
-            // Get authentication token
             const token = await getToken();
-
-            // Construct the document URL
             const downloadUrl = `${API_BASE_URL}/publications/publication/${publication?.workspace_id}/document/${filename}`;
 
-            // Create a fetch request with authentication to get the file
             const response = await fetch(downloadUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -99,10 +191,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                 throw new Error(`Download failed: ${response.status}`);
             }
 
-            // Get the blob from the response
             const blob = await response.blob();
-
-            // Create a download link
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -110,20 +199,16 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
             document.body.appendChild(link);
             link.click();
 
-            // Clean up
             window.URL.revokeObjectURL(url);
             document.body.removeChild(link);
 
         } catch (error) {
             console.error("Error downloading file:", error);
-            // TODO: You might want to show a notification to the user here
         } finally {
-            // Clear loading state for this file
             setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
         }
     };
 
-    // Start a chat with a publication
     const startChat = async (pub: Publication) => {
         try {
             setActiveChatPublication(pub);
@@ -173,7 +258,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
     const timeRemaining = getTimeRemaining(publication.submission_deadline);
 
-    // Helper function to render icon based on string name
     const renderIcon = (iconName: TimelineEvent['icon'], size = 14) => {
         switch (iconName) {
             case 'calendar': return <CalendarIcon size={size} />;
@@ -185,12 +269,9 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     };
 
     const isRecommended = publication.is_recommended;
-
     const hasLots = publication.lot_titles && publication.lot_titles.length > 0 && publication.lot_descriptions && publication.lot_descriptions.length > 0;
     const hasDocuments = publication.documents && Array.isArray(publication.documents) && publication.documents.length > 0;
     const hasExternalLinks = publication.external_links && Array.isArray(publication.external_links) && publication.external_links.length > 0;
-
-    // Determine if we should show the documents tab
     const showDocumentsTab = hasDocuments || hasExternalLinks;
 
     return (
@@ -200,14 +281,12 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                     {/* Header with viewed status, active status, recommendation status and time remaining */}
                     <div className={`w-full p-3 flex flex-wrap justify-between items-center gap-2 ${isRecommended ? 'bg-astral-100 dark:bg-astral-900/20 border-b border-astral-300 dark:border-slate-800' : 'border-b border-slate-200 dark:border-slate-800'}`}>
                         <div className="flex items-center gap-2 flex-wrap">
-                            {/* Active status */}
                             <div className={`flex items-center gap-1 border ${publication.is_active ? "bg-emerald-200 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-200 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"} px-2 py-1 rounded-full text-xs`}>
                                 <CheckCircleIcon size={12} />
                                 <span>{publication.is_active ? "Actief" : "Inactief"}</span>
                             </div>
                         </div>
 
-                        {/* Time remaining badge */}
                         <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getTimeRemainingStyles(timeRemaining.variant)}`}>
                             <ClockIcon size={12} />
                             <span>{timeRemaining.text}</span>
@@ -238,7 +317,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
                     {/* Content with padding */}
                     <div className="p-6 flex flex-col gap-6">
-                        {/* Header with time remaining badge */}
+                        {/* Header */}
                         <div className="flex flex-col gap-2 w-full">
                             <div className="flex flex-wrap items-start justify-between gap-4 w-full">
                                 <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words flex-1 min-w-0 text-gray-900 dark:text-white line-clamp-2">
@@ -416,7 +495,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                 {/* Info tab content */}
                                 {contentTab === 'info' && (
                                     <div className="space-y-6">
-                                        {/* Organization, Sector, Region Information - Card style with consistent layout */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                                 <div className="flex items-center gap-2 mb-3">
@@ -451,7 +529,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                             </div>
                                         </div>
 
-                                        {/* CPV Codes and Value */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                                 <div className="flex items-center gap-2 mb-3">
@@ -636,6 +713,193 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                 )}
                             </div>
                         </div>
+
+                        {/* Related Content Section */}
+                        {relatedContent && (relatedContent.total_publications > 0 || relatedContent.total_contracts > 0) && (
+                            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <TrendingUpIcon size={18} />
+                                        Gerelateerde content
+                                    </h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        Ontdek vergelijkbare aanbestedingen en toegekende contracten
+                                    </p>
+                                </div>
+
+                                {/* Related Content Tabs */}
+                                <div className="flex border-b border-slate-200 dark:border-slate-800">
+                                    <button
+                                        onClick={() => setRelatedTab('publications')}
+                                        className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${relatedTab === 'publications'
+                                            ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
+                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        <FileIcon size={14} />
+                                        <span>Aanbestedingen ({relatedContent.total_publications})</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setRelatedTab('contracts')}
+                                        className={`px-4 py-3 text-sm font-medium flex items-center gap-1.5 ${relatedTab === 'contracts'
+                                            ? 'text-astral-600 border-b-2 border-astral-500 dark:text-astral-300 dark:border-astral-400'
+                                            : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        <UsersIcon size={14} />
+                                        <span>Contracten ({relatedContent.total_contracts})</span>
+                                    </button>
+                                </div>
+
+                                {/* Related Content Area */}
+                                <div className="p-6">
+                                    {loadingRelated ? (
+                                        <div className="space-y-3">
+                                            {[1, 2, 3].map((i) => (
+                                                <div key={i} className="animate-pulse bg-gray-200 dark:bg-gray-700 h-24 rounded-lg"></div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Related Publications Tab */}
+                                            {relatedTab === 'publications' && (
+                                                <div className="space-y-3">
+                                                    {relatedContent.related_publications.length === 0 ? (
+                                                        <div className="text-center p-6 text-gray-500 dark:text-gray-400">
+                                                            <FileIcon className="mx-auto h-8 w-8 mb-2" />
+                                                            <p>Geen gerelateerde aanbestedingen gevonden</p>
+                                                        </div>
+                                                    ) : (
+                                                        relatedContent.related_publications.map((pub) => (
+                                                            <div
+                                                                key={pub.workspace_id}
+                                                                className="border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:shadow-md hover:border-astral-300 dark:hover:border-astral-700 cursor-pointer transition-all duration-150"
+                                                                onClick={() => router.push(`/publications/detail/${pub.workspace_id}`)}
+                                                            >
+                                                                <div className="flex justify-between items-start mb-3">
+                                                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 mr-4">
+                                                                        {pub.title}
+                                                                    </h4>
+                                                                    <div className="flex flex-col items-end space-y-1">
+                                                                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${getSimilarityColor(pub.similarity_score)}`}>
+                                                                            {pub.similarity_score.toFixed(0)}% match
+                                                                        </div>
+                                                                        {pub.match_percentage && (
+                                                                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${getMatchColor(pub.match_percentage)}`}>
+                                                                                {pub.match_percentage.toFixed(0)}% AI
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <BuildingIcon className="h-4 w-4" />
+                                                                        <span className="truncate">{pub.organisation}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <CalendarIcon className="h-4 w-4" />
+                                                                        <span>
+                                                                            {pub.submission_deadline
+                                                                                ? `Deadline: ${formatDate(pub.submission_deadline)}`
+                                                                                : `Gepubliceerd: ${formatDate(pub.publication_date)}`}
+                                                                        </span>
+                                                                    </div>
+                                                                    {pub.estimated_value && (
+                                                                        <div className="flex items-center space-x-2">
+                                                                            <EuroIcon className="h-4 w-4" />
+                                                                            <span>{formatCurrency(pub.estimated_value)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <TagIcon className="h-4 w-4" />
+                                                                        <span className="truncate">{pub.sector}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                        <span className="font-medium">Gelijkenis:</span> {pub.similarity_reason}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Related Contracts Tab */}
+                                            {relatedTab === 'contracts' && (
+                                                <div className="space-y-3">
+                                                    {relatedContent.related_contracts.length === 0 ? (
+                                                        <div className="text-center p-6 text-gray-500 dark:text-gray-400">
+                                                            <UsersIcon className="mx-auto h-8 w-8 mb-2" />
+                                                            <p>Geen gerelateerde contracten gevonden</p>
+                                                        </div>
+                                                    ) : (
+                                                        relatedContent.related_contracts.map((contract) => (
+                                                            <div key={contract.publication_id} className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                                                                <div className="flex justify-between items-start mb-3">
+                                                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 mr-4">
+                                                                        {contract.title}
+                                                                    </h4>
+                                                                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${getSimilarityColor(contract.similarity_score)}`}>
+                                                                        {contract.similarity_score.toFixed(0)}% match
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <BuildingIcon className="h-4 w-4" />
+                                                                        <span className="truncate">{contract.buyer}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <UsersIcon className="h-4 w-4" />
+                                                                        <span className="font-medium text-green-600 dark:text-green-400 truncate">
+                                                                            {contract.winner}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <EuroIcon className="h-4 w-4" />
+                                                                        <span className="font-semibold">
+                                                                            {formatCurrency(contract.value)}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <CalendarIcon className="h-4 w-4" />
+                                                                        <span>
+                                                                            {contract.award_date ? formatDate(contract.award_date) : 'Datum onbekend'}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                            <span className="font-medium">Gelijkenis:</span> {contract.similarity_reason}
+                                                                        </p>
+                                                                        <Button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                window.open(`/publications/detail/${contract.publication_id}`, '_blank');
+                                                                            }}
+                                                                            className="text-xs bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 px-3 py-1 rounded-md flex items-center gap-1"
+                                                                        >
+                                                                            <ExternalLinkIcon size={12} />
+                                                                            Bekijk
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Action buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 mt-2">
