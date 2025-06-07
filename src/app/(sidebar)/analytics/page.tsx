@@ -1,5 +1,6 @@
 "use client";
 
+import { siteConfig } from "@/app/siteConfig";
 import { useAuth } from "@clerk/nextjs";
 import {
     BarChart3,
@@ -13,7 +14,6 @@ import {
     X
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { siteConfig } from "@/app/siteConfig";
 
 // Types
 interface ContractItem {
@@ -97,7 +97,7 @@ const FilterDropdown = ({ isOpen, onToggle, filters, onFilterChange, onClear }) 
     if (!isOpen) return null;
 
     return (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-lg z-50 p-4">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-lg z-50 p-4 max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium text-slate-900 dark:text-white">Filters</h3>
                 <button
