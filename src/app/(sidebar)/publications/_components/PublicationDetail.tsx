@@ -13,6 +13,7 @@ import {
     CodeIcon,
     DownloadIcon,
     EuroIcon,
+    ExternalLinkIcon,
     FileIcon,
     Layers,
     LinkIcon,
@@ -20,12 +21,11 @@ import {
     StarIcon,
     TagIcon,
     TrendingUpIcon,
-    UsersIcon,
-    ExternalLinkIcon
+    UsersIcon
 } from 'lucide-react';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import ChatComponent from "./ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -317,14 +317,35 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
                     {/* Content with padding */}
                     <div className="p-6 flex flex-col gap-6">
-                        {/* Header */}
-                        <div className="flex flex-col gap-2 w-full">
+                        {/* Header with Action Buttons */}
+                        <div className="flex flex-col gap-4 w-full">
                             <div className="flex flex-wrap items-start justify-between gap-4 w-full">
-                                <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words flex-1 min-w-0 text-gray-900 dark:text-white line-clamp-2">
-                                    {publication.title}
-                                </h2>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words text-gray-900 dark:text-white line-clamp-2">
+                                        {publication.title}
+                                    </h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {publication.workspace_id}</p>
+                                </div>
+
+                                {/* Action buttons in header */}
+                                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                                    <Button
+                                        onClick={() => startChat(publication)}
+                                        className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-2 rounded-md text-sm"
+                                    >
+                                        <RiChatSmile2Line className="size-4" />
+                                        <span>Procy</span>
+                                    </Button>
+                                    <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
+                                        <Button
+                                            className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md text-sm w-full"
+                                        >
+                                            <RiExternalLinkLine className="size-4" />
+                                            <span>Indienen</span>
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">ID: {publication.workspace_id}</p>
                         </div>
 
                         {/* Description tabs section with timeline */}
@@ -723,7 +744,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         Gerelateerde content
                                     </h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Ontdek vergelijkbare aanbestedingen en toegekende contracten
+                                        Ontdek vergelijkbare aanbestedingen en toegekende gunningen
                                     </p>
                                 </div>
 
@@ -747,7 +768,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                             }`}
                                     >
                                         <UsersIcon size={14} />
-                                        <span>Contracten ({relatedContent.total_contracts})</span>
+                                        <span>Gunningen ({relatedContent.total_contracts})</span>
                                     </button>
                                 </div>
 
@@ -834,7 +855,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                     {relatedContent.related_contracts.length === 0 ? (
                                                         <div className="text-center p-6 text-gray-500 dark:text-gray-400">
                                                             <UsersIcon className="mx-auto h-8 w-8 mb-2" />
-                                                            <p>Geen gerelateerde contracten gevonden</p>
+                                                            <p>Geen gerelateerde gunningen gevonden</p>
                                                         </div>
                                                     ) : (
                                                         relatedContent.related_contracts.map((contract) => (
@@ -900,25 +921,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                 </div>
                             </div>
                         )}
-
-                        {/* Action buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 mt-2">
-                            <Button
-                                onClick={() => startChat(publication)}
-                                className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
-                            >
-                                <RiChatSmile2Line className="size-5" />
-                                <span>Procy</span>
-                            </Button>
-                            <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
-                                <Button
-                                    className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-3 rounded-md w-full sm:w-auto"
-                                >
-                                    <RiExternalLinkLine className="size-5" />
-                                    <span>Indienen</span>
-                                </Button>
-                            </Link>
-                        </div>
                     </div>
                 </div>
             </div>
