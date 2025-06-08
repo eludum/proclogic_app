@@ -75,16 +75,16 @@ const truncateText = (text: string, maxLength: number) => {
 };
 
 // Components
-const StatsCard = ({ icon: Icon, title, value, description, color = "blue" }) => (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+const StatsCard = ({ icon: Icon, title, value, description }) => (
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
         <div className="flex items-center justify-between">
             <div>
                 <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{title}</p>
-                <p className={`text-2xl font-bold text-${color}-600 dark:text-${color}-400`}>{value}</p>
+                <p className="text-xl font-bold text-slate-900 dark:text-white">{value}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{description}</p>
             </div>
-            <div className={`p-3 rounded-full bg-${color}-100 dark:bg-${color}-900/30`}>
-                <Icon className={`w-6 h-6 text-${color}-600 dark:text-${color}-400`} />
+            <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-700">
+                <Icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </div>
         </div>
     </div>
@@ -105,7 +105,7 @@ const FilterDropdown = ({ isOpen, onToggle, filters, onFilterChange, onClear }) 
                     className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 flex items-center gap-1"
                 >
                     <X className="w-3 h-3" />
-                    Clear all
+                    Alles wissen
                 </button>
             </div>
 
@@ -113,14 +113,14 @@ const FilterDropdown = ({ isOpen, onToggle, filters, onFilterChange, onClear }) 
                 <div className="grid grid-cols-2 gap-3">
                     <div>
                         <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Year
+                            Jaar
                         </label>
                         <select
                             value={filters.year}
                             onChange={(e) => onFilterChange('year', e.target.value)}
                             className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         >
-                            <option value="">All years</option>
+                            <option value="">Alle jaren</option>
                             {years.map(year => (
                                 <option key={year} value={year}>{year}</option>
                             ))}
@@ -129,44 +129,44 @@ const FilterDropdown = ({ isOpen, onToggle, filters, onFilterChange, onClear }) 
 
                     <div>
                         <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Quarter
+                            Kwartaal
                         </label>
                         <select
                             value={filters.quarter}
                             onChange={(e) => onFilterChange('quarter', e.target.value)}
                             className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                         >
-                            <option value="">All quarters</option>
-                            <option value="1">Q1</option>
-                            <option value="2">Q2</option>
-                            <option value="3">Q3</option>
-                            <option value="4">Q4</option>
+                            <option value="">Alle kwartalen</option>
+                            <option value="1">K1</option>
+                            <option value="2">K2</option>
+                            <option value="3">K3</option>
+                            <option value="4">K4</option>
                         </select>
                     </div>
                 </div>
 
                 <div>
                     <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Winner
+                        Winnaar
                     </label>
                     <input
                         type="text"
                         value={filters.winner}
                         onChange={(e) => onFilterChange('winner', e.target.value)}
-                        placeholder="Filter by winner name"
+                        placeholder="Filter op winnaar naam"
                         className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400"
                     />
                 </div>
 
                 <div>
                     <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                        Buyer
+                        Opdrachtgever
                     </label>
                     <input
                         type="text"
                         value={filters.supplier}
                         onChange={(e) => onFilterChange('supplier', e.target.value)}
-                        placeholder="Filter by buyer name"
+                        placeholder="Filter op opdrachtgever naam"
                         className="w-full px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400"
                     />
                 </div>
@@ -218,7 +218,7 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
             </td>
 
             <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">
                     {truncateText(contract.sector, 25)}
                 </span>
             </td>
@@ -234,7 +234,7 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
                     onClick={onViewDetails}
                     className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                 >
-                    View
+                    Bekijk
                     <ExternalLink className="w-3 h-3" />
                 </button>
             </td>
@@ -246,11 +246,11 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
                     <div className="space-y-3">
                         <div>
                             <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-2">
-                                Contract Details
+                                Gunning Details
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                                 <div>
-                                    <span className="text-slate-500 dark:text-slate-400">Full Title:</span>
+                                    <span className="text-slate-500 dark:text-slate-400">Volledige titel:</span>
                                     <p className="text-slate-900 dark:text-white font-medium">{contract.title}</p>
                                 </div>
                                 <div>
@@ -258,7 +258,7 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
                                     <p className="text-slate-900 dark:text-white font-mono">{contract.cpv_code}</p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-500 dark:text-slate-400">Award Date:</span>
+                                    <span className="text-slate-500 dark:text-slate-400">Gunningsdatum:</span>
                                     <p className="text-slate-900 dark:text-white">{formatDate(contract.award_date)}</p>
                                 </div>
                             </div>
@@ -267,7 +267,7 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
                         {contract.suppliers.length > 0 && (
                             <div>
                                 <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-2">
-                                    Suppliers ({contract.suppliers.length})
+                                    Leveranciers ({contract.suppliers.length})
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {contract.suppliers.map((supplier, idx) => (
@@ -328,7 +328,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     disabled={currentPage === 1}
                     className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Previous
+                    Vorige
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -354,12 +354,12 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Next
+                    Volgende
                 </button>
             </div>
 
             <div className="text-sm text-slate-500 dark:text-slate-400">
-                Page {currentPage} of {totalPages}
+                Pagina {currentPage} van {totalPages}
             </div>
         </div>
     );
@@ -424,7 +424,7 @@ export default function AnalyticsDashboard() {
             setError(null);
 
             const token = await getToken();
-            if (!token) throw new Error('No authentication token');
+            if (!token) throw new Error('Geen authenticatie token');
 
             const headers = { 'Authorization': `Bearer ${token}` };
 
@@ -435,7 +435,7 @@ export default function AnalyticsDashboard() {
             ]);
 
             if (!contractsRes.ok || !summaryRes.ok) {
-                throw new Error('Failed to fetch data');
+                throw new Error('Fout bij het ophalen van gegevens');
             }
 
             const [contractsData, summaryData] = await Promise.all([
@@ -446,7 +446,7 @@ export default function AnalyticsDashboard() {
             setContracts(contractsData);
             setSummary(summaryData);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred');
+            setError(err instanceof Error ? err.message : 'Er is een fout opgetreden');
         } finally {
             setLoading(false);
         }
@@ -494,12 +494,12 @@ export default function AnalyticsDashboard() {
         return (
             <div className="p-6">
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-red-800 dark:text-red-200">Error: {error}</p>
+                    <p className="text-red-800 dark:text-red-200">Fout: {error}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="mt-2 px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
                     >
-                        Retry
+                        Opnieuw proberen
                     </button>
                 </div>
             </div>
@@ -508,43 +508,6 @@ export default function AnalyticsDashboard() {
 
     return (
         <div className="p-6 space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                    Contract Analytics
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">
-                    Analysis of awarded contracts and procurement data
-                </p>
-            </div>
-
-            {/* Summary Cards */}
-            {summary && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <StatsCard
-                        icon={BarChart3}
-                        title="Total Contracts"
-                        value={summary.total_count.toLocaleString()}
-                        description="Awarded contracts"
-                        color="blue"
-                    />
-                    <StatsCard
-                        icon={Euro}
-                        title="Total Value"
-                        value={formatCurrency(summary.total_value)}
-                        description="Combined contract value"
-                        color="green"
-                    />
-                    <StatsCard
-                        icon={TrendingUp}
-                        title="Average Value"
-                        value={formatCurrency(summary.avg_value)}
-                        description="Per contract"
-                        color="purple"
-                    />
-                </div>
-            )}
-
             {/* Search and Filters */}
             <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-center gap-4">
@@ -552,7 +515,7 @@ export default function AnalyticsDashboard() {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search contracts..."
+                            placeholder="Zoek gunningen..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400"
@@ -579,16 +542,40 @@ export default function AnalyticsDashboard() {
                 </div>
             </div>
 
+            {/* Summary Cards */}
+            {summary && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StatsCard
+                        icon={BarChart3}
+                        title="Totaal Gunningen"
+                        value={summary.total_count.toLocaleString()}
+                        description="Toegekende gunningen"
+                    />
+                    <StatsCard
+                        icon={Euro}
+                        title="Totale Waarde"
+                        value={formatCurrency(summary.total_value)}
+                        description="Gecombineerde gunningswaarde"
+                    />
+                    <StatsCard
+                        icon={TrendingUp}
+                        title="Gemiddelde Waarde"
+                        value={formatCurrency(summary.avg_value)}
+                        description="Per gunning"
+                    />
+                </div>
+            )}
+
             {/* Results Table */}
             <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                 {loading ? (
                     <div className="p-8 text-center">
                         <div className="animate-spin w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-2"></div>
-                        <p className="text-slate-600 dark:text-slate-400">Loading contracts...</p>
+                        <p className="text-slate-600 dark:text-slate-400">Gunningen laden...</p>
                     </div>
                 ) : contracts?.items.length === 0 ? (
                     <div className="p-8 text-center">
-                        <p className="text-slate-600 dark:text-slate-400">No contracts found matching your criteria</p>
+                        <p className="text-slate-600 dark:text-slate-400">Geen gunningen gevonden die voldoen aan uw criteria</p>
                     </div>
                 ) : (
                     <>
@@ -597,25 +584,25 @@ export default function AnalyticsDashboard() {
                                 <thead className="bg-slate-50 dark:bg-slate-700">
                                     <tr>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            Title
+                                            Titel
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            Date
+                                            Datum
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            Winner
+                                            Winnaar
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            Buyer
+                                            Opdrachtgever
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                             Sector
                                         </th>
                                         <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            Value
+                                            Waarde
                                         </th>
                                         <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                                            Actions
+                                            Acties
                                         </th>
                                     </tr>
                                 </thead>

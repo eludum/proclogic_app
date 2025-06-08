@@ -6,6 +6,8 @@ import { useAuth } from "@clerk/nextjs";
 import { RiChatSmile2Line, RiExternalLinkLine } from '@remixicon/react';
 import {
     ArrowLeftIcon,
+    BookmarkCheck,
+    BookmarkPlus,
     BuildingIcon,
     CalendarIcon,
     CheckCircleIcon,
@@ -56,6 +58,7 @@ export interface Publication {
     ai_summary_without_documents?: string;
     ai_summary_with_documents?: string;
     external_links?: string[];
+    is_saved?: boolean; // Add this to track save status
 }
 
 interface TimelineEvent {
@@ -116,7 +119,16 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const [relatedTab, setRelatedTab] = useState<'publications' | 'contracts'>('publications');
     const [relatedContent, setRelatedContent] = useState<RelatedContentResponse | null>(null);
     const [loadingRelated, setLoadingRelated] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const { getToken } = useAuth();
+
+    // Initialize save status from publication prop
+    useEffect(() => {
+        if (publication?.is_saved !== undefined) {
+            setIsSaved(publication.is_saved);
+        }
+    }, [publication?.is_saved]);
 
     // Fetch related content when publication changes
     useEffect(() => {
@@ -150,6 +162,37 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
             console.error("Error fetching related content:", error);
         } finally {
             setLoadingRelated(false);
+        }
+    };
+
+    const handleSaveToggle = async () => {
+        if (!publication?.workspace_id || isSaving) return;
+
+        try {
+            setIsSaving(true);
+            const token = await getToken();
+            const endpoint = isSaved ? 'unsave' : 'save';
+
+            const response = await fetch(
+                `${API_BASE_URL}/publications/publication/${publication.workspace_id}/${endpoint}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (response.ok) {
+                setIsSaved(!isSaved);
+            } else {
+                console.error('Failed to toggle save status');
+            }
+        } catch (error) {
+            console.error("Error toggling save status:", error);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -317,31 +360,52 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
                     {/* Content with padding */}
                     <div className="p-6 flex flex-col gap-6">
-                        {/* Header with Action Buttons */}
-                        <div className="flex flex-col gap-4 w-full">
-                            <div className="flex flex-wrap items-start justify-between gap-4 w-full">
-                                <div className="flex-1 min-w-0">
-                                    <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words text-gray-900 dark:text-white line-clamp-2">
-                                        {publication.title}
-                                    </h2>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {publication.workspace_id}</p>
-                                </div>
+                        {/* Header with Full-Width Title */}
+                        <div className="flex flex-col gap-3 w-full">
+                            {/* Full-width title section */}
+                            <div className="w-full">
+                                <h2 className="text-xl sm:text-2xl font-semibold leading-tight break-words text-gray-900 dark:text-white">
+                                    {publication.title}
+                                </h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {publication.workspace_id}</p>
+                            </div>
 
-                                {/* Action buttons in header */}
-                                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                            {/* Action buttons row */}
+                            <div className="pt-2 flex items-center justify-between w-full">
+
+                                {/* Enhanced Action buttons group */}
+                                <div className="flex items-center bg-slate-25 dark:bg-slate-850 rounded-lg p-1 gap-1 border border-slate-100 dark:border-slate-750 shrink-0">
+                                    <Button
+                                        onClick={handleSaveToggle}
+                                        disabled={isSaving}
+                                        className="flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
+                                    >
+                                        {isSaving ? (
+                                            <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                                        ) : isSaved ? (
+                                            <BookmarkCheck size={14} />
+                                        ) : (
+                                            <BookmarkPlus size={14} />
+                                        )}
+                                        <span className="hidden sm:inline">
+                                            {isSaving ? (isSaved ? 'Verwijderen...' : 'Opslaan...') : (isSaved ? 'Verwijderen' : 'Opslaan')}
+                                        </span>
+                                    </Button>
+
                                     <Button
                                         onClick={() => startChat(publication)}
-                                        className="flex items-center justify-center gap-2 bg-astral-500 hover:bg-astral-600 text-white px-4 py-2 rounded-md text-sm"
+                                        className="flex items-center justify-center gap-1.5 bg-astral-500 hover:bg-astral-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
                                     >
                                         <RiChatSmile2Line className="size-4" />
-                                        <span>Procy</span>
+                                        <span className="hidden sm:inline">Procy</span>
                                     </Button>
+
                                     <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
                                         <Button
-                                            className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md text-sm w-full"
+                                            className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
                                         >
                                             <RiExternalLinkLine className="size-4" />
-                                            <span>Indienen</span>
+                                            <span className="hidden sm:inline">Indienen</span>
                                         </Button>
                                     </Link>
                                 </div>
