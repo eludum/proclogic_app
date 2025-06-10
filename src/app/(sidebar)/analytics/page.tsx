@@ -75,7 +75,14 @@ const truncateText = (text: string, maxLength: number) => {
 };
 
 // Components
-const StatsCard = ({ icon: Icon, title, value, description }) => (
+type StatsCardProps = {
+    icon: React.ComponentType<{ className?: string }>;
+    title: string;
+    value: string | number;
+    description: string;
+};
+
+const StatsCard = ({ icon: Icon, title, value, description }: StatsCardProps) => (
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
         <div className="flex items-center justify-between">
             <div>
@@ -90,7 +97,14 @@ const StatsCard = ({ icon: Icon, title, value, description }) => (
     </div>
 );
 
-const FilterDropdown = ({ isOpen, onToggle, filters, onFilterChange, onClear }) => {
+type FilterDropdownProps = {
+    isOpen: boolean;
+    filters: Filters;
+    onFilterChange: (key: keyof Filters, value: string) => void;
+    onClear: () => void;
+};
+
+const FilterDropdown = ({ isOpen, filters, onFilterChange, onClear }: FilterDropdownProps) => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
 
@@ -175,7 +189,14 @@ const FilterDropdown = ({ isOpen, onToggle, filters, onFilterChange, onClear }) 
     );
 };
 
-const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
+type ContractRowProps = {
+    contract: ContractItem;
+    isExpanded: boolean;
+    onToggle: () => void;
+    onViewDetails: () => void;
+};
+
+const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: ContractRowProps) => (
     <>
         <tr className="hover:bg-slate-50 dark:hover:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
             <td className="px-4 py-3">
@@ -291,7 +312,13 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }) => (
     </>
 );
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+type PaginationProps = {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+};
+
+const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
     const getPageNumbers = () => {
         const delta = 2;
         const range = [];
@@ -533,7 +560,6 @@ export default function AnalyticsDashboard() {
 
                         <FilterDropdown
                             isOpen={showFilters}
-                            onToggle={() => setShowFilters(!showFilters)}
                             filters={filters}
                             onFilterChange={handleFilterChange}
                             onClear={handleClearFilters}
