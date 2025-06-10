@@ -236,7 +236,7 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: Contract
 
             <td className="px-4 py-3">
                 <div className="text-sm text-gray-900 dark:text-white">
-                    {truncateText(contract.buyer, 30)}
+                    {truncateText(contract.suppliers?.[0]?.name || contract.buyer || 'Onbekend', 30)}
                 </div>
             </td>
 
@@ -506,7 +506,24 @@ export default function AnalyticsDashboard() {
                 </div>
 
                 {/* Summary Cards */}
-                {summary && (
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+                                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2"></div>
+                                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                    </div>
+                                    <div className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse">
+                                        <div className="w-5 h-5"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : summary ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <StatsCard
                             icon={BarChart3}
@@ -527,7 +544,7 @@ export default function AnalyticsDashboard() {
                             description="Per gunning"
                         />
                     </div>
-                )}
+                ) : null}
 
                 {/* Results count */}
                 <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -543,7 +560,9 @@ export default function AnalyticsDashboard() {
                 {/* Results Table */}
                 <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                     {loading ? (
-                        <Loader loadingtext="Gunningen laden..." size={32} />
+                        <div className="p-12">
+                            <Loader loadingtext="Gunningen laden..." size={32} />
+                        </div>
                     ) : contracts?.items.length === 0 ? (
                         <div className="p-8 text-center">
                             <p className="text-gray-600 dark:text-gray-400">Geen gunningen gevonden die voldoen aan uw criteria</p>
