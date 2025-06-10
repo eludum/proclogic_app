@@ -6,7 +6,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/DropdownMenu";
 import { SafeUser } from '@/lib/clerkUserUtils';
@@ -55,29 +54,21 @@ export function DropdownUserProfile({
       >
         <DropdownMenuLabel>{user && user.emailAddress}</DropdownMenuLabel>
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Changelog
-            <ArrowUpRight
-              className="mb-1 ml-1 size-3 shrink-0 text-gray-500 dark:text-gray-500"
-              aria-hidden="true"
-            />
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Documentation
-            <ArrowUpRight
-              className="mb-1 ml-1 size-3 shrink-0 text-gray-500"
-              aria-hidden="true"
-            />
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Join Slack community
-            <ArrowUpRight
-              className="mb-1 ml-1 size-3 shrink-0 text-gray-500"
-              aria-hidden="true"
-            />
-          </DropdownMenuItem>
+          <a
+            href="https://proclogic.be/changelog"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <DropdownMenuItem>
+
+              Changelog
+              <ArrowUpRight
+                className="mb-1 ml-1 size-3 shrink-0 text-gray-500 dark:text-gray-500"
+                aria-hidden="true"
+              />
+            </DropdownMenuItem>
+          </a>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
       </DropdownMenuContent>
     </DropdownMenu>
   );
