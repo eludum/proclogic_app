@@ -3,6 +3,7 @@
 import { siteConfig } from "@/app/siteConfig";
 import { Loader } from "@/components/ui/PageLoad";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import {
     BarChart3,
     ChevronDown,
@@ -191,12 +192,12 @@ const FilterDropdown = ({ isOpen, filters, onFilterChange, onClear }: FilterDrop
     );
 };
 
-type ContractRowProps = {
+interface ContractRowProps {
     contract: ContractItem;
     isExpanded: boolean;
     onToggle: () => void;
     onViewDetails: () => void;
-};
+}
 
 const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: ContractRowProps) => (
     <>
@@ -206,107 +207,80 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: Contract
                     onClick={onToggle}
                     className="flex items-center gap-2 text-left group"
                 >
-                    {isExpanded ? (
-                        <ChevronDown size={16} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-                    ) : (
-                        <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
-                    )}
-                    <div>
-                        <div className="font-medium text-gray-900 dark:text-white text-sm">
+                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">
                             {truncateText(contract.title, 60)}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                            {contract.publication_id}
-                        </div>
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            ID: {contract.publication_id}
+                        </p>
                     </div>
                 </button>
             </td>
-
+            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                {formatDate(contract.award_date)}
+            </td>
+            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                {truncateText(contract.winner, 30)}
+            </td>
+            <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                {contract.value > 0 ? formatCurrency(contract.value) : 'Niet beschikbaar'}
+            </td>
+            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                {truncateText(contract.sector, 25)}
+            </td>
             <td className="px-4 py-3">
-                <div className="text-sm text-gray-900 dark:text-white">
-                    {formatDate(contract.award_date)}
-                </div>
-            </td>
-
-            <td className="px-4 py-3">
-                <div className="text-sm font-medium text-gray-900 dark:text-white">
-                    {truncateText(contract.winner, 30)}
-                </div>
-            </td>
-
-            <td className="px-4 py-3">
-                <div className="text-sm text-gray-900 dark:text-white">
-                    {truncateText(contract.suppliers?.[0]?.name || contract.buyer || 'Onbekend', 30)}
-                </div>
-            </td>
-
-            <td className="px-4 py-3">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
-                    {truncateText(contract.sector, 25)}
-                </span>
-            </td>
-
-            <td className="px-4 py-3 text-right">
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {formatCurrency(contract.value)}
-                </div>
-            </td>
-
-            <td className="px-4 py-3 text-right">
                 <button
                     onClick={onViewDetails}
-                    className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-astral-600 hover:text-astral-700 dark:text-astral-400 dark:hover:text-astral-300"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-astral-50 text-astral-700 dark:bg-astral-900/30 dark:text-astral-300 rounded-md hover:bg-astral-100 dark:hover:bg-astral-900/50 transition-colors"
                 >
-                    Bekijk
                     <ExternalLink size={12} />
+                    Details
                 </button>
             </td>
         </tr>
-
         {isExpanded && (
-            <tr className="bg-gray-50 dark:bg-slate-800/30">
-                <td colSpan={7} className="px-4 py-4 border-b border-slate-200 dark:border-slate-700">
-                    <div className="space-y-3">
+            <tr className="bg-gray-50 dark:bg-gray-800/30">
+                <td colSpan={6} className="px-4 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                         <div>
-                            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                Gunning Details
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-                                <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Volledige titel:</span>
-                                    <p className="text-gray-900 dark:text-white font-medium">{contract.title}</p>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500 dark:text-gray-400">CPV Code:</span>
-                                    <p className="text-gray-900 dark:text-white font-mono">{contract.cpv_code}</p>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500 dark:text-gray-400">Gunningsdatum:</span>
-                                    <p className="text-gray-900 dark:text-white">{formatDate(contract.award_date)}</p>
-                                </div>
-                            </div>
+                            <span className="font-medium text-gray-700 dark:text-gray-300">Opdrachtgever:</span>
+                            <p className="text-gray-600 dark:text-gray-400 mt-1">{contract.buyer}</p>
                         </div>
-
-                        {contract.suppliers.length > 0 && (
+                        <div>
+                            <span className="font-medium text-gray-700 dark:text-gray-300">CPV Code:</span>
+                            <p className="text-gray-600 dark:text-gray-400 mt-1 font-mono text-xs">{contract.cpv_code}</p>
+                        </div>
+                        {contract.suppliers && contract.suppliers.length > 0 && (
                             <div>
-                                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                    Leveranciers ({contract.suppliers.length})
-                                </h4>
-                                <div className="flex flex-wrap gap-2">
-                                    {contract.suppliers.map((supplier, idx) => (
-                                        <span
-                                            key={idx}
-                                            className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
-                                        >
+                                <span className="font-medium text-gray-700 dark:text-gray-300">Leveranciers:</span>
+                                <div className="mt-1 space-y-1">
+                                    {contract.suppliers.slice(0, 3).map((supplier, index) => (
+                                        <p key={index} className="text-gray-600 dark:text-gray-400 text-xs">
                                             {supplier.name}
                                             {supplier.id && (
-                                                <span className="ml-1 opacity-75">({supplier.id})</span>
+                                                <span className="text-gray-500 ml-1">({supplier.id})</span>
                                             )}
-                                        </span>
+                                        </p>
                                     ))}
+                                    {contract.suppliers.length > 3 && (
+                                        <p className="text-gray-500 dark:text-gray-400 text-xs">
+                                            +{contract.suppliers.length - 3} meer...
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         )}
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <button
+                            onClick={onViewDetails}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-astral-600 text-white text-sm font-medium rounded-md hover:bg-astral-700 transition-colors"
+                        >
+                            <ExternalLink size={14} />
+                            Bekijk volledige gunning details
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -314,9 +288,11 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: Contract
     </>
 );
 
+
 // Main component
 export default function AnalyticsDashboard() {
     const { getToken } = useAuth();
+    const router = useRouter();
 
     // State
     const [contracts, setContracts] = useState<ContractsResponse | null>(null);
@@ -434,9 +410,8 @@ export default function AnalyticsDashboard() {
         }
         setExpandedRows(newExpanded);
     };
-
     const viewContractDetails = (contractId: string) => {
-        window.open(`/publications/detail/${contractId}`, '_blank');
+        router.push(`/contracts/${contractId}`);
     };
 
     const handlePageChange = (page: number) => {
@@ -574,7 +549,7 @@ export default function AnalyticsDashboard() {
                                     <thead className="bg-gray-50 dark:bg-slate-800">
                                         <tr>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Titel
+                                                Gunning
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                 Datum
@@ -583,15 +558,12 @@ export default function AnalyticsDashboard() {
                                                 Winnaar
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Opdrachtgever
+                                                Waarde
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                 Sector
                                             </th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Waarde
-                                            </th>
-                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                 Acties
                                             </th>
                                         </tr>
