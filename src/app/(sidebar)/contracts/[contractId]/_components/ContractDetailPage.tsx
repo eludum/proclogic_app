@@ -1,6 +1,7 @@
 "use client"
 
 import { siteConfig } from "@/app/siteConfig";
+import { Loader } from "@/components/ui/PageLoad";
 import { useAuth } from "@clerk/nextjs";
 import {
     BuildingIcon,
@@ -384,7 +385,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-96">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-astral-600"></div>
+                <Loader loadingtext="Gunning laden..." size={32} />
             </div>
         );
     }
