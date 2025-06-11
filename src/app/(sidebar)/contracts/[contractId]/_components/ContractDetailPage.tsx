@@ -95,6 +95,27 @@ const formatDate = (dateString?: string) => {
     });
 };
 
+const sanitizeBTWNumber = (btwNumber?: string): string | null => {
+    if (!btwNumber) return null;
+
+    // Remove all non-alphanumeric characters (spaces, dots, dashes, etc.)
+    const cleaned = btwNumber.replace(/[^a-zA-Z0-9]/g, '');
+
+    // Check if it's a Belgian BTW number format
+    if (cleaned.startsWith('BE') && cleaned.length === 12) {
+        // Extract just the 10 digits after 'BE'
+        return cleaned.substring(2);
+    }
+
+    // Check if it's just 10 digits (already sanitized Belgian BTW)
+    if (/^\d{10}$/.test(cleaned)) {
+        return cleaned;
+    }
+
+    // If it contains weird stuff like "COR" or other non-standard formats, return null
+    return null;
+};
+
 const OrganizationCard = ({
     organization,
     title,
@@ -116,6 +137,9 @@ const OrganizationCard = ({
         );
     }
 
+    // Sanitize and validate the BTW number
+    const sanitizedBTW = sanitizeBTWNumber(organization.business_id);
+
     return (
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-3">
@@ -131,15 +155,17 @@ const OrganizationCard = ({
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 BTW Nummer: {organization.business_id}
                             </p>
-                            <a
-                                href={`https://www.companyweb.be/nl/${organization.business_id}/`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
-                            >
-                                <ExternalLinkIcon size={10} />
-                                CompanyWeb
-                            </a>
+                            {sanitizedBTW && (
+                                <a
+                                    href={`https://www.companyweb.be/nl/${sanitizedBTW}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                                >
+                                    <ExternalLinkIcon size={10} />
+                                    CompanyWeb
+                                </a>
+                            )}
                         </div>
                     )}
                 </div>
