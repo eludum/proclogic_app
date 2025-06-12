@@ -179,6 +179,9 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     };
 
     const formatCurrency = (value: number) => {
+        if (value === 0) {
+            return "Niet beschikbaar";
+        }
         return new Intl.NumberFormat('nl-NL', {
             style: 'currency',
             currency: 'EUR',
@@ -625,7 +628,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                 <p className="text-gray-800 dark:text-gray-200 text-lg font-semibold">
                                                     {publication.estimated_value
                                                         ? new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'EUR' }).format(publication.estimated_value)
-                                                        : "Niet gespecificeerd"}
+                                                        : "Niet gespecificeerd in de aanbesteding"}
                                                 </p>
                                             </div>
                                         </div>
@@ -825,7 +828,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                                 </span>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
-                                                                <EuroIcon className="h-4 w-4" />
                                                                 <span className="font-semibold">
                                                                     {formatCurrency(contract.value)}
                                                                 </span>
@@ -846,7 +848,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                                 <Button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        window.open(`/publications/detail/${contract.publication_id}`, '_blank');
+                                                                        window.open(`/contracts/${contract.publication_id}`, '_blank');
                                                                     }}
                                                                     className="text-xs bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 px-3 py-1 rounded-md flex items-center gap-1"
                                                                 >
