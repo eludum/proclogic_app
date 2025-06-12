@@ -824,7 +824,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                             <div className="flex items-center space-x-2">
                                                                 <UsersIcon className="h-4 w-4" />
                                                                 <span className="font-medium text-green-600 dark:text-green-400 truncate">
-                                                                    {contract.winner}
+                                                                    {contract.winner.toLowerCase() === "unknown" ? "Niet bekend" : contract.winner}
                                                                 </span>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
