@@ -395,7 +395,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
             <section aria-label="Gunning Detail">
                 <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                     <div className="w-full">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Gunning Details</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Gunning details</h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
                     </div>
                 </div>
@@ -408,7 +408,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
             <section aria-label="Gunning Detail">
                 <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                     <div className="w-full">
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Gunning Details</h1>
+                        <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Gunning details</h1>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Gunning niet gevonden</p>
                     </div>
                 </div>
@@ -425,7 +425,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
 
                         <div className="flex items-center gap-2">
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-                                Gunning Details
+                                Gunning details
                             </h1>
                             <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 rounded">
                                 Toegewezen
@@ -448,7 +448,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                     <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 mb-3">
                             <EuroIcon size={16} className="text-emerald-600" />
-                            <h3 className="font-medium text-gray-900 dark:text-white">Totale Gunningwaarde</h3>
+                            <h3 className="font-medium text-gray-900 dark:text-white">Totale gunningwaarde</h3>
                         </div>
                         <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(contract.total_contract_amount, contract.currency)}
@@ -458,7 +458,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                     <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 mb-3">
                             <TrendingUpIcon size={16} className="text-blue-600" />
-                            <h3 className="font-medium text-gray-900 dark:text-white">Hoogste Bedrag</h3>
+                            <h3 className="font-medium text-gray-900 dark:text-white">Hoogste bedrag</h3>
                         </div>
                         <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             {formatCurrency(contract.highest_publication_amount, contract.currency)}

@@ -403,7 +403,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                             }`}
                                     >
                                         <RiChatSmile2Line className="size-4" />
-                                        <span>AI Samenvatting</span>
+                                        <span>AI samenvatting</span>
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('original')}
@@ -434,7 +434,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         <div className="flex flex-col gap-4">
                                             {publication.ai_summary_without_documents && (
                                                 <div className="bg-astral-50 dark:bg-astral-950/50 p-4 rounded-lg">
-                                                    <h3 className="text-lg font-medium mb-3 text-astral-800 dark:text-astral-200">AI Aankondiging Samenvatting</h3>
+                                                    <h3 className="text-lg font-medium mb-3 text-astral-800 dark:text-astral-200">AI aankondiging samenvatting</h3>
                                                     <div className="max-h-80 overflow-y-auto">
                                                         <p className="text-sm text-astral-700 dark:text-astral-300 break-words whitespace-pre-line">
                                                             {publication.ai_summary_without_documents}
@@ -445,7 +445,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
                                             {publication.ai_summary_with_documents && (
                                                 <div className="bg-astral-50 dark:bg-astral-950/50 p-4 rounded-lg">
-                                                    <h3 className="text-lg font-medium mb-3 text-astral-800 dark:text-astral-200">AI Document Samenvatting</h3>
+                                                    <h3 className="text-lg font-medium mb-3 text-astral-800 dark:text-astral-200">AI document samenvatting</h3>
                                                     <div className="max-h-60 overflow-y-auto">
                                                         <p className="text-sm text-astral-700 dark:text-astral-300 break-words whitespace-pre-line">
                                                             {publication.ai_summary_with_documents}
@@ -468,7 +468,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
                             {/* Timeline - takes 1/3 of the width on large screens */}
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                                <h3 className="font-medium text-lg mb-4 text-gray-900 dark:text-white">Tijdlijn Proces</h3>
+                                <h3 className="font-medium text-lg mb-4 text-gray-900 dark:text-white">Tijdlijn proces</h3>
                                 <div className="relative max-h-100 overflow-y-auto">
                                     {/* Timeline vertical line */}
                                     <div className="absolute left-3.5 top-0 h-full w-0.5 bg-gray-200 dark:bg-gray-700"></div>
@@ -595,7 +595,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <CodeIcon size={16} className="text-gray-400" />
-                                                    <h3 className="font-medium text-gray-900 dark:text-white">CPV Codes</h3>
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">CPV codes</h3>
                                                 </div>
                                                 <div className="flex flex-col gap-2">
                                                     <div className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-sm text-sm">
@@ -638,7 +638,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <CheckCircleIcon size={16} className="text-gray-400" />
-                                                    <h3 className="font-medium text-gray-900 dark:text-white">Vereiste Accreditaties</h3>
+                                                    <h3 className="font-medium text-gray-900 dark:text-white">Vereiste accreditaties</h3>
                                                 </div>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     {Object.entries(publication.accreditations).map(([key, value], index) => (

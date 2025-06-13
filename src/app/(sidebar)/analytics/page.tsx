@@ -3,7 +3,6 @@
 import { siteConfig } from "@/app/siteConfig";
 import { Loader } from "@/components/ui/PageLoad";
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import {
     BarChart3,
     ChevronDown,
@@ -15,6 +14,7 @@ import {
     TrendingUp,
     X
 } from 'lucide-react';
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from 'react';
 import { Pagination } from "../publications/_components/Pagination";
 
@@ -422,7 +422,7 @@ export default function AnalyticsDashboard() {
         return (
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
-                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Analytics Dashboard</h1>
+                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Gunning analyse</h1>
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                         <p className="text-red-800 dark:text-red-200">Fout: {error}</p>
                         <button
@@ -441,8 +441,8 @@ export default function AnalyticsDashboard() {
         <section aria-label="Analytics Dashboard">
             <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                 <div className="w-full">
-                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Analytics Dashboard</h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Ontdek inzichten in toegekende gunningen en markttrends</p>
+                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Gunning analyse</h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Ontdek inzichten in toegekende gunningen en markttrends.</p>
                 </div>
             </div>
 
@@ -502,19 +502,19 @@ export default function AnalyticsDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <StatsCard
                             icon={BarChart3}
-                            title="Totaal Gunningen"
+                            title="Totaal gunningen"
                             value={summary.total_count.toLocaleString()}
                             description="Toegekende gunningen"
                         />
                         <StatsCard
                             icon={Euro}
-                            title="Totale Waarde"
+                            title="Totale waarde"
                             value={formatCurrency(summary.total_value)}
                             description="Gecombineerde gunningswaarde"
                         />
                         <StatsCard
                             icon={TrendingUp}
-                            title="Gemiddelde Waarde"
+                            title="Gemiddelde waarde"
                             value={formatCurrency(summary.avg_value)}
                             description="Per gunning"
                         />
