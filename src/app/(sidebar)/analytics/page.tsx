@@ -196,10 +196,9 @@ interface ContractRowProps {
     contract: ContractItem;
     isExpanded: boolean;
     onToggle: () => void;
-    onViewDetails: () => void;
 }
 
-const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: ContractRowProps) => (
+const ContractRow = ({ contract, isExpanded, onToggle }: ContractRowProps) => (
     <>
         <tr className="hover:bg-gray-50 dark:hover:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
             <td className="px-4 py-3">
@@ -415,9 +414,6 @@ export default function AnalyticsDashboard() {
         }
         setExpandedRows(newExpanded);
     };
-    const viewContractDetails = (contractId: string) => {
-        router.push(`/contracts/${contractId}`);
-    };
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -580,7 +576,6 @@ export default function AnalyticsDashboard() {
                                                 contract={contract}
                                                 isExpanded={expandedRows.has(contract.publication_id)}
                                                 onToggle={() => toggleRowExpansion(contract.publication_id)}
-                                                onViewDetails={() => viewContractDetails(contract.publication_id)}
                                             />
                                         ))}
                                     </tbody>
