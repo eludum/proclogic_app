@@ -231,13 +231,15 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: Contract
                 {truncateText(contract.sector, 25)}
             </td>
             <td className="px-4 py-3">
-                <button
-                    onClick={onViewDetails}
+                <a
+                    href={`/contracts/${contract.publication_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-astral-50 text-astral-700 dark:bg-astral-900/30 dark:text-astral-300 rounded-md hover:bg-astral-100 dark:hover:bg-astral-900/50 transition-colors"
                 >
                     <ExternalLink size={12} />
                     Details
-                </button>
+                </a>
             </td>
         </tr>
         {isExpanded && (
@@ -274,19 +276,22 @@ const ContractRow = ({ contract, isExpanded, onToggle, onViewDetails }: Contract
                         )}
                     </div>
                     <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <button
-                            onClick={onViewDetails}
+                        <a
+                            href={`/contracts/${contract.publication_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 px-4 py-2 bg-astral-600 text-white text-sm font-medium rounded-md hover:bg-astral-700 transition-colors"
                         >
                             <ExternalLink size={14} />
                             Bekijk volledige gunning details
-                        </button>
+                        </a>
                     </div>
                 </td>
             </tr>
         )}
     </>
 );
+
 
 
 // Main component

@@ -161,7 +161,7 @@ const OrganizationCard = ({
                                     href={`https://www.companyweb.be/nl/${sanitizedBTW}/`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                                    className="inline-flex items-center gap-1 px-3 py-2 text-xs bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                                 >
                                     <ExternalLinkIcon size={10} />
                                     CompanyWeb
@@ -190,15 +190,25 @@ const OrganizationCard = ({
                 {(organization.phone || organization.email || organization.website) && (
                     <div className="pt-2 space-y-1">
                         {organization.phone && (
-                            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
-                                <PhoneIcon size={12} />
-                                <span>{organization.phone}</span>
+                            <div className="flex items-center gap-1 text-sm">
+                                <PhoneIcon size={12} className="text-gray-400" />
+                                <a
+                                    href={`tel:${organization.phone}`}
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+                                >
+                                    {organization.phone}
+                                </a>
                             </div>
                         )}
                         {organization.email && (
-                            <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
-                                <MailIcon size={12} />
-                                <span>{organization.email}</span>
+                            <div className="flex items-center gap-1 text-sm">
+                                <MailIcon size={12} className="text-gray-400" />
+                                <a
+                                    href={`mailto:${organization.email}`}
+                                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors break-all"
+                                >
+                                    {organization.email}
+                                </a>
                             </div>
                         )}
                         {organization.website && (
@@ -218,7 +228,7 @@ const OrganizationCard = ({
                 )}
 
                 {organization.company_size && (
-                    <div className="pt-2">
+                    <div className="p-2">
                         <span className="inline-block px-2 py-1 text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded">
                             {organization.company_size}
                         </span>
@@ -226,7 +236,7 @@ const OrganizationCard = ({
                 )}
 
                 {organization.subcontracting && organization.subcontracting !== "Not applicable" && (
-                    <div className="pt-2">
+                    <div className="p-2">
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                             Onderaanneming: {organization.subcontracting}
                         </p>
