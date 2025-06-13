@@ -286,13 +286,6 @@ const ContractInfoCard = ({ contract }: { contract: ContractDetail }) => {
                     </div>
                 )}
 
-                {contract.dynamic_purchasing_system && (
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400">Dynamic Purchasing System</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{contract.dynamic_purchasing_system}</p>
-                    </div>
-                )}
-
                 {contract.framework_agreement && (
                     <div>
                         <p className="text-gray-500 dark:text-gray-400">Raamovereenkomst</p>
