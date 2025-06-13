@@ -5,7 +5,6 @@ import { Loader } from "@/components/ui/PageLoad";
 import { useAuth } from "@clerk/nextjs";
 import {
     BuildingIcon,
-    CalendarIcon,
     EuroIcon,
     ExternalLinkIcon,
     FileTextIcon,
@@ -252,10 +251,17 @@ const ContractInfoCard = ({ contract }: { contract: ContractDetail }) => {
         <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-3">
                 <FileTextIcon size={16} className="text-gray-400" />
-                <h3 className="font-medium text-gray-900 dark:text-white">Gunning Details</h3>
+                <h3 className="font-medium text-gray-900 dark:text-white">Gunning details</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                {contract.notice_type && (
+                    <div>
+                        <p className="text-gray-500 dark:text-gray-400">Gunning datum</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{formatDate(contract.issue_date)}</p>
+                    </div>
+                )}
+
                 {contract.internal_id && (
                     <div>
                         <p className="text-gray-500 dark:text-gray-400">Intern ID</p>
@@ -263,23 +269,9 @@ const ContractInfoCard = ({ contract }: { contract: ContractDetail }) => {
                     </div>
                 )}
 
-                {contract.notice_type && (
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400">Notice Type</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{contract.notice_type}</p>
-                    </div>
-                )}
-
-                {contract.number_of_participation_requests && (
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400">Deelnameverzoeken</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{contract.number_of_participation_requests}</p>
-                    </div>
-                )}
-
                 {contract.electronic_auction_used !== undefined && (
                     <div>
-                        <p className="text-gray-500 dark:text-gray-400">Elektronische Veiling</p>
+                        <p className="text-gray-500 dark:text-gray-400">Elektronische veiling</p>
                         <p className="font-medium text-gray-900 dark:text-gray-100">
                             {contract.electronic_auction_used ? 'Ja' : 'Nee'}
                         </p>
@@ -486,7 +478,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                             <h3 className="font-medium text-gray-900 dark:text-white">Inschrijvingen</h3>
                         </div>
                         <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {contract.number_of_publications_received || 'Niet beschikbaar'}
+                            {contract.number_of_participation_requests || 'Niet beschikbaar'}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Aantal ontvangen
@@ -529,35 +521,6 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                 {/* Contract Information */}
                 <ContractInfoCard contract={contract} />
 
-                {/* Additional Information */}
-                {(contract.publication_date || contract.submission_deadline) && (
-                    <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                        <div className="flex items-center gap-2 mb-3">
-                            <CalendarIcon size={16} className="text-gray-400" />
-                            <h3 className="font-medium text-gray-900 dark:text-white">Tijdlijn</h3>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                            {contract.publication_date && (
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400">Publicatiedatum</p>
-                                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                                        {formatDate(contract.publication_date)}
-                                    </p>
-                                </div>
-                            )}
-
-                            {contract.submission_deadline && (
-                                <div>
-                                    <p className="text-gray-500 dark:text-gray-400">Inschrijvingsdeadline</p>
-                                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                                        {formatDate(contract.submission_deadline)}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
             </div>
         </section>
     );
