@@ -11,7 +11,7 @@ import {
     FileTextIcon,
     MailIcon,
     PhoneIcon,
-    TagIcon,
+    TrendingDownIcon,
     TrendingUpIcon,
     UsersIcon
 } from 'lucide-react';
@@ -260,13 +260,6 @@ const ContractInfoCard = ({ contract }: { contract: ContractDetail }) => {
                     </div>
                 )}
 
-                {contract.number_of_publications_received && (
-                    <div>
-                        <p className="text-gray-500 dark:text-gray-400">Ontvangen Publicaties</p>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{contract.number_of_publications_received}</p>
-                    </div>
-                )}
-
                 {contract.number_of_participation_requests && (
                     <div>
                         <p className="text-gray-500 dark:text-gray-400">Deelnameverzoeken</p>
@@ -453,40 +446,50 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                         <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(contract.total_contract_amount, contract.currency)}
                         </p>
-                    </div>
-
-                    <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
-                        <div className="flex items-center gap-2 mb-3">
-                            <TrendingUpIcon size={16} className="text-blue-600" />
-                            <h3 className="font-medium text-gray-900 dark:text-white">Hoogste bedrag</h3>
-                        </div>
-                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {formatCurrency(contract.highest_publication_amount, contract.currency)}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Winnend bedrag
                         </p>
                     </div>
 
                     <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 mb-3">
-                            <CalendarIcon size={16} className="text-gray-400" />
-                            <h3 className="font-medium text-gray-900 dark:text-white">Uitgiftedatum</h3>
+                            <TrendingUpIcon size={16} className="text-blue-600" />
+                            <h3 className="font-medium text-gray-900 dark:text-white">Hoogste inschrijving</h3>
                         </div>
-                        <p className="text-gray-800 dark:text-gray-200">{formatDate(contract.issue_date)}</p>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {formatCurrency(contract.highest_publication_amount, contract.currency)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Hoogste aangeboden bedrag
+                        </p>
                     </div>
 
                     <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 mb-3">
-                            <TagIcon size={16} className="text-gray-400" />
-                            <h3 className="font-medium text-gray-900 dark:text-white">Sector</h3>
+                            <TrendingDownIcon size={16} className="text-orange-600" />
+                            <h3 className="font-medium text-gray-900 dark:text-white">Laagste inschrijving</h3>
                         </div>
-                        <p className="text-gray-800 dark:text-gray-200">{contract.sector || 'Niet beschikbaar'}</p>
-                        {contract.cpv_code && (
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                CPV: {contract.cpv_code}
-                            </p>
-                        )}
+                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {formatCurrency(contract.lowest_publication_amount, contract.currency)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Laagste aangeboden bedrag
+                        </p>
+                    </div>
+
+                    <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-4 bg-white dark:bg-slate-900">
+                        <div className="flex items-center gap-2 mb-3">
+                            <UsersIcon size={16} className="text-purple-600" />
+                            <h3 className="font-medium text-gray-900 dark:text-white">Inschrijvingen</h3>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            {contract.number_of_publications_received || 'Niet beschikbaar'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Aantal ontvangen
+                        </p>
                     </div>
                 </div>
-
                 {/* Organizations */}
                 <div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
