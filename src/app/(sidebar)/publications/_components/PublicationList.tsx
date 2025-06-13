@@ -439,7 +439,7 @@ export default function PublicationList({
 
             <div className="space-y-6">
                 {isLoading ? (
-                    <Loader loadingtext={"Laden..."} size={32} />
+                    <Loader loadingtext={"Aanbestedingen laden..."} size={32} />
                 ) : sortedPublications.length === 0 ? (
                     <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Geen aanbestedingen gevonden</p>

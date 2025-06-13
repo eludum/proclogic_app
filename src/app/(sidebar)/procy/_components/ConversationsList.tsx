@@ -95,7 +95,7 @@ export default function ConversationsList() {
         <>
             <div className="space-y-6">
                 {loading ? (
-                    <Loader loadingtext={"Laden..."} size={32} />
+                    <Loader loadingtext={"Gesprekken laden..."} size={32} />
 
                 ) : error ? (
                     <div className="text-center py-6">
