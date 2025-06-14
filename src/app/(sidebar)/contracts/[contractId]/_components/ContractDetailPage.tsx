@@ -219,7 +219,7 @@ const OrganizationCard = ({
                                     rel="noopener noreferrer"
                                     className="text-astral-600 dark:text-astral-400 hover:underline"
                                 >
-                                    organization.website
+                                    {organization.website}
                                 </a>
                             </div>
                         )}
