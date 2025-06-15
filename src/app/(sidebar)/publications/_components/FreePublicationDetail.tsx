@@ -338,7 +338,7 @@ export default function FreePublicationDetail({ publication, timelineEvents }: F
                                 <p className="text-gray-700 dark:text-gray-300 font-medium text-center mb-1">Premium functie</p>
                                 <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-3">Upgrade naar premium om alle documenten te bekijken. Chat direct met Procy om te ontdekken of dit bij je bedrijf past.</p>
                                 <Button
-                                    onClick={() => router.push('/pricing')}
+                                    onClick={() => router.push('https://proclogic.be/pricing')}
                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
                                 >
                                     Upgrade nu
