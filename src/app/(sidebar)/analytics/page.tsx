@@ -9,7 +9,6 @@ import {
     ChevronRight,
     Euro,
     ExternalLink,
-    Filter,
     Search,
     TrendingUp,
     X
@@ -462,7 +461,7 @@ export default function AnalyticsDashboard() {
                             />
                         </div>
 
-                        <div className="relative">
+                        {/* <div className="relative">
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
                                 className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
@@ -477,7 +476,7 @@ export default function AnalyticsDashboard() {
                                 onFilterChange={handleFilterChange}
                                 onClear={handleClearFilters}
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 
