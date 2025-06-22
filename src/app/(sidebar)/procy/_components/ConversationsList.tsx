@@ -1,6 +1,7 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
+import { ErrorState } from "@/components/ErrorState";
 import { Loader } from "@/components/ui/PageLoad";
 import { formatDate } from "@/lib/publicationUtils";
 import { useAuth } from "@clerk/nextjs";
@@ -98,9 +99,7 @@ export default function ConversationsList() {
                     <Loader loadingtext={"Gesprekken laden..."} size={32} />
 
                 ) : error ? (
-                    <div className="text-center py-6">
-                        <p className="text-red-500">Fout bij het laden van gesprekken: {error}</p>
-                    </div>
+                    <ErrorState onRetry={() => window.location.reload()} />
                 ) : conversations.length === 0 ? (
                     <div className="text-center py-6 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 p-6">
                         <RiChatSmile2Line className="w-12 h-12 text-gray-400 mx-auto mb-4" />

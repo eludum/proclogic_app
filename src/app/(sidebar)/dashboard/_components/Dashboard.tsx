@@ -1,12 +1,12 @@
 "use client"
 import { siteConfig } from "@/app/siteConfig";
 import { Button } from "@/components/Button";
+import { ErrorState } from "@/components/ErrorState";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
 import { useAuth } from "@clerk/nextjs";
 import {
-    AlertTriangleIcon,
     BellIcon,
     BellOffIcon,
     BellRingIcon,
@@ -16,7 +16,6 @@ import {
     ClockIcon,
     MailOpenIcon,
     MessageSquareIcon,
-    RefreshCcwIcon,
     StarIcon,
     TrashIcon,
     UserIcon
@@ -73,9 +72,9 @@ interface InboxListProps {
     totalPages?: number;
 }
 
-export default function InboxList({ 
-    initialNotifications, 
-    fetchError, 
+export default function InboxList({
+    initialNotifications,
+    fetchError,
     totalNotifications = 0,
     unreadNotifications = 0,
     currentPage = 1,
@@ -88,7 +87,7 @@ export default function InboxList({
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
     // Ref to track if filter has been changed
     const hasFilterChanged = useRef(false);
-    
+
     // Initialize counts state with server-provided data
     const [counts, setCounts] = useState<NotificationCounts>({
         total: totalNotifications,
@@ -108,10 +107,10 @@ export default function InboxList({
             account: 0
         }
     });
-    
+
     // Default page size to 10 (can be adjusted)
     const PAGE_SIZE = 10;
-    
+
     const [pagination, setPagination] = useState<PaginationState>({
         page: currentPage,
         pageSize: PAGE_SIZE,
@@ -156,7 +155,7 @@ export default function InboxList({
     const pageToOffset = (page: number) => {
         return (page - 1) * pagination.pageSize;
     };
-    
+
     // Load notifications based on current filter and page
     const loadNotifications = async (page = 1, filterType = filter) => {
         setIsLoading(true);
@@ -164,21 +163,21 @@ export default function InboxList({
             const token = await getToken();
             let endpoint = `${API_BASE_URL}/notifications/`;
             const params = new URLSearchParams();
-            
+
             // Calculate offset from page number
             const offset = pageToOffset(page);
-            
+
             // Add pagination parameters
             params.append('limit', pagination.pageSize.toString());
             params.append('offset', offset.toString());
-            
+
             // Determine the endpoint based on filter type
             if (filterType === 'unread') {
                 endpoint = `${API_BASE_URL}/notifications/unread`;
             } else if (filterType !== 'all') {
                 endpoint = `${API_BASE_URL}/notifications/by-type/${filterType}`;
             }
-            
+
             const response = await fetch(`${endpoint}?${params.toString()}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -189,7 +188,7 @@ export default function InboxList({
             if (response.ok) {
                 const data = await response.json();
                 setNotifications(data.items || []);
-                
+
                 // Update pagination state with server-provided values
                 const totalPages = Math.ceil(data.total / pagination.pageSize) || 1;
                 setPagination({
@@ -200,19 +199,9 @@ export default function InboxList({
                 });
             } else {
                 console.error('Failed to fetch notifications:', await response.text());
-                toast({
-                    title: "Fout bij laden",
-                    description: "De berichten konden niet worden geladen. Probeer het later opnieuw.",
-                    variant: "error"
-                });
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
-            toast({
-                title: "Fout bij laden",
-                description: "Er is een fout opgetreden bij het laden van berichten.",
-                variant: "error"
-            });
         } finally {
             setIsLoading(false);
             setIsPaginationLoading(false);
@@ -226,10 +215,10 @@ export default function InboxList({
             hasFilterChanged.current = true;
             return;
         }
-        
+
         loadNotifications(1, filter);
     }, [filter]);
-    
+
     // Handle page change
     const handlePageChange = (newPage: number) => {
         if (newPage !== pagination.page && newPage >= 1 && newPage <= pagination.pages) {
@@ -323,7 +312,7 @@ export default function InboxList({
             const token = await getToken();
             // Convert string IDs to integers and send as direct array
             const notificationIdsAsIntegers = Array.from(selectedNotifications).map(id => parseInt(id, 10));
-            
+
             const response = await fetch(`${API_BASE_URL}/notifications/mark-read`, {
                 method: 'POST',
                 headers: {
@@ -332,7 +321,7 @@ export default function InboxList({
                 },
                 body: JSON.stringify(notificationIdsAsIntegers)
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => null);
                 throw new Error(errorData?.detail || `Error: ${response.status}`);
@@ -348,10 +337,10 @@ export default function InboxList({
                 title: "Berichten gemarkeerd als gelezen",
                 variant: "success"
             });
-            
+
             // Reload current filter to update the list
             loadNotifications(1, filter);
-            
+
             // Refresh counts after marking as read
             fetchNotificationCounts();
         } catch (error) {
@@ -375,7 +364,7 @@ export default function InboxList({
             const token = await getToken();
             // Convert string IDs to integers and send as direct array
             const notificationIdsAsIntegers = Array.from(selectedNotifications).map(id => parseInt(id, 10));
-            
+
             const response = await fetch(`${API_BASE_URL}/notifications/delete`, {
                 method: 'POST',
                 headers: {
@@ -384,7 +373,7 @@ export default function InboxList({
                 },
                 body: JSON.stringify(notificationIdsAsIntegers)
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => null);
                 throw new Error(errorData?.detail || `Error: ${response.status}`);
@@ -398,10 +387,10 @@ export default function InboxList({
                 title: "Berichten verwijderd",
                 variant: "success"
             });
-            
+
             // Reload notifications to update the counts
             loadNotifications(1, filter);
-            
+
             // Refresh counts after deletion
             fetchNotificationCounts();
         } catch (error) {
@@ -433,7 +422,7 @@ export default function InboxList({
                     msg.id === notification.id ? { ...msg, is_read: true } : msg
                 );
                 setNotifications(updatedNotifications);
-                
+
                 // Refresh notification counts after marking as read
                 fetchNotificationCounts();
             } catch (error) {
@@ -569,24 +558,13 @@ export default function InboxList({
                                 <Loader loadingtext={"Berichten laden..."} size={32} />
                             </div>
                         ) : fetchError ? (
-                            <div className="p-6 text-center">
-                                <AlertTriangleIcon size={32} className="mx-auto text-amber-500 mb-4" />
-                                <h3 className="text-lg font-medium mb-2">Fout bij laden</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mb-4">{fetchError}</p>
-                                <Button
-                                    onClick={() => router.refresh()}
-                                    className="mx-auto"
-                                >
-                                    <RefreshCcwIcon size={16} className="mr-2" />
-                                    Probeer opnieuw
-                                </Button>
-                            </div>
+                            <ErrorState onRetry={() => router.refresh()} />
                         ) : notifications.length === 0 ? (
                             <div className="p-6 text-center">
                                 <MailOpenIcon size={32} className="mx-auto text-gray-400 mb-4" />
                                 <h3 className="text-lg font-medium mb-2">Geen berichten gevonden</h3>
                                 <p className="text-gray-500 dark:text-gray-400">
-                                    {filter === 'all' 
+                                    {filter === 'all'
                                         ? "Er zijn momenteel geen nieuwe berichten. Kom later terug om te zien of er updates of belangrijke meldingen zijn."
                                         : `Je hebt geen berichten in de geselecteerde categorie.`
                                     }
@@ -679,7 +657,7 @@ export default function InboxList({
                             </>
                         )}
                     </div>
-                    
+
                     {/* Only show pagination if there are multiple pages */}
                     {shouldShowPagination && notifications.length > 0 && (
                         <Pagination

@@ -1,6 +1,7 @@
 "use client";
 
 import { siteConfig } from "@/app/siteConfig";
+import { ErrorState } from "@/components/ErrorState";
 import { Loader } from "@/components/ui/PageLoad";
 import { useAuth } from "@clerk/nextjs";
 import {
@@ -420,20 +421,17 @@ export default function AnalyticsDashboard() {
 
     if (error) {
         return (
-            <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
-                <div className="w-full">
-                    <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Gunning analyse</h1>
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                        <p className="text-red-800 dark:text-red-200">Fout: {error}</p>
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="mt-2 px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700"
-                        >
-                            Opnieuw proberen
-                        </button>
+            <section aria-label="Analytics Dashboard">
+                <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
+                    <div className="w-full">
+                        <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Gunning analyse</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ontdek inzichten in toegekende gunningen en markttrends.</p>
                     </div>
                 </div>
-            </div>
+                <div className="px-4 sm:px-6 pb-6">
+                    <ErrorState onRetry={() => window.location.reload()} />
+                </div>
+            </section>
         );
     }
 

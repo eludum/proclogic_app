@@ -6,6 +6,7 @@ import { siteConfig } from "@/app/siteConfig";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
+import { ErrorState } from "@/components/ErrorState";
 import { useAuth } from "@clerk/nextjs";
 import {
     DndContext,
@@ -57,6 +58,7 @@ export default function KanbanBoardPage() {
 
     // State
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [kanbanData, setKanbanData] = useState<KanbanData>({ columns: [] });
     const [showStatusDialog, setShowStatusDialog] = useState(false);
     const [editingStatus, setEditingStatus] = useState<StatusColumn | null>(null);
@@ -93,11 +95,7 @@ export default function KanbanBoardPage() {
             setKanbanData(data);
         } catch (error) {
             console.error('Error fetching kanban board:', error);
-            toast({
-                title: "Fout bij laden",
-                description: "Het overzichtsbord kon niet worden geladen. Probeer het later opnieuw.",
-                variant: "error"
-            });
+            setError(error instanceof Error ? error.message : 'Er is een fout opgetreden');
         } finally {
             setIsLoading(false);
         }
@@ -515,6 +513,8 @@ export default function KanbanBoardPage() {
                 <div className="flex justify-center items-center h-64">
                     <Loader loadingtext="Overzichtsbord laden..." size={32} />
                 </div>
+            ) : error ? (
+                <ErrorState onRetry={fetchKanbanBoard} />
             ) : (
                 <div className="flex-grow w-full overflow-hidden">
                     <DndContext

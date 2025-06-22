@@ -3,6 +3,7 @@ import { siteConfig } from "@/app/siteConfig";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
+import { ErrorState } from "@/components/ErrorState";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import AddUserForm from "../_components/AddUserForm";
@@ -24,6 +25,7 @@ export default function UsersSettingsPage() {
     const [users, setUsers] = useState<CompanyUser[]>([]);
     const [emails, setEmails] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [addingUser, setAddingUser] = useState(false);
     const { getToken } = useAuth();
     const { toast } = useToast();
@@ -68,11 +70,7 @@ export default function UsersSettingsPage() {
             setUsers(usersData || []);
         } catch (error) {
             console.error("Error fetching users data:", error);
-            toast({
-                title: "Fout bij laden",
-                description: "Gebruikersgegevens konden niet worden geladen. Probeer het later opnieuw.",
-                variant: "error"
-            });
+            setError(error instanceof Error ? error.message : 'Er is een fout opgetreden');
         } finally {
             setLoading(false);
         }
@@ -168,6 +166,10 @@ export default function UsersSettingsPage() {
                 <Loader loadingtext="Gebruikers laden..." size={32} />
             </div>
         );
+    }
+
+    if (error) {
+        return <ErrorState onRetry={fetchUsers} />;
     }
 
     return (

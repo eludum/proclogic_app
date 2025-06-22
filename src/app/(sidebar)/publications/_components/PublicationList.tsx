@@ -212,25 +212,14 @@ export default function PublicationList({
                     pages: data.pages || 0
                 });
             } else {
-                // Only report errors if the request wasn't aborted
                 if (!signal.aborted) {
                     console.error('Failed to fetch publications:', await response.text());
-                    toast({
-                        title: "Fout bij laden",
-                        description: "De aanbestedingen konden niet worden geladen. Probeer het later opnieuw.",
-                        variant: "error"
-                    });
                 }
             }
         } catch (error) {
             // Only report errors if the request wasn't aborted
             if (error instanceof Error && error.name !== 'AbortError') {
                 console.error('Error fetching publications:', error);
-                toast({
-                    title: "Fout bij laden",
-                    description: "Er is een fout opgetreden bij het laden van aanbestedingen.",
-                    variant: "error"
-                });
             }
         } finally {
             // Only update loading state if the request wasn't aborted

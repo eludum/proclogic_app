@@ -51,14 +51,17 @@ export default async function Publications() {
 
       <div className="w-full">
         {fetchError ? (
-          <div className="p-6 text-center">
-            <p>Er is een fout opgetreden bij het laden van de aanbestedingen {fetchError}</p>
+          <div className="flex flex-col items-center justify-center py-12">
+            <p>
+              Oeps! Het lijkt erop dat er iets is misgegaan...
+            </p>
+            <br></br>
             <form action="/publications">
               <button
                 type="submit"
-                className="mt-4 px-4 py-2 bg-astral-500 text-white rounded-md hover:bg-astral-600 transition-colors"
+                className="bg-astral-500 hover:bg-astral-600 text-white px-4 py-2 rounded-md"
               >
-                Probeer het later opnieuw
+                Probeer opnieuw
               </button>
             </form>
           </div>

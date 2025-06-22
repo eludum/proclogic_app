@@ -4,6 +4,7 @@ import { Button } from "@/components/Button";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
+import { ErrorState } from "@/components/ErrorState";
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import AccreditationsForm from "../_components/AccreditationsForm";
@@ -32,6 +33,7 @@ export interface Company {
 export default function CompanySettingsPage() {
     const [company, setCompany] = useState<Company | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
     const [activeSection, setActiveSection] = useState('profile');
     const { getToken } = useAuth();
@@ -59,11 +61,7 @@ export default function CompanySettingsPage() {
             setCompany(data);
         } catch (error) {
             console.error("Error fetching company data:", error);
-            toast({
-                title: "Fout bij laden",
-                description: "Bedrijfsgegevens konden niet worden geladen. Probeer het later opnieuw.",
-                variant: "error"
-            });
+            setError(error instanceof Error ? error.message : 'Er is een fout opgetreden');
         } finally {
             setLoading(false);
         }
@@ -131,6 +129,10 @@ export default function CompanySettingsPage() {
                 <Loader loadingtext="Bedrijfsgegevens laden..." size={32} />
             </div>
         );
+    }
+
+    if (error) {
+        return <ErrorState onRetry={fetchCompanyData} />;
     }
 
     return (

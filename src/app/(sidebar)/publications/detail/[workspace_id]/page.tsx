@@ -1,6 +1,7 @@
 "use server"
 
 import { siteConfig } from "@/app/siteConfig";
+import { ErrorState } from "@/components/ErrorState";
 import { auth } from '@clerk/nextjs/server';
 import PublicationDetail, { Publication } from "../../_components/PublicationDetail";
 
@@ -60,8 +61,11 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                 <div className="flex flex-col justify-between gap-4 px-4 py-6 sm:flex-row sm:items-center sm:p-6">
                     <div className="w-full">
                         <h1 className="text-2xl font-bold text-gray-900 mb-2 dark:text-white">Aanbesteding Details</h1>
-                        <p className="text-sm text-red-500">Error: {fetchError}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Details van de geselecteerde aanbesteding.</p>
                     </div>
+                </div>
+                <div className="px-4 sm:px-6 pb-6">
+                    <ErrorState onRetry={() => window.location.reload()} />
                 </div>
             </section>
         );
