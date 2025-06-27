@@ -18,7 +18,7 @@ export default function StepComplete({ companyName }: StepCompleteProps) {
             </h1>
 
             <p className="text-lg text-gray-700 dark:text-gray-300 max-w-lg">
-                Je bedrijf,{companyName},is nu klaar om van ProcLogic gebruik te maken.
+                Je bedrijf, {companyName}, is nu klaar om van ProcLogic gebruik te maken.
             </p>
 
             <div className="w-full max-w-lg mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
