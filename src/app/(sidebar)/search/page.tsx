@@ -1,12 +1,37 @@
-"use server"
 import { siteConfig } from "@/app/siteConfig";
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { Suspense } from "react";
 import FreePublicationList from "../publications/_components/FreePublicationList";
 import PublicationList from "../publications/_components/PublicationList";
+import { PublicationSkeleton } from "../publications/_components/PublicationSkeleton";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
-export default async function PublicSearch() {
+// Fast-loading skeleton that shows immediately
+function SearchPageSkeleton() {
+    return (
+        <section aria-label="Publications Search">
+            {/* Premium Banner Skeleton */}
+            <div className="mt-5 mx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-astral-50 to-astral-100 dark:from-astral-900/30 dark:to-astral-800/30 rounded-lg border border-astral-200 dark:border-astral-800 shadow-xs">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex-1">
+                        <div className="h-5 w-48 bg-gray-200 dark:bg-gray-800 animate-pulse rounded mb-2"></div>
+                        <div className="h-4 w-96 bg-gray-200 dark:bg-gray-800 animate-pulse rounded"></div>
+                    </div>
+                    <div className="h-9 w-32 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-md"></div>
+                </div>
+            </div>
+
+            {/* Main content skeleton */}
+            <div className="mx-4 sm:mx-6">
+                <PublicationSkeleton count={8} />
+            </div>
+        </section>
+    );
+}
+
+// Async component that loads data
+async function SearchContent() {
     const user = await currentUser();
     const { getToken } = await auth();
     const isLoggedIn = !!user;
@@ -64,7 +89,6 @@ export default async function PublicSearch() {
 
     return (
         <section aria-label="Publications Search">
-
             {/* Premium Banner - only show for non-logged in users */}
             {!isLoggedIn && (
                 <div className="mt-5 mx-4 sm:mx-6 mb-6 p-4 bg-gradient-to-r from-astral-50 to-astral-100 dark:from-astral-900/30 dark:to-astral-800/30 rounded-lg border border-astral-200 dark:border-astral-800 shadow-xs">
@@ -78,55 +102,42 @@ export default async function PublicSearch() {
                             </p>
                         </div>
                         <a
-                            href="https://app.proclogic.be/sign-in"
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-transparent border border-astral-500 text-astral-700 transition-colors duration-200"
+                            href="/sign-up"
+                            className="inline-flex items-center px-4 py-2 bg-astral-600 text-white text-sm font-medium rounded-md hover:bg-astral-700 transition-colors"
                         >
-                            Aanmelden
-                        </a>
-                        <a
-                            href="https://www.proclogic.be/pricing"
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-astral-600 hover:bg-astral-700 transition-colors duration-200"
-                        >
-                            Registreren
+                            Gratis account aanmaken
                         </a>
                     </div>
                 </div>
             )}
 
-            <div className="w-full">
+            {/* Main content */}
+            <div className="mx-4 sm:mx-6">
                 {fetchError ? (
-                    <div className="flex flex-col items-center justify-center py-12">
-                        <p>
-                            Oeps! Het lijkt erop dat er iets is misgegaan...
-                        </p>
-                        <br></br>
-                        <form action="">
-                            <button type="submit" className="bg-astral-500 hover:bg-astral-600 text-white px-4 py-2 rounded-md">
-                                Probeer opnieuw
-                            </button>
-                        </form>
+                    <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
+                        <p className="text-red-600 dark:text-red-400 mb-2">Fout bij ophalen van aanbestedingen</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">{fetchError}</p>
                     </div>
-                ) : publicationsData.items.length === 0 ? (
-                    <div className="p-6 text-center">
-                        <p className="text-gray-500">Geen aanbestedingen gevonden</p>
-                    </div>
+                ) : isLoggedIn ? (
+                    <PublicationList
+                        initialPublications={publicationsData}
+                        isSearchPage={true}
+                    />
                 ) : (
-                    <div className="p-4">
-                        {isLoggedIn ? (
-                            // Logged-in users see the full PublicationList with all features
-                            <PublicationList
-                                initialPublications={publicationsData}
-                                isSearchPage={true}
-                            />
-                        ) : (
-                            // Non-logged in users see the limited PublicationList
-                            <FreePublicationList
-                                initialPublications={publicationsData}
-                            />
-                        )}
-                    </div>
+                    <FreePublicationList
+                        initialPublications={publicationsData}
+                    />
                 )}
             </div>
         </section>
+    );
+}
+
+// Main page component using Suspense for immediate loading
+export default function PublicSearch() {
+    return (
+        <Suspense fallback={<SearchPageSkeleton />}>
+            <SearchContent />
+        </Suspense>
     );
 }
