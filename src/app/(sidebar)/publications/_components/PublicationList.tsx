@@ -447,18 +447,18 @@ export default function PublicationList({
                                 isUnsaving={unsavingPublications[publication.workspace_id]}
                             />
                         ))}
-
-                        {/* Pagination Controls */}
-                        {pagination.pages > 1 && (
-                            <Pagination
-                                currentPage={pagination.page}
-                                totalPages={pagination.pages}
-                                totalItems={pagination.total}
-                                onPageChange={handlePageChange}
-                                isLoading={isLoading}
-                            />
-                        )}
                     </>
+                )}
+
+                {/* Pagination Controls */}
+                {pagination.pages > 1 && (
+                    <Pagination
+                        currentPage={pagination.page}
+                        totalPages={pagination.pages}
+                        totalItems={pagination.total}
+                        onPageChange={handlePageChange}
+                        isLoading={isLoading}
+                    />
                 )}
 
                 {/* Chat dialog */}

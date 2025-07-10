@@ -1,6 +1,7 @@
 "use client"
 
 import { siteConfig } from "@/app/siteConfig";
+import { Loader } from "@/components/ui/PageLoad";
 import { formatDate } from "@/lib/publicationUtils";
 import { BuildingIcon, CalendarIcon, CheckCircleIcon, CodeIcon, MapPinIcon, TagIcon } from 'lucide-react';
 import { useEffect, useState } from "react";
@@ -184,7 +185,9 @@ export default function FreePublicationList({ initialPublications }: FreePublica
 
             {/* Publications list */}
             <div className="space-y-6">
-                {publications.length === 0 ? (
+                {isLoading ? (
+                    <Loader loadingtext={"Aanbestedingen laden..."} size={32} />
+                ) : publications.length === 0 ? (
                     <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-6">
                         <p className="text-gray-600 dark:text-gray-300 mb-2">Geen aanbestedingen gevonden</p>
                     </div>
