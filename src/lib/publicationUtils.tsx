@@ -40,7 +40,7 @@ export const getTimeRemaining = (deadline: string | number | Date | null | undef
     if (days < 365) {
         const months = Math.floor(days / 30);
         return {
-            text: `${months} maand${months !== 1 ? 's' : ''} resterend`,
+            text: `${months} maand${months !== 1 ? 'en' : ''} resterend`,
             variant: "comfortable"
         };
     }
