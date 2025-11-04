@@ -36,10 +36,10 @@ export default function Banner() {
                     </p>
                 </div>
                 <a
-                    href="/sign-up"
+                    href="https://proclogic.be/pricing"
                     className="inline-flex items-center px-4 py-2 bg-astral-600 text-white text-sm font-medium rounded-md hover:bg-astral-700 transition-colors"
                 >
-                    Gratis account aanmaken
+                    Account aanmaken
                 </a>
             </div>
         </div>
