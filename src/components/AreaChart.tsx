@@ -553,7 +553,8 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
     const areaId = React.useId()
 
     const prevActiveRef = React.useRef<boolean | undefined>(undefined)
-    const prevLabelRef = React.useRef<string | undefined>(undefined)
+    // initialize as empty string so prevLabelRef.current is always a string
+    const prevLabelRef = React.useRef<string>("")
 
     const getFillContent = ({
       fillType,
@@ -762,28 +763,26 @@ const AreaChart = React.forwardRef<HTMLDivElement, AreaChartProps>(
                   }))
                   : []
 
+                // coerce label to a string to satisfy TooltipProps.label
+                const safeLabel = label == null ? "" : String(label)
+
                 if (
                   tooltipCallback &&
-                  (active !== prevActiveRef.current ||
-                    label !== prevLabelRef.current)
+                  (active !== prevActiveRef.current || safeLabel !== prevLabelRef.current)
                 ) {
-                  tooltipCallback({ active, payload: cleanPayload, label })
+                  tooltipCallback({ active, payload: cleanPayload, label: safeLabel })
                   prevActiveRef.current = active
-                  prevLabelRef.current = label
+                  prevLabelRef.current = safeLabel
                 }
 
                 return showTooltip && active ? (
                   CustomTooltip ? (
-                    <CustomTooltip
-                      active={active}
-                      payload={cleanPayload}
-                      label={label}
-                    />
+                    <CustomTooltip active={active} payload={cleanPayload} label={safeLabel} />
                   ) : (
                     <ChartTooltip
                       active={active}
                       payload={cleanPayload}
-                      label={label}
+                      label={safeLabel}
                       valueFormatter={valueFormatter}
                     />
                   )

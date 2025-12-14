@@ -229,7 +229,7 @@ type PayloadItem = {
 interface ChartTooltipProps {
   active: boolean | undefined
   payload: PayloadItem[]
-  label: string
+  label: string | number | undefined
   valueFormatter: (value: number) => string
 }
 
@@ -396,7 +396,7 @@ const ConditionalBarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
     const stacked = type === "stacked" || type === "percent"
 
     const prevActiveRef = React.useRef<boolean | undefined>(undefined)
-    const prevLabelRef = React.useRef<string | undefined>(undefined)
+    const prevLabelRef = React.useRef<string | number | undefined>(undefined)
 
     function valueToPercent(value: number) {
       return `${(value * 100).toFixed(0)}%`

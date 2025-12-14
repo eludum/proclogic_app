@@ -458,7 +458,7 @@ type PayloadItem = {
 interface ChartTooltipProps {
   active: boolean | undefined
   payload: PayloadItem[]
-  label: string
+  label: string | number | undefined
   barValueFormatter?: (value: number) => string
   lineValueFormatter?: (value: number) => string
 }
@@ -675,7 +675,7 @@ const ComboChart = React.forwardRef<HTMLDivElement, ComboChartProps>(
     )
 
     const prevActiveRef = React.useRef<boolean | undefined>(undefined)
-    const prevLabelRef = React.useRef<string | undefined>(undefined)
+    const prevLabelRef = React.useRef<string | number | undefined>(undefined)
 
     const barCategoryColors = constructCategoryColors(
       mergedBarSeries.categories,
