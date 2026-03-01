@@ -5,9 +5,7 @@
 
 </div>
 
-<div align="center">
 # ProcLogic Frontend
-</div>
 
 > The first fully open source public tender platform - Frontend Application
 
