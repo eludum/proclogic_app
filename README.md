@@ -1,4 +1,13 @@
-# ProcLogic App
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/eludum/proclogic_app/main/assets/proclogic.svg" alt="ProcLogic Logo" width="120" height="120">
+
+
+</div>
+
+<div align="center">
+# ProcLogic Frontend
+</div>
 
 > The first fully open source public tender platform - Frontend Application
 
@@ -229,3 +238,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Issues: [GitHub Issues](https://github.com/eludum/proclogic_app/issues)
 - Email: info@proclogic.be
+
+--
+
+<div align="center">
+
+<a href="https://koselogic.be" target="_blank">
+  <img src="https://raw.githubusercontent.com/eludum/proclogic_app/main/assets/koselogic.svg" alt="KoseLogic" width="200">
+</a>
+
+
+
+
+**[koselogic.be](https://koselogic.be)**
+
+ProcLogic is developed by KoseLogic
+
+</div>
