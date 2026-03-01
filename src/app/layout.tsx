@@ -1,16 +1,10 @@
 import { nlBE } from '@clerk/localizations'
 import { ClerkProvider } from '@clerk/nextjs'
 import type { Metadata } from "next"
-import dynamic from 'next/dynamic'
 import localFont from "next/font/local"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
-
-// Lazy load Google Analytics to not block initial render
-const GoogleAnalytics = dynamic(
-  () => import('@next/third-parties/google').then(mod => mod.GoogleAnalytics),
-  { ssr: false }
-)
+import { GoogleAnalyticsWrapper } from "./components/GoogleAnalytics"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -63,7 +57,7 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} bg-white-50 h-full antialiased dark:bg-gray-950`}
         >
-          <GoogleAnalytics gaId="G-ZDRV9JZEEW" />
+          <GoogleAnalyticsWrapper />
           {children}
         </body>
       </html>
