@@ -1,20 +1,30 @@
 import { nlBE } from '@clerk/localizations'
 import { ClerkProvider } from '@clerk/nextjs'
-import { GoogleAnalytics } from '@next/third-parties/google'
 import type { Metadata } from "next"
+import dynamic from 'next/dynamic'
 import localFont from "next/font/local"
 import "./globals.css"
 import { siteConfig } from "./siteConfig"
+
+// Lazy load Google Analytics to not block initial render
+const GoogleAnalytics = dynamic(
+  () => import('@next/third-parties/google').then(mod => mod.GoogleAnalytics),
+  { ssr: false }
+)
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
+  display: "swap", // Prevent blocking on font load
+  preload: true,
 })
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+  display: "swap", // Prevent blocking on font load
+  preload: true,
 })
 
 export const metadata: Metadata = {
