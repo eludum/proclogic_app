@@ -239,7 +239,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Issues: [GitHub Issues](https://github.com/eludum/proclogic_app/issues)
 - Email: info@proclogic.be
 
---
+---
 
 <div align="center">
 
