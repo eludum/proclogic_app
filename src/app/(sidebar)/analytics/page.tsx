@@ -3,6 +3,7 @@
 import { siteConfig } from "@/app/siteConfig";
 import { ErrorState } from "@/components/ErrorState";
 import { Loader } from "@/components/ui/PageLoad";
+import { DateRangePicker } from "@/components/DatePicker";
 import { useAuth } from "@clerk/nextjs";
 import {
     BarChart3,
@@ -14,8 +15,7 @@ import {
     TrendingUp,
     X
 } from 'lucide-react';
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pagination } from "../publications/_components/Pagination";
 
 // Types
@@ -53,6 +53,11 @@ interface Filters {
     sector_code: string;
     winner: string;
     supplier: string;
+    date_from: string;
+    date_to: string;
+    sector: string;
+    min_value: string;
+    max_value: string;
 }
 
 // Utility functions
@@ -100,97 +105,6 @@ const StatsCard = ({ icon: Icon, title, value, description }: StatsCardProps) =>
     </div>
 );
 
-type FilterDropdownProps = {
-    isOpen: boolean;
-    filters: Filters;
-    onFilterChange: (key: keyof Filters, value: string) => void;
-    onClear: () => void;
-};
-
-const FilterDropdown = ({ isOpen, filters, onFilterChange, onClear }: FilterDropdownProps) => {
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-lg z-50 p-4 max-h-96 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-gray-900 dark:text-white">Filters</h3>
-                <button
-                    onClick={onClear}
-                    className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 flex items-center gap-1"
-                >
-                    <X size={12} />
-                    Alles wissen
-                </button>
-            </div>
-
-            <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Jaar
-                        </label>
-                        <select
-                            value={filters.year}
-                            onChange={(e) => onFilterChange('year', e.target.value)}
-                            className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
-                        >
-                            <option value="">Alle jaren</option>
-                            {years.map(year => (
-                                <option key={year} value={year}>{year}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Kwartaal
-                        </label>
-                        <select
-                            value={filters.quarter}
-                            onChange={(e) => onFilterChange('quarter', e.target.value)}
-                            className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
-                        >
-                            <option value="">Alle kwartalen</option>
-                            <option value="1">K1</option>
-                            <option value="2">K2</option>
-                            <option value="3">K3</option>
-                            <option value="4">K4</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Winnaar
-                    </label>
-                    <input
-                        type="text"
-                        value={filters.winner}
-                        onChange={(e) => onFilterChange('winner', e.target.value)}
-                        placeholder="Filter op winnaar naam"
-                        className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Opdrachtgever
-                    </label>
-                    <input
-                        type="text"
-                        value={filters.supplier}
-                        onChange={(e) => onFilterChange('supplier', e.target.value)}
-                        placeholder="Filter op opdrachtgever naam"
-                        className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400"
-                    />
-                </div>
-            </div>
-        </div>
-    );
-};
 
 interface ContractRowProps {
     contract: ContractItem;
@@ -296,7 +210,6 @@ const ContractRow = ({ contract, isExpanded, onToggle }: ContractRowProps) => (
 // Main component
 export default function AnalyticsDashboard() {
     const { getToken } = useAuth();
-    const router = useRouter();
 
     // State
     const [contracts, setContracts] = useState<ContractsResponse | null>(null);
@@ -306,7 +219,6 @@ export default function AnalyticsDashboard() {
 
     // UI State
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-    const [showFilters, setShowFilters] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
     // Filter state
@@ -317,11 +229,19 @@ export default function AnalyticsDashboard() {
         month: '',
         sector_code: '',
         winner: '',
-        supplier: ''
+        supplier: '',
+        date_from: '',
+        date_to: '',
+        sector: '',
+        min_value: '',
+        max_value: ''
     });
 
     // Debounced search
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // Date range state
+    const [dateRange, setDateRange] = useState<{from: Date | undefined; to?: Date | undefined} | undefined>(undefined);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -331,6 +251,24 @@ export default function AnalyticsDashboard() {
 
         return () => clearTimeout(timer);
     }, [searchTerm]);
+    
+    // Handle date range changes
+    useEffect(() => {
+        if (dateRange) {
+            setFilters(prev => ({
+                ...prev,
+                date_from: dateRange.from ? dateRange.from.toISOString().split('T')[0] : '',
+                date_to: dateRange.to ? dateRange.to.toISOString().split('T')[0] : ''
+            }));
+        } else {
+            setFilters(prev => ({
+                ...prev,
+                date_from: '',
+                date_to: ''
+            }));
+        }
+        setCurrentPage(1);
+    }, [dateRange]);
 
     // Build query parameters
     const queryParams = useMemo(() => {
@@ -347,7 +285,7 @@ export default function AnalyticsDashboard() {
     }, [filters, currentPage]);
 
     // Fetch data
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -379,11 +317,11 @@ export default function AnalyticsDashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getToken, queryParams]);
 
     useEffect(() => {
         fetchData();
-    }, [queryParams]);
+    }, [fetchData]);
 
     // Event handlers
     const handleFilterChange = (key: keyof Filters, value: string) => {
@@ -399,10 +337,16 @@ export default function AnalyticsDashboard() {
             month: '',
             sector_code: '',
             winner: '',
-            supplier: ''
+            supplier: '',
+            date_from: '',
+            date_to: '',
+            sector: '',
+            min_value: '',
+            max_value: ''
         });
         setSearchTerm('');
         setCurrentPage(1);
+        setDateRange(undefined);
     };
 
     const toggleRowExpansion = (contractId: string) => {
@@ -446,35 +390,86 @@ export default function AnalyticsDashboard() {
 
             <div className="px-4 sm:px-6 pb-6 space-y-6">
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-4">
+                    {/* Search Bar */}
                     <div className="flex items-center gap-4">
                         <div className="relative flex-1">
                             <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                                 type="text"
-                                placeholder="Zoek gunningen..."
+                                placeholder="Zoek gunningen op titel, winnaar, opdrachtgever..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
                             />
                         </div>
+                        
+                        {/* Clear all filters button */}
+                        <button
+                            onClick={handleClearFilters}
+                            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            <X size={16} />
+                            Wissen
+                        </button>
+                    </div>
 
-                        {/* <div className="relative">
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
-                            >
-                                <Filter size={16} />
-                                Filters
-                            </button>
-
-                            <FilterDropdown
-                                isOpen={showFilters}
-                                filters={filters}
-                                onFilterChange={handleFilterChange}
-                                onClear={handleClearFilters}
+                    {/* Filter Controls */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Date Range Filter */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Periode
+                            </label>
+                            <DateRangePicker
+                                value={dateRange}
+                                onChange={setDateRange}
+                                placeholder="Selecteer periode"
+                                className="w-full"
                             />
-                        </div> */}
+                        </div>
+
+                        {/* Sector Filter */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Sector
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Bijv. IT, Bouw, Consultancy..."
+                                value={filters.sector}
+                                onChange={(e) => handleFilterChange('sector', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Min Value Filter */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Min. waarde (€)
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="0"
+                                value={filters.min_value}
+                                onChange={(e) => handleFilterChange('min_value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Max Value Filter */}
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Max. waarde (€)
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="Geen limiet"
+                                value={filters.max_value}
+                                onChange={(e) => handleFilterChange('max_value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-astral-500 focus:border-transparent"
+                            />
+                        </div>
                     </div>
                 </div>
 
