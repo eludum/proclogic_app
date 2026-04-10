@@ -199,7 +199,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
         try {
             setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
             const token = await getToken();
-            const downloadUrl = `${API_BASE_URL}/publications/publication/${publication?.workspace_id}/document/${filename}`;
+            const downloadUrl = `${API_BASE_URL}/publications/publication/${publication?.workspace_id}/document/${encodeURIComponent(filename)}`;
 
             const response = await fetch(downloadUrl, {
                 headers: {
