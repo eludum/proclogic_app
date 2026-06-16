@@ -648,7 +648,7 @@ const SingleDatePicker = ({
                 locale={locale}
                 enableYearNavigation={enableYearNavigation}
                 disableNavigation={disableNavigation}
-                initialFocus
+                autoFocus
                 {...props}
               />
               {showTimePicker && (
@@ -951,7 +951,7 @@ const RangeDatePicker = ({
                 disableNavigation={disableNavigation}
                 enableYearNavigation={enableYearNavigation}
                 locale={locale}
-                initialFocus
+                autoFocus
                 classNames={{
                   months:
                     "flex flex-row divide-x divide-gray-200 dark:divide-gray-800 overflow-x-auto",
