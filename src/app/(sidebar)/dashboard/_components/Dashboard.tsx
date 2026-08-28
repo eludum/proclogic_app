@@ -24,6 +24,19 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Pagination } from "../../publications/_components/Pagination";
 
+/** Only site-relative paths and http(s) URLs may be opened. */
+function isSafeLink(link: string): boolean {
+    const trimmed = link.trim();
+    if (trimmed.startsWith("/") && !trimmed.startsWith("//")) return true;
+    try {
+        const url = new URL(trimmed);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
+}
+
+
 const API_BASE_URL = siteConfig.api_base_url;
 
 interface Notification {
@@ -430,9 +443,12 @@ export default function InboxList({
             }
         }
 
-        // Navigate to linked resource
-        if (notification.link) {
-            window.open(notification.link, "_blank");
+        // Navigate to linked resource. The link comes from the API, so the
+        // scheme is checked before opening -- a javascript: or data: URL here
+        // would execute in our origin. window.open also gets no implicit
+        // noopener, unlike an anchor with target="_blank".
+        if (notification.link && isSafeLink(notification.link)) {
+            window.open(notification.link, "_blank", "noopener,noreferrer");
         }
     };
 

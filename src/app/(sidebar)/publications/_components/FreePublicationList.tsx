@@ -214,6 +214,7 @@ export default function FreePublicationList({ initialPublications }: FreePublica
                                 <div className="mb-4">
                                     <a
                                         target="_blank"
+                                        rel="noopener noreferrer"
                                         href={`/publications/free/detail/${publication.workspace_id}`}
                                         className="text-lg font-semibold text-astral-600 dark:text-astral-400 hover:underline focus:outline-hidden mb-1 block"
                                     >

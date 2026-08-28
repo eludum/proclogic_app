@@ -158,6 +158,7 @@ export function PublicationCard({
                         <a
                             href={`/publications/detail/${publication.workspace_id}`}
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-hidden line-clamp-2"
                             onClick={() => onMarkAsViewed(publication)}
                             title={publication.title}
@@ -168,6 +169,7 @@ export function PublicationCard({
                     <a
                         href={`/publications/detail/${publication.workspace_id}`}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="text-xs text-gray-500 dark:text-gray-400 hover:underline focus:outline-hidden"
                         onClick={() => onMarkAsViewed(publication)}
                     >

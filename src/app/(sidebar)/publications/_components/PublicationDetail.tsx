@@ -377,7 +377,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         <span className="hidden sm:inline">Procy</span>
                                     </Button>
 
-                                    <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
+                                    <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank" rel="noopener noreferrer">
                                         <Button
                                             className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
                                         >
@@ -755,6 +755,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                             <Link
                                                                 href={link}
                                                                 target="_blank"
+                                                                rel="noopener noreferrer"
                                                                 className="flex items-center gap-2 text-astral-600 dark:text-astral-400 hover:underline"
                                                             >
                                                                 <RiExternalLinkLine className="size-4" />
@@ -861,7 +862,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                                 <Button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        window.open(`/contracts/${contract.publication_id}`, '_blank');
+                                                                        window.open(`/contracts/${contract.publication_id}`, '_blank', 'noopener,noreferrer');
                                                                     }}
                                                                     className="text-xs bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 px-3 py-1 rounded-md flex items-center gap-1"
                                                                 >
