@@ -6,6 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { RiChatSmile2Line, RiCloseLine, RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react";
 import { FileTextIcon, LoaderIcon, SendIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from "react";
+import MessageContent from "./MessageContent";
 
 const API_BASE_URL = siteConfig.api_base_url;
 
@@ -40,9 +41,41 @@ interface WebSocketResponseData {
         done?: boolean;
         thread_id?: string;
         detail?: string;
+        // Sent while Procy is querying the database, so the user sees why the
+        // answer is taking a moment instead of a silent spinner.
+        tool?: string;
+        arguments?: Record<string, unknown>;
     };
     detail?: string;
 }
+
+// Procy can now query the tender and award database directly, so the greeting
+// says so -- users had no way to discover that from the old wording.
+const WELCOME_TEXT =
+    "Hallo! Ik ben Procy. Ik ken deze aanbesteding \u00e9n de volledige databank van " +
+    "Belgische overheidsopdrachten en gunningen. Vraag me gerust naar vergelijkbare " +
+    "opdrachten, wat zulk werk doorgaans kost, of wie het meestal wint.";
+
+// What to show while a given tool runs. Anything unmapped falls back to a
+// generic line, so a newly added backend tool never breaks the UI.
+const TOOL_LABELS: Record<string, string> = {
+    search_awards: "Procy doorzoekt gunningen...",
+    find_similar_awards: "Procy zoekt vergelijkbare gunningen...",
+    get_award: "Procy haalt gunningsdetails op...",
+    award_market_stats: "Procy berekent marktcijfers...",
+    awards_by_sector: "Procy analyseert sectoren...",
+    awards_by_region: "Procy analyseert regio's...",
+    awards_by_winner: "Procy zoekt uit wie deze opdrachten wint...",
+    awards_by_supplier: "Procy zoekt leveranciers op...",
+    awards_by_buyer: "Procy zoekt aanbestedende diensten op...",
+    awards_timeseries: "Procy bekijkt de trend over tijd...",
+    search_publications: "Procy doorzoekt aanbestedingen...",
+    get_publication: "Procy haalt de aanbesteding op...",
+    find_similar_publications: "Procy zoekt vergelijkbare aanbestedingen...",
+    search_organisations: "Procy zoekt organisaties op...",
+    get_organisation_profile: "Procy bekijkt het profiel van de organisatie...",
+    run_sql_readonly: "Procy bevraagt de database...",
+};
 
 export default function ChatComponent({ publicationId, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
     const { getToken } = useAuth();
@@ -53,6 +86,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
     const [localIsFullscreen, setLocalIsFullscreen] = useState(false);
     const [availableFiles, setAvailableFiles] = useState<string[]>([]);
     const [connectionError, setConnectionError] = useState<string | null>(null);
+    const [toolStatus, setToolStatus] = useState<string | null>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -161,7 +195,14 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 case "connected":
                     break;
 
+                case "tool_call": {
+                    const tool = data.data?.tool ?? "";
+                    setToolStatus(TOOL_LABELS[tool] ?? "Procy raadpleegt de database...");
+                    break;
+                }
+
                 case "stream_start":
+                    setToolStatus(null);
                     // Reset any previous streaming message
                     setStreamingMessage({
                         id: `assistant-${Date.now()}`,
@@ -208,6 +249,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     ]);
 
                     setStreamingMessage(null);
+                    setToolStatus(null);
                     setLoading(false);
                     break;
 
@@ -226,6 +268,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         }
                     ]);
                     setStreamingMessage(null);
+                    setToolStatus(null);
                     setLoading(false);
                     break;
 
@@ -381,7 +424,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         setMessages([{
                             id: "welcome",
                             role: "assistant",
-                            content: `Hallo! Ik ben Procy. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                            content: WELCOME_TEXT,
                             timestamp: new Date()
                         }]);
                     }
@@ -390,7 +433,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                     setMessages([{
                         id: "welcome",
                         role: "assistant",
-                        content: `Hallo! Ik ben Procy. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                        content: WELCOME_TEXT,
                         timestamp: new Date()
                     }]);
                 }
@@ -409,7 +452,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 setMessages([{
                     id: "welcome",
                     role: "assistant",
-                    content: `Hallo! Ik ben Procy. Ik kan je helpen met het analyseren van deze aanbesteding. Wat wil je graag weten?`,
+                    content: WELCOME_TEXT,
                     timestamp: new Date()
                 }]);
             } finally {
@@ -457,6 +500,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
         ]);
         setCurrentMessage("");
         setLoading(true);
+        setToolStatus(null);
         setConnectionError(null); // Clear any previous errors
 
         // Ensure WebSocket connection is active
@@ -650,7 +694,11 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                                     : "bg-white dark:bg-slate-800 text-gray-800 dark:text-white"
                                     }`}
                             >
-                                <div className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                                <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                                    {message.role === "assistant"
+                                        ? <MessageContent content={message.content} />
+                                        : message.content}
+                                </div>
 
                                 {/* Citations */}
                                 {renderCitations(message.citations)}
@@ -671,7 +719,7 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                         >
                             <div className="max-w-[80%] rounded-xl p-4 shadow-xs bg-white dark:bg-slate-800 text-gray-800 dark:text-white">
                                 <div className="text-sm whitespace-pre-wrap leading-relaxed">
-                                    {streamingMessage.content}
+                                    <MessageContent content={streamingMessage.content} />
                                     <span className="inline-block w-2 h-4 ml-1 bg-astral-500 animate-pulse"></span>
                                 </div>
                                 <div className="mt-1 text-right">
@@ -688,7 +736,9 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                             <div className="rounded-xl px-4 py-3 bg-white dark:bg-slate-800 shadow-xs">
                                 <div className="flex items-center gap-2">
                                     <LoaderIcon size={16} className="animate-spin text-astral-600" />
-                                    <span className="text-sm text-gray-800 dark:text-gray-200">Procy is aan het denken...</span>
+                                    <span className="text-sm text-gray-800 dark:text-gray-200">
+                                        {toolStatus ?? "Procy is aan het denken..."}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -723,12 +773,14 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
 
                     {/* Suggestion buttons */}
                     <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        <p>Suggesties:</p>
+                        <p>Probeer bijvoorbeeld:</p>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {[
                                 "Samenvatting van deze aanbesteding",
-                                "Wat is de deadline?",
-                                "Wat zijn de belangrijkste vereisten?",
+                                "Welke vergelijkbare gunningen zijn er al?",
+                                "Wie wint dit soort opdrachten meestal?",
+                                "Wat is de gemiddelde waarde in deze sector?",
+                                "Lopen er nu nog gelijkaardige opdrachten?",
                                 "Is dit geschikt voor mijn bedrijf?"
                             ].map((suggestion, index) => (
                                 <button
