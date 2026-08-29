@@ -85,16 +85,6 @@ interface RelatedContractItem {
     similarity_reason: string;
 }
 
-/** What the agent is roughly doing, so a 90-second wait is not a blank bar.
- *  Timings come from measuring the run against production. */
-function deepSearchStage(elapsedSeconds: number): string {
-    if (elapsedSeconds < 8) return "Zoektermen opstellen op basis van deze aanbesteding...";
-    if (elapsedSeconds < 25) return "De gunningendatabank doorzoeken...";
-    if (elapsedSeconds < 50) return "Gevonden gunningen lezen en vergelijken...";
-    if (elapsedSeconds < 80) return "Resultaten rangschikken en onderbouwen...";
-    return "Nog even bezig — de resultaten worden bewaard, ook als je wegklikt.";
-}
-
 interface RelatedContentResponse {
     related_contracts: RelatedContractItem[];
     total_contracts: number;
@@ -102,6 +92,15 @@ interface RelatedContentResponse {
     source?: "rules" | "procy";
     /** "ready" | "running" | "none" */
     deep_status?: string;
+    /** Live progress straight from the agent: phases actually completed, not elapsed time. */
+    deep_progress?: DeepProgress | null;
+}
+
+interface DeepProgress {
+    step: number;
+    total: number;
+    label: string;
+    awards_seen: number;
 }
 
 interface PublicationDetailProps {
@@ -141,7 +140,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     // Opt-in deep search. The agent takes ~90s, so the page shows the instant
     // rule-based list and lets the user ask for the real thing.
     const [deepRunning, setDeepRunning] = useState(false);
-    const [deepElapsed, setDeepElapsed] = useState(0);
 
     const fetchRelatedContent = useCallback(async (quiet = false) => {
         if (!workspaceId) return;
@@ -175,7 +173,6 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const startDeepSearch = useCallback(async () => {
         if (!workspaceId) return;
         setDeepRunning(true);
-        setDeepElapsed(0);
         try {
             const token = await getTokenRef.current();
             await fetch(
@@ -188,28 +185,21 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
         }
     }, [workspaceId, getTokenRef]);
 
-    // While a deep search runs, tick a counter for the progress bar and poll for
-    // the result. One interval drives both so they cannot drift apart.
+    // While a deep search runs, poll for progress. The bar is driven by what the
+    // server reports it has actually done, so the interval only needs to be
+    // often enough to feel live -- there is no local clock to keep in step.
     useEffect(() => {
         if (!deepRunning) return;
         let cancelled = false;
 
-        const id = setInterval(async () => {
-            if (cancelled) return;
-            setDeepElapsed(prev => prev + 1);
-            // Poll every 5s rather than every tick; the run takes ~90s.
-            setDeepElapsed(prev => {
-                if (prev % 5 === 0) {
-                    void fetchRelatedContent(true).then(data => {
-                        if (cancelled || !data) return;
-                        if (data.deep_status === 'ready' || data.source === 'procy') {
-                            setDeepRunning(false);
-                        }
-                    });
+        const id = setInterval(() => {
+            void fetchRelatedContent(true).then(data => {
+                if (cancelled || !data) return;
+                if (data.deep_status === 'ready' || data.source === 'procy') {
+                    setDeepRunning(false);
                 }
-                return prev;
             });
-        }, 1000);
+        }, 2000);
 
         // Give up watching after five minutes; the API caps the run well before
         // this, and the result stays cached for whenever the page is reopened.
@@ -885,18 +875,42 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                             Procy doorzoekt de gunningen
                                                         </span>
                                                     </div>
+                                                    {/* Driven by what the agent reports it has finished --
+                                                        phases completed, not a timer. Indeterminate until the
+                                                        first report arrives, rather than faking a position. */}
                                                     <div className="h-1.5 w-full rounded-full bg-astral-100 dark:bg-astral-900/50 overflow-hidden">
-                                                        <div
-                                                            className="h-full rounded-full bg-astral-600 transition-all duration-1000 ease-linear"
-                                                            style={{ width: `${Math.min(95, (deepElapsed / 60) * 100)}%` }}
-                                                        />
+                                                        {relatedContent?.deep_progress ? (
+                                                            <div
+                                                                className="h-full rounded-full bg-astral-600 transition-[width] duration-500 ease-out"
+                                                                style={{
+                                                                    width: `${Math.round(
+                                                                        (relatedContent.deep_progress.step /
+                                                                            Math.max(1, relatedContent.deep_progress.total)) * 100
+                                                                    )}%`,
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="h-full w-1/3 rounded-full bg-astral-600 animate-pulse" />
+                                                        )}
                                                     </div>
-                                                    <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
-                                                        {deepSearchStage(deepElapsed)}
-                                                    </p>
+                                                    <div className="mt-2 flex items-baseline justify-between gap-3">
+                                                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                                                            {relatedContent?.deep_progress?.label ?? "Bezig met opstarten..."}
+                                                        </p>
+                                                        {relatedContent?.deep_progress ? (
+                                                            <span className="shrink-0 text-xs tabular-nums text-gray-500 dark:text-gray-400">
+                                                                stap {relatedContent.deep_progress.step}/{relatedContent.deep_progress.total}
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+                                                    {!!relatedContent?.deep_progress?.awards_seen && (
+                                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                            {relatedContent.deep_progress.awards_seen} gunning(en) bekeken
+                                                        </p>
+                                                    )}
                                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                        Dit duurt ongeveer een minuut. Je kunt gerust verder werken — het
-                                                        resultaat wordt bewaard en staat er de volgende keer meteen.
+                                                        Je kunt gerust verder werken — het resultaat wordt bewaard en
+                                                        staat er de volgende keer meteen.
                                                     </p>
                                                 </div>
                                             ) : (
