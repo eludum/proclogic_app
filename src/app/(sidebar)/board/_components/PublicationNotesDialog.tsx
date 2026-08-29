@@ -1,6 +1,6 @@
 import { Button } from '@/components/Button';
 import { StickyNote, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 // Types
 interface PublicationItem {
@@ -27,15 +27,23 @@ export default function PublicationNotesDialog({
     publication,
     onSave
 }: PublicationNotesDialogProps) {
-    const [notes, setNotes] = useState('');
+    const [notes, setNotes] = useState(isOpen ? (publication?.notes || '') : '');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Set initial notes when dialog opens
-    useEffect(() => {
-        if (isOpen && publication) {
-            setNotes(publication.notes || '');
+    // Load the publication's notes into the editable field each time the dialog
+    // opens on a publication. Adjusting during render is React's documented
+    // alternative to an effect for this
+    // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes):
+    // the effect version rendered the textarea once holding the *previous*
+    // publication's notes before correcting itself.
+    const openFor = isOpen && publication ? publication.publication_workspace_id : null;
+    const [prevOpenFor, setPrevOpenFor] = useState<string | null>(openFor);
+    if (openFor !== prevOpenFor) {
+        setPrevOpenFor(openFor);
+        if (openFor !== null) {
+            setNotes(publication?.notes || '');
         }
-    }, [isOpen, publication]);
+    }
 
     // Handle save
     const handleSave = async () => {

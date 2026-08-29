@@ -3,9 +3,10 @@ import { siteConfig } from "@/app/siteConfig";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
+import { useLatestRef } from '@/lib/useLatestRef';
 import { ErrorState } from "@/components/ErrorState";
 import { useAuth, useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AddUserForm from "../_components/AddUserForm";
 import UsersList from "../_components/UsersList";
 
@@ -28,18 +29,15 @@ export default function UsersSettingsPage() {
     const [error, setError] = useState<string | null>(null);
     const [addingUser, setAddingUser] = useState(false);
     const { getToken } = useAuth();
+    const getTokenRef = useLatestRef(getToken);
     const { toast } = useToast();
     const { user } = useUser(); // Get current Clerk user
     const currentUserEmail = user?.primaryEmailAddress?.emailAddress || '';
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const token = await getToken();
+            const token = await getTokenRef.current();
 
             // Get company emails (for reference)
             const emailsResponse = await fetch(`${API_BASE_URL}/users/company-emails`, {
@@ -74,7 +72,11 @@ export default function UsersSettingsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getTokenRef]);
+
+    useEffect(() => {
+        void fetchUsers();
+    }, [fetchUsers]);
 
     const addUser = async (email: string) => {
         setAddingUser(true);

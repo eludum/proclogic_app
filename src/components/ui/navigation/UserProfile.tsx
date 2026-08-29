@@ -1,5 +1,6 @@
 "use client"
 
+import { useIsHydrated } from "@/lib/useIsHydrated";
 import { Button } from "@/components/Button";
 import { useSidebar } from "@/components/Sidebar";
 import { SafeUser } from '@/lib/clerkUserUtils';
@@ -7,7 +8,6 @@ import { cx, focusRing } from "@/lib/utils";
 import { SignInButton, SignOutButton, useClerk } from '@clerk/nextjs';
 import { RiLoginBoxLine, RiLogoutBoxLine } from "@remixicon/react";
 import { ChevronsUpDown } from "lucide-react";
-import { useEffect, useState } from "react";
 import { ArrowAnimated } from "../ArrowAnimated";
 import { DropdownUserProfile } from "./DropdownUserProfile";
 
@@ -18,15 +18,11 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user, loading = false }: UserProfileProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsHydrated();
   const { state, isMobile, setOpenMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
   const { signOut } = useClerk();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
   // Helper to close the mobile drawer
   const closeMobileDrawer = () => {
     if (isMobile) {

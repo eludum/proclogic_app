@@ -3,7 +3,7 @@ import { siteConfig } from "@/app/siteConfig";
 import { useToast } from "@/lib/useToast";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { completeOnboardingClerk } from './_actions/ClerkOnboarding';
 
 // Import components
@@ -32,7 +32,6 @@ export default function OnboardingPage() {
     // Company info state
     const [selectedOption, setSelectedOption] = useState<"ai" | "manual" | null>(null)
     const [websiteUrl, setWebsiteUrl] = useState("")
-    const [isUrlValid, setIsUrlValid] = useState<boolean | null>(null)
     const [isScraping, setIsScraping] = useState(false)
     const [expandedCategory, setExpandedCategory] = useState<string | null>("Producten & Grondstoffen")
     const [searchQuery, setSearchQuery] = useState("")
@@ -51,11 +50,13 @@ export default function OnboardingPage() {
         activity_keywords: []
     })
 
-    useEffect(() => {
-        // Reset validation state if field is empty
+    // Purely a function of websiteUrl, so it is derived during render instead of
+    // being mirrored into state by an effect -- which rendered one frame carrying
+    // the previous verdict every time the field changed.
+    const isUrlValid = useMemo<boolean | null>(() => {
+        // No verdict at all while the field is empty
         if (!websiteUrl || websiteUrl.trim() === "") {
-            setIsUrlValid(null)
-            return
+            return null
         }
 
         try {
@@ -68,8 +69,7 @@ export default function OnboardingPage() {
 
             // If input doesn't match the pattern, it's not valid
             if (!urlPattern.test(trimmedUrl)) {
-                setIsUrlValid(false)
-                return
+                return false
             }
 
             // Add protocol if missing
@@ -82,10 +82,10 @@ export default function OnboardingPage() {
             new URL(urlToCheck)
 
             // If we got here, URL is valid
-            setIsUrlValid(true)
-        } catch (e) {
+            return true
+        } catch {
             // Any errors mean invalid URL
-            setIsUrlValid(false)
+            return false
         }
     }, [websiteUrl])
 

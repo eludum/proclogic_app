@@ -1,4 +1,6 @@
 "use client"
+import { usePathname } from "next/navigation";
+import { useIsHydrated } from "@/lib/useIsHydrated";
 import { Divider } from "@/components/Divider"
 import {
   Popover,
@@ -155,14 +157,11 @@ const adminNavigation: NavItem[] = [
 ];
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
-  const [isLoading, setIsLoading] = React.useState(true);
+  // The sidebar renders a skeleton until hydration; that is a render-time fact
+  // React can report directly, rather than state corrected by an effect.
+  const isLoading = !useIsHydrated();
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-
-  React.useEffect(() => {
-    // Set loading to false once component mounts
-    setIsLoading(false);
-  }, []);
 
   // Initialize with all menu sections open
   const [openMenus, setOpenMenus] = React.useState<string[]>([
@@ -172,16 +171,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     adminNavigation[0].name
   ]);
 
-  // Get the current route from window.location if we're in a browser environment
-  const [currentRoute, setCurrentRoute] = React.useState<string>("/");
-
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Extract pathname from either localhost:3000 or app.proclogic.be
-      const pathname = window.location.pathname;
-      setCurrentRoute(pathname);
-    }
-  }, []);
+  // The router already knows the current route. Reading window.location into
+  // state in a mount effect only ever produced the route the sidebar first
+  // rendered under, so the active-item highlight went stale on every
+  // client-side navigation.
+  const currentRoute = usePathname() ?? "/";
 
   const toggleMenu = (name: string) => {
     // Don't toggle menus when collapsed
