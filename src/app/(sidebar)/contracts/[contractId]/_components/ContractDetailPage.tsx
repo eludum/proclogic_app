@@ -8,7 +8,11 @@ import {
     EuroIcon,
     ExternalLinkIcon,
     FileTextIcon,
+    BookmarkIcon,
+    DownloadIcon,
+    FileDownIcon,
     MailIcon,
+    MessageSquareIcon,
     PencilIcon,
     PhoneIcon,
     TrendingDownIcon,
@@ -16,8 +20,9 @@ import {
     UsersIcon
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AwardEntryDialog from "../../_components/AwardEntryDialog";
+import ChatComponent from "../../../publications/_components/ChatComponent";
 
 // Types
 interface ContractOrganization {
@@ -291,6 +296,74 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
     const [error, setError] = useState<string | null>(null);
     const [contractId, setContractId] = useState<string | null>(null);
     const [completing, setCompleting] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    // Awards are publications, so their annexes come from the same BOSA
+    // workspace and download through the same URL as a tender's documents.
+    const [documents, setDocuments] = useState<{ filename: string; created_at?: string }[]>([]);
+    const [docsLoading, setDocsLoading] = useState(false);
+
+    const loadDocuments = useCallback(async () => {
+        if (!contractId) return;
+        setDocsLoading(true);
+        try {
+            const token = await getToken();
+            const res = await fetch(
+                `${siteConfig.api_base_url}/publications/publication/${contractId}/documents`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.ok) {
+                const data = await res.json();
+                setDocuments(data.documents ?? []);
+            }
+        } catch (e) {
+            console.error("Kon documenten niet laden", e);
+        } finally {
+            setDocsLoading(false);
+        }
+    }, [contractId, getToken]);
+
+    useEffect(() => { if (contractId) void loadDocuments(); }, [contractId, loadDocuments]);
+
+    const downloadDocument = async (filename: string) => {
+        try {
+            const token = await getToken();
+            const res = await fetch(
+                `${siteConfig.api_base_url}/publications/publication/${contractId}/document/${encodeURIComponent(filename)}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!res.ok) throw new Error(`Download mislukt (${res.status})`);
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            console.error("Download mislukt", e);
+        }
+    };
+
+    const toggleSaved = async () => {
+        if (!contractId || saving) return;
+        setSaving(true);
+        try {
+            const token = await getToken();
+            const res = await fetch(
+                `${siteConfig.api_base_url}/publications/publication/${contractId}/${isSaved ? "unsave" : "save"}`,
+                { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (res.ok) setIsSaved(!isSaved);
+        } catch (e) {
+            console.error("Opslaan mislukt", e);
+        } finally {
+            setSaving(false);
+        }
+    };
 
     // Resolve the params promise
     useEffect(() => {
@@ -420,15 +493,39 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => setCompleting(true)}
-                    title="Ontbrekende gegevens aanvullen of corrigeren — alleen zichtbaar voor jouw bedrijf"
-                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
-                >
-                    <PencilIcon size={16} />
-                    Gegevens aanvullen
-                </button>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={toggleSaved}
+                        disabled={saving}
+                        title={isSaved ? "Uit opgeslagen verwijderen" : "Deze gunning opslaan"}
+                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${isSaved
+                            ? "border-astral-300 dark:border-astral-800 bg-astral-50 dark:bg-astral-900/30 text-astral-700 dark:text-astral-300"
+                            : "border-gray-200 dark:border-gray-800 bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800"
+                            }`}
+                    >
+                        <BookmarkIcon size={16} className={isSaved ? "fill-current" : undefined} />
+                        {isSaved ? "Opgeslagen" : "Opslaan"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setChatOpen(true)}
+                        title="Vraag Procy over deze gunning"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-astral-200 dark:border-astral-900/50 bg-white dark:bg-slate-900 text-astral-700 dark:text-astral-300 hover:bg-astral-50 dark:hover:bg-astral-900/30 transition-colors"
+                    >
+                        <MessageSquareIcon size={16} />
+                        Vraag het Procy
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCompleting(true)}
+                        title="Ontbrekende gegevens aanvullen of corrigeren — alleen zichtbaar voor jouw bedrijf"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
+                    >
+                        <PencilIcon size={16} />
+                        Gegevens aanvullen
+                    </button>
+                </div>
             </div>
 
             {contractId && (
@@ -446,6 +543,61 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                     onSaved={() => window.location.reload()}
                 />
             )}
+
+            {chatOpen && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                    <div className="w-full max-w-3xl h-[80vh] bg-white dark:bg-slate-900 rounded-lg shadow-xl overflow-hidden">
+                        <ChatComponent publicationId={contractId} onClose={() => setChatOpen(false)} />
+                    </div>
+                </div>
+            )}
+
+            {/* Award documents. Same BOSA workspace as a tender's, reached by the
+                same id and downloaded through the same URL. */}
+            <div className="px-4 sm:px-6 pb-6">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                        <FileDownIcon size={18} />
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                            Documenten{documents.length > 0 ? ` (${documents.length})` : ""}
+                        </h3>
+                    </div>
+                    <div className="p-6">
+                        {docsLoading ? (
+                            <div className="space-y-2">
+                                {[1, 2].map(i => (
+                                    <div key={i} className="animate-pulse bg-gray-200 dark:bg-gray-700 h-10 rounded-md" />
+                                ))}
+                            </div>
+                        ) : documents.length === 0 ? (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Er zijn geen documenten bij deze gunning gepubliceerd.
+                            </p>
+                        ) : (
+                            <ul className="space-y-2">
+                                {documents.map(doc => (
+                                    <li
+                                        key={doc.filename}
+                                        className="flex items-center justify-between gap-3 rounded-md border border-slate-200 dark:border-slate-800 px-3 py-2"
+                                    >
+                                        <span className="min-w-0 truncate text-sm text-gray-800 dark:text-gray-200" title={doc.filename}>
+                                            {doc.filename}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => void downloadDocument(doc.filename)}
+                                            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-astral-50 text-astral-700 dark:bg-astral-900/30 dark:text-astral-300 hover:bg-astral-100 dark:hover:bg-astral-900/50 transition-colors"
+                                        >
+                                            <DownloadIcon size={13} />
+                                            Downloaden
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             {/* Content */}
             <div className="p-6 space-y-6">

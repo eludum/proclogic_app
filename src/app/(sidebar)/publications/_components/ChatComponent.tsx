@@ -19,7 +19,8 @@ interface Message {
 }
 
 interface ChatComponentProps {
-    publicationId: string;
+    /** Null for a general conversation about the market rather than one tender. */
+    publicationId?: string | null;
     onClose: () => void;
     isFullscreen?: boolean;
     toggleFullscreen?: () => void;
@@ -77,7 +78,7 @@ const TOOL_LABELS: Record<string, string> = {
     run_sql_readonly: "Procy bevraagt de database...",
 };
 
-export default function ChatComponent({ publicationId, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
+export default function ChatComponent({ publicationId = null, onClose, isFullscreen = false, toggleFullscreen }: ChatComponentProps) {
     const { getToken } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [currentMessage, setCurrentMessage] = useState("");
@@ -368,6 +369,13 @@ export default function ChatComponent({ publicationId, onClose, isFullscreen = f
                 if (!token) {
                     console.error("Failed to get authentication token");
                     setConnectionError("Authentication failed. Please log in again.");
+                    return;
+                }
+
+                // A general conversation has no tender to load documents from,
+                // and no per-publication conversation to resume.
+                if (!publicationId) {
+                    setLoading(false);
                     return;
                 }
 

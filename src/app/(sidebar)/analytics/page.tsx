@@ -10,6 +10,7 @@ import {
     ChevronRight,
     Euro,
     ExternalLink,
+    MessageSquare,
     Pencil,
     Plus,
     Search,
@@ -20,6 +21,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from 'react';
 import { Pagination } from "../publications/_components/Pagination";
 import AwardEntryDialog from "../contracts/_components/AwardEntryDialog";
+import ChatComponent from "../publications/_components/ChatComponent";
 
 // Types
 interface ContractItem {
@@ -200,9 +202,10 @@ interface ContractRowProps {
     isExpanded: boolean;
     onToggle: () => void;
     onComplete: () => void;
+    onAsk: () => void;
 }
 
-const ContractRow = ({ contract, isExpanded, onToggle, onComplete }: ContractRowProps) => (
+const ContractRow = ({ contract, isExpanded, onToggle, onComplete, onAsk }: ContractRowProps) => (
     <>
         <tr className="hover:bg-gray-50 dark:hover:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
             <td className="px-4 py-3">
@@ -244,6 +247,15 @@ const ContractRow = ({ contract, isExpanded, onToggle, onComplete }: ContractRow
                         <ExternalLink size={12} />
                         Details
                     </a>
+                    <button
+                        type="button"
+                        onClick={onAsk}
+                        title="Vraag Procy over deze gunning"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <MessageSquare size={12} />
+                        Procy
+                    </button>
                     <button
                         type="button"
                         onClick={onComplete}
@@ -325,6 +337,10 @@ export default function AnalyticsDashboard() {
     // Completing an existing BOSA award, or adding one of the company's own.
     const [editing, setEditing] = useState<ContractItem | null>(null);
     const [addingNew, setAddingNew] = useState(false);
+    // Procy, with no tender in focus: the useful questions on this page are
+    // about the market, not about one award.
+    const [chatAward, setChatAward] = useState<ContractItem | null>(null);
+    const [generalChat, setGeneralChat] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
     // Filter state
@@ -460,14 +476,25 @@ export default function AnalyticsDashboard() {
                     <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Gunning analyse</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Ontdek inzichten in toegekende gunningen en markttrends.</p>
                 </div>
-                <button
-                    type="button"
-                    onClick={() => setAddingNew(true)}
-                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
-                >
-                    <Plus size={16} />
-                    Gunning toevoegen
-                </button>
+                <div className="flex shrink-0 items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setGeneralChat(true)}
+                        title="Stel Procy een vraag over de gunningen — hij doorzoekt de databank"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-astral-200 dark:border-astral-900/50 bg-white dark:bg-slate-900 text-astral-700 dark:text-astral-300 hover:bg-astral-50 dark:hover:bg-astral-900/30 transition-colors"
+                    >
+                        <MessageSquare size={16} />
+                        Vraag het Procy
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setAddingNew(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
+                    >
+                        <Plus size={16} />
+                        Gunning toevoegen
+                    </button>
+                </div>
             </div>
 
             <div className="px-4 sm:px-6 pb-6 space-y-6">
@@ -600,6 +627,7 @@ export default function AnalyticsDashboard() {
                                                 isExpanded={expandedRows.has(contract.publication_id)}
                                                 onToggle={() => toggleRowExpansion(contract.publication_id)}
                                                 onComplete={() => setEditing(contract)}
+                                                onAsk={() => setChatAward(contract)}
                                             />
                                         ))}
                                     </tbody>
@@ -633,6 +661,17 @@ export default function AnalyticsDashboard() {
                 } : undefined}
                 onSaved={fetchData}
             />
+
+            {(generalChat || chatAward) && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                    <div className="w-full max-w-3xl h-[80vh] bg-white dark:bg-slate-900 rounded-lg shadow-xl overflow-hidden">
+                        <ChatComponent
+                            publicationId={chatAward?.publication_id ?? null}
+                            onClose={() => { setGeneralChat(false); setChatAward(null); }}
+                        />
+                    </div>
+                </div>
+            )}
 
             <AwardEntryDialog
                 isOpen={addingNew}
