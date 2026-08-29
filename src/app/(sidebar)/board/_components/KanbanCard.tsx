@@ -113,6 +113,7 @@ export default function KanbanCard({ publication, columnId, onOpenNotes }: Kanba
                     <a
                         href={`/publications/detail/${publication.publication_workspace_id}`}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="text-sm font-medium text-gray-800 dark:text-white hover:text-astral-600 dark:hover:text-astral-400 line-clamp-2 flex-1"
                     >
                         {publication.title}
@@ -120,6 +121,7 @@ export default function KanbanCard({ publication, columnId, onOpenNotes }: Kanba
                     <a
                         href={`/publications/detail/${publication.publication_workspace_id}`}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="text-gray-500 dark:text-gray-400 hover:text-astral-600 dark:hover:text-astral-400 p-1 flex-shrink-0"
                     >
                         <ExternalLink size={14} />

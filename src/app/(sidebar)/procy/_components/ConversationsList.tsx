@@ -124,6 +124,7 @@ export default function ConversationsList() {
                                         <a
                                             href={`/publications/detail/${conversation.publication_workspace_id}`}
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             className="text-base sm:text-lg font-semibold leading-tight break-words flex-1 min-w-0 hover:underline focus:outline-hidden line-clamp-1"
                                             title={conversation.publication_title}
                                         >
@@ -140,6 +141,7 @@ export default function ConversationsList() {
                                         <a
                                             href={`/publications/detail/${conversation.publication_workspace_id}`}
                                             target="_blank"
+                                            rel="noopener noreferrer"
                                             className="hover:underline focus:outline-hidden"
                                             title={conversation.publication_workspace_id}
                                         >

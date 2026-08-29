@@ -377,7 +377,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         <span className="hidden sm:inline">Procy</span>
                                     </Button>
 
-                                    <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank">
+                                    <Link href={`https://publicprocurement.be/publication-workspaces/${publication.workspace_id}/general`} target="_blank" rel="noopener noreferrer">
                                         <Button
                                             className="flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
                                         >
@@ -755,6 +755,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                             <Link
                                                                 href={link}
                                                                 target="_blank"
+                                                                rel="noopener noreferrer"
                                                                 className="flex items-center gap-2 text-astral-600 dark:text-astral-400 hover:underline"
                                                             >
                                                                 <RiExternalLinkLine className="size-4" />
@@ -776,8 +777,12 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                             </div>
                         </div>
 
-                        {/* Related Content Section - Only Contracts */}
-                        {relatedContent && relatedContent.total_contracts > 0 && (
+                        {/* Related Content Section - Only Contracts.
+                            Rendered while loading too: the search runs against the
+                            award database and takes a moment on a cold cache, and
+                            the skeleton below was previously unreachable because
+                            relatedContent is still null at that point. */}
+                        {(loadingRelated || relatedContent) && (
                             <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
                                 <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -785,7 +790,9 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         Vergelijkbare gunningen
                                     </h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        Ontdek vergelijkbare toegekende gunningen
+                                        {loadingRelated
+                                            ? "Procy doorzoekt de gunningendatabank naar opdrachten die op deze aanbesteding lijken..."
+                                            : "Procy doorzocht de gunningendatabank en selecteerde de opdrachten die het meest op deze aanbesteding lijken. Elk resultaat is een echte gunning \u2014 klik op Bekijk voor de details."}
                                     </p>
                                 </div>
 
@@ -799,10 +806,14 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            {relatedContent.related_contracts.length === 0 ? (
+                                            {!relatedContent || relatedContent.related_contracts.length === 0 ? (
                                                 <div className="text-center p-6 text-gray-500 dark:text-gray-400">
                                                     <UsersIcon className="mx-auto h-8 w-8 mb-2" />
-                                                    <p>Geen vergelijkbare gunningen gevonden</p>
+                                                    <p className="font-medium text-gray-700 dark:text-gray-300">Geen vergelijkbare gunningen gevonden</p>
+                                                    <p className="text-sm mt-1 max-w-md mx-auto">
+                                                        Er staan nog geen voldoende gelijkaardige gegunde opdrachten in de databank.
+                                                        Vraag het gerust aan Procy \u2014 die kan ook op sector, regio of opdrachtgever zoeken.
+                                                    </p>
                                                 </div>
                                             ) : (
                                                 relatedContent.related_contracts.map((contract) => (
@@ -811,7 +822,10 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 flex-1 mr-4">
                                                                 {contract.title}
                                                             </h4>
-                                                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${getSimilarityColor(contract.similarity_score)}`}>
+                                                            <div
+                                                                className={`px-2 py-1 rounded-full text-xs font-medium shrink-0 ${getSimilarityColor(contract.similarity_score)}`}
+                                                                title="Hoe sterk deze gunning op de aanbesteding lijkt: 90%+ is vrijwel dezelfde opdracht, 60-80% duidelijk verwant werk."
+                                                            >
                                                                 {contract.similarity_score.toFixed(0)}% match
                                                             </div>
                                                         </div>
@@ -842,13 +856,13 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
 
                                                         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                                             <div className="flex justify-between items-center">
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                    <span className="font-medium">Gelijkenis:</span> {contract.similarity_reason}
+                                                                <p className="text-xs text-gray-500 dark:text-gray-400 pr-3">
+                                                                    <span className="font-medium">Waarom vergelijkbaar:</span> {contract.similarity_reason}
                                                                 </p>
                                                                 <Button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
-                                                                        window.open(`/contracts/${contract.publication_id}`, '_blank');
+                                                                        window.open(`/contracts/${contract.publication_id}`, '_blank', 'noopener,noreferrer');
                                                                     }}
                                                                     className="text-xs bg-astral-100 hover:bg-astral-200 dark:bg-astral-900/30 dark:hover:bg-astral-800/50 text-astral-600 dark:text-astral-400 px-3 py-1 rounded-md flex items-center gap-1"
                                                                 >
