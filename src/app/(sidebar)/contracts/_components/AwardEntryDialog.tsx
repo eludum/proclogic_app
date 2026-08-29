@@ -5,7 +5,7 @@ import { Button } from "@/components/Button";
 import { useLatestRef } from "@/lib/useLatestRef";
 import { useToast } from "@/lib/useToast";
 import { useAuth } from "@clerk/nextjs";
-import { AlertTriangle, FileUp, Loader2, Sparkles, Trash2, X } from "lucide-react";
+import { AlertTriangle, Download, FileUp, Loader2, Paperclip, Sparkles, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 const API = siteConfig.api_base_url;
@@ -47,6 +47,13 @@ export interface BosaValues {
     value?: number | null;
 }
 
+interface AwardUpload {
+    id: number;
+    filename: string;
+    size_bytes: number;
+    created_at: string;
+}
+
 interface Props {
     isOpen: boolean;
     onClose: () => void;
@@ -81,6 +88,86 @@ export default function AwardEntryDialog({
     const [aiFilled, setAiFilled] = useState<Set<keyof AwardFields>>(new Set());
     const [warnings, setWarnings] = useState<string[]>([]);
     const [documentName, setDocumentName] = useState<string | null>(null);
+    // Files kept with the award. Distinct from the PDF above, which is read for
+    // its values and then discarded -- these are stored.
+    const [uploads, setUploads] = useState<AwardUpload[]>([]);
+    const [uploading, setUploading] = useState(false);
+
+    const loadUploads = useCallback(async () => {
+        if (!publicationId) return;
+        try {
+            const token = await getTokenRef.current();
+            const res = await fetch(`${API}/contracts/${publicationId}/uploads`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) setUploads((await res.json()).documents ?? []);
+        } catch (e) {
+            console.error("Kon bewaarde documenten niet laden", e);
+        }
+    }, [publicationId, getTokenRef]);
+
+    const handleKeepFile = async (file: File) => {
+        if (!publicationId) return;
+        setUploading(true);
+        try {
+            const token = await getTokenRef.current();
+            const body = new FormData();
+            body.append("file", file);
+            const res = await fetch(`${API}/contracts/${publicationId}/uploads`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body,
+            });
+            if (!res.ok) {
+                const detail = await res.json().catch(() => null);
+                throw new Error(detail?.detail || `Uploaden mislukt (${res.status})`);
+            }
+            await loadUploads();
+            toast({ title: "Document bewaard", description: file.name, variant: "success" });
+        } catch (e) {
+            toast({
+                title: "Uploaden mislukt",
+                description: e instanceof Error ? e.message : "Onbekende fout",
+                variant: "error",
+            });
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const downloadUpload = async (doc: AwardUpload) => {
+        try {
+            const token = await getTokenRef.current();
+            const res = await fetch(`${API}/contracts/uploads/${doc.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error(`Download mislukt (${res.status})`);
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = doc.filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            toast({ title: "Download mislukt", description: String(e), variant: "error" });
+        }
+    };
+
+    const deleteUpload = async (doc: AwardUpload) => {
+        try {
+            const token = await getTokenRef.current();
+            const res = await fetch(`${API}/contracts/uploads/${doc.id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (res.ok) await loadUploads();
+        } catch (e) {
+            console.error("Verwijderen mislukt", e);
+        }
+    };
 
     const set = (key: keyof AwardFields, value: string) => {
         setFields(prev => ({ ...prev, [key]: value }));
@@ -130,8 +217,10 @@ export default function AwardEntryDialog({
         setWarnings([]);
         setHasEntry(false);
         setDocumentName(null);
+        setUploads([]);
         void loadExisting();
-    }, [isOpen, loadExisting]);
+        void loadUploads();
+    }, [isOpen, loadExisting, loadUploads]);
 
     const handleUpload = async (file: File) => {
         setExtracting(true);
@@ -411,6 +500,78 @@ export default function AwardEntryDialog({
                         />
                     </div>
                 </div>
+
+                {publicationId && (
+                    <div className="mt-5 rounded-md border border-gray-200 dark:border-gray-800 p-4">
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Paperclip size={15} />
+                                    Documenten bij deze gunning
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Bewaard bij de gunning en alleen zichtbaar voor jouw bedrijf. Anders
+                                    dan de PDF hierboven, die alleen uitgelezen wordt.
+                                </p>
+                            </div>
+                            <label className="shrink-0">
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    disabled={busy || uploading}
+                                    onChange={(e) => {
+                                        const f = e.target.files?.[0];
+                                        e.target.value = "";
+                                        if (f) void handleKeepFile(f);
+                                    }}
+                                />
+                                <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium cursor-pointer ${busy || uploading
+                                    ? "bg-gray-100 text-gray-400 dark:bg-gray-800 cursor-not-allowed"
+                                    : "border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    }`}>
+                                    {uploading ? <Loader2 size={15} className="animate-spin" /> : <Paperclip size={15} />}
+                                    {uploading ? "Bezig..." : "Document toevoegen"}
+                                </span>
+                            </label>
+                        </div>
+
+                        {uploads.length > 0 && (
+                            <ul className="mt-3 space-y-2">
+                                {uploads.map(doc => (
+                                    <li
+                                        key={doc.id}
+                                        className="flex items-center justify-between gap-3 rounded-md border border-gray-200 dark:border-gray-800 px-3 py-2"
+                                    >
+                                        <span className="min-w-0 truncate text-sm text-gray-800 dark:text-gray-200" title={doc.filename}>
+                                            {doc.filename}
+                                            <span className="ml-2 text-xs text-gray-400">
+                                                {(doc.size_bytes / 1024).toFixed(0)} kB
+                                            </span>
+                                        </span>
+                                        <span className="flex shrink-0 items-center gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => void downloadUpload(doc)}
+                                                title="Downloaden"
+                                                className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                            >
+                                                <Download size={15} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => void deleteUpload(doc)}
+                                                title="Verwijderen"
+                                                className="p-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                )}
 
                 <div className="flex justify-between items-center gap-2 mt-6">
                     <div>
