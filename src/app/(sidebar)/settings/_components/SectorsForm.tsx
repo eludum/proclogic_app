@@ -1,6 +1,6 @@
 import { Button } from '@/components/Button';
 import { InfoIcon, PlusCircleIcon, SaveIcon, TagIcon, TrashIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Company } from '../company-profile/page';
 
 interface SectorsFormProps {
@@ -60,24 +60,34 @@ interface SectorInput {
 }
 
 export default function SectorsForm({ company, onSave, saving }: SectorsFormProps) {
-    // Convert company sectors to a format for form inputs with unique IDs
-    const initializeSectors = () => {
+    // Convert company sectors to a format for form inputs with unique IDs.
+    //
+    // The ids are local handles -- React keys, and the argument to the update and
+    // remove helpers. They never leave this component, so they only have to be
+    // unique and stable, and an index serves that. The previous
+    // Date.now()/Math.random() version was impure during render, and Date.now()
+    // alone also collided outright whenever two rows were created inside the
+    // same millisecond.
+    const initializeSectors = (): SectorInput[] => {
         if (!company.interested_sectors || company.interested_sectors.length === 0) {
             return [{
                 sector: availableSectors[0].value,
                 cpvCodes: '',
-                id: Date.now().toString()
+                id: 'sector-0'
             }];
         }
 
-        return company.interested_sectors.map(s => ({
+        return company.interested_sectors.map((s, index) => ({
             sector: s.sector,
             cpvCodes: s.cpv_codes.join(', '),
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
+            id: `sector-${index}`
         }));
     };
 
-    const [sectorInputs, setSectorInputs] = useState<SectorInput[]>(initializeSectors());
+    const [sectorInputs, setSectorInputs] = useState<SectorInput[]>(initializeSectors);
+    // Ids for rows added after mount, seeded past the initial rows so it cannot
+    // collide with them. Only ever incremented from an event handler.
+    const nextSectorId = useRef(sectorInputs.length);
     const [selectedSector, setSelectedSector] = useState(availableSectors[0].value);
 
     const addSectorInput = () => {
@@ -88,7 +98,7 @@ export default function SectorsForm({ company, onSave, saving }: SectorsFormProp
             {
                 sector: sectorLabel,
                 cpvCodes: selectedSector,  // Preset with the main CPV code
-                id: Date.now().toString()
+                id: `sector-${nextSectorId.current++}`
             }
         ]);
     };

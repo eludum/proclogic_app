@@ -4,9 +4,10 @@ import { Button } from "@/components/Button";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
+import { useLatestRef } from '@/lib/useLatestRef';
 import { ErrorState } from "@/components/ErrorState";
 import { useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AccreditationsForm from "../_components/AccreditationsForm";
 import CompanyProfileForm from "../_components/CompanyProfileForm";
 import RegionsForm from "../_components/RegionsForm";
@@ -37,16 +38,13 @@ export default function CompanySettingsPage() {
     const [saving, setSaving] = useState(false);
     const [activeSection, setActiveSection] = useState('profile');
     const { getToken } = useAuth();
+    const getTokenRef = useLatestRef(getToken);
     const { toast } = useToast();
 
-    useEffect(() => {
-        fetchCompanyData();
-    }, []);
-
-    const fetchCompanyData = async () => {
+    const fetchCompanyData = useCallback(async () => {
         setLoading(true);
         try {
-            const token = await getToken();
+            const token = await getTokenRef.current();
             const response = await fetch(`${API_BASE_URL}/company/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -65,7 +63,11 @@ export default function CompanySettingsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getTokenRef]);
+
+    useEffect(() => {
+        void fetchCompanyData();
+    }, [fetchCompanyData]);
 
     const updateCompany = async (updatedData: Partial<Company>) => {
         if (!company) return;

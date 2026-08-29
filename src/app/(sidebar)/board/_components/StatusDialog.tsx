@@ -1,6 +1,8 @@
 import { Button } from '@/components/Button';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+
+const DEFAULT_COLOR = '#3883a4';
 
 interface StatusDialogProps {
     isOpen: boolean;
@@ -25,24 +27,27 @@ export default function StatusDialog({
     onUpdateStatus,
     onDeleteStatus
 }: StatusDialogProps) {
-    const [name, setName] = useState('');
-    const [color, setColor] = useState('#3883a4'); // Default color
+    const [name, setName] = useState(isOpen && status ? status.name : '');
+    const [color, setColor] = useState(isOpen && status ? status.color : DEFAULT_COLOR);
     const [isLoading, setIsLoading] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    // Reset form when dialog opens or status changes
-    useEffect(() => {
-        if (isOpen) {
-            if (status) {
-                setName(status.name);
-                setColor(status.color);
-            } else {
-                setName('');
-                setColor('#3883a4');
-            }
+    // Reset the form each time the dialog opens, and whenever it switches
+    // between statuses while open. Adjusting during render is React's documented
+    // alternative to an effect here
+    // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes):
+    // the effect version painted the previous status's name and colour for one
+    // frame before overwriting them.
+    const openFor = isOpen ? String(status?.id ?? 'new') : null;
+    const [prevOpenFor, setPrevOpenFor] = useState<string | null>(openFor);
+    if (openFor !== prevOpenFor) {
+        setPrevOpenFor(openFor);
+        if (openFor !== null) {
+            setName(status?.name ?? '');
+            setColor(status?.color ?? DEFAULT_COLOR);
             setShowDeleteConfirm(false);
         }
-    }, [isOpen, status]);
+    }
 
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent) => {

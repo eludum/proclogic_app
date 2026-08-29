@@ -1,5 +1,6 @@
 "use client"
 
+import { useIsHydrated } from "@/lib/useIsHydrated";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,11 +24,7 @@ export function DropdownUserProfile({
   align = "start",
   user
 }: DropdownUserProfileProps) {
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsHydrated();
 
   // If not mounted yet, render a div with the children to maintain layout
   if (!mounted) {

@@ -5,6 +5,7 @@ import { ErrorState } from "@/components/ErrorState";
 import { Toaster } from '@/components/Toaster';
 import { Loader } from "@/components/ui/PageLoad";
 import { useToast } from '@/lib/useToast';
+import { useLatestRef } from '@/lib/useLatestRef';
 import { useAuth } from "@clerk/nextjs";
 import {
     BellIcon,
@@ -21,7 +22,7 @@ import {
     UserIcon
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pagination } from "../../publications/_components/Pagination";
 
 /** Only site-relative paths and http(s) URLs may be opened. */
@@ -100,6 +101,8 @@ export default function InboxList({
     const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
     // Ref to track if filter has been changed
     const hasFilterChanged = useRef(false);
+    // Whether the server rendered the first page of notifications; see the effect below.
+    const hadServerNotifications = useRef((initialNotifications || []).length > 0);
 
     // Initialize counts state with server-provided data
     const [counts, setCounts] = useState<NotificationCounts>({
@@ -132,21 +135,14 @@ export default function InboxList({
     });
 
     const { getToken } = useAuth();
+    const getTokenRef = useLatestRef(getToken);
     const { toast } = useToast();
     const router = useRouter();
 
-    // Load notification counts on component mount - but only if not provided in props
-    useEffect(() => {
-        // Only fetch counts if we don't already have them from server-side props
-        if (counts.total === 0 && totalNotifications === 0) {
-            fetchNotificationCounts();
-        }
-    }, []);
-
     // Fetch notification counts 
-    const fetchNotificationCounts = async () => {
+    const fetchNotificationCounts = useCallback(async () => {
         try {
-            const token = await getToken();
+            const token = await getTokenRef.current();
             const response = await fetch(`${API_BASE_URL}/notifications/counts`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -162,18 +158,29 @@ export default function InboxList({
         } catch (error) {
             console.error('Error fetching notification counts:', error);
         }
-    };
+    }, [getTokenRef]);
+
+    // Load notification counts on component mount - but only if not provided in props.
+    // The dependencies are real rather than an empty array: the fetcher is stable,
+    // and the two counts are only read to decide whether server-side props already
+    // supplied them -- if the fetch comes back with zero they stay zero, so this
+    // cannot retrigger itself.
+    useEffect(() => {
+        if (counts.total === 0 && totalNotifications === 0) {
+            void fetchNotificationCounts();
+        }
+    }, [counts.total, totalNotifications, fetchNotificationCounts]);
 
     // Convert page number to offset for API calls
-    const pageToOffset = (page: number) => {
+    const pageToOffset = useCallback((page: number) => {
         return (page - 1) * pagination.pageSize;
-    };
+    }, [pagination.pageSize]);
 
     // Load notifications based on current filter and page
-    const loadNotifications = async (page = 1, filterType = filter) => {
+    const loadNotifications = useCallback(async (page = 1, filterType = filter) => {
         setIsLoading(true);
         try {
-            const token = await getToken();
+            const token = await getTokenRef.current();
             let endpoint = `${API_BASE_URL}/notifications/`;
             const params = new URLSearchParams();
 
@@ -219,18 +226,22 @@ export default function InboxList({
             setIsLoading(false);
             setIsPaginationLoading(false);
         }
-    };
+    }, [filter, pagination.pageSize, pageToOffset, getTokenRef]);
 
-    // Load notifications when filter changes, but avoid duplicate initial load
+    // Load notifications when filter changes, but avoid duplicate initial load.
+    // Whether the server supplied the first page is a mount-time fact, so it is
+    // captured in a ref initialiser rather than read from state -- reading
+    // notifications here would make it a dependency, and every load would then
+    // retrigger this effect.
     useEffect(() => {
         // Skip the initial load as we already have data from server
-        if (filter === 'all' && notifications.length > 0 && !hasFilterChanged.current) {
+        if (filter === 'all' && hadServerNotifications.current && !hasFilterChanged.current) {
             hasFilterChanged.current = true;
             return;
         }
 
-        loadNotifications(1, filter);
-    }, [filter]);
+        void loadNotifications(1, filter);
+    }, [filter, loadNotifications]);
 
     // Handle page change
     const handlePageChange = (newPage: number) => {

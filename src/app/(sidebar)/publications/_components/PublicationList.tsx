@@ -228,7 +228,7 @@ export default function PublicationList({
                 currentRequestController.current = null;
             }
         }
-    }, [filters, pagination.size, getToken, toast]);
+    }, [filters, pagination.size, getToken]);
 
     // Handle filter changes with debounce
     const handleFiltersChange = useCallback((newFilters: FilterState) => {

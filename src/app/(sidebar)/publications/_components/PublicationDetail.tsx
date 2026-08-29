@@ -26,7 +26,8 @@ import {
 } from 'lucide-react';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLatestRef } from "@/lib/useLatestRef";
 import ChatComponent from "./ChatComponent";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -101,33 +102,35 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
     const [relatedContent, setRelatedContent] = useState<RelatedContentResponse | null>(null);
     const [loadingRelated, setLoadingRelated] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
+    // Narrowed to the one field the fetch below depends on: memoising on
+    // `publication` itself would rebuild the callback on every unrelated change
+    // to the object, and the React Compiler rejects a dependency list narrower
+    // than the values the body actually reads.
+    const workspaceId = publication?.workspace_id;
+    // The saved flag belongs to the publication. handleSaveToggle still needs the
+    // button to flip straight away rather than waiting for a new prop, so local
+    // state holds an override keyed by the publication it applies to: show a
+    // different publication and the key stops matching, so the prop takes over
+    // again with no effect needed to resynchronise it. Previously this was
+    // mirrored into state by an effect, which rendered the stale value once
+    // first and briefly showed the wrong icon.
+    const [savedOverride, setSavedOverride] = useState<{ workspaceId?: string; value: boolean } | null>(null);
+    const isSaved = savedOverride !== null && savedOverride.workspaceId === workspaceId
+        ? savedOverride.value
+        : (publication?.is_saved ?? false);
     const [isSaving, setIsSaving] = useState(false);
     const { getToken } = useAuth();
+    const getTokenRef = useLatestRef(getToken);
 
-    // Initialize save status from publication prop
-    useEffect(() => {
-        if (publication?.is_saved !== undefined) {
-            setIsSaved(publication.is_saved);
-        }
-    }, [publication?.is_saved]);
-
-    // Fetch related content when publication changes
-    useEffect(() => {
-        if (publication?.workspace_id) {
-            fetchRelatedContent();
-        }
-    }, [publication?.workspace_id]);
-
-    const fetchRelatedContent = async () => {
-        if (!publication?.workspace_id) return;
+    const fetchRelatedContent = useCallback(async () => {
+        if (!workspaceId) return;
 
         try {
             setLoadingRelated(true);
-            const token = await getToken();
+            const token = await getTokenRef.current();
 
             const response = await fetch(
-                `${API_BASE_URL}/publications/publication/${publication.workspace_id}/related?contracts_limit=10`,
+                `${API_BASE_URL}/publications/publication/${workspaceId}/related?contracts_limit=10`,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -145,7 +148,14 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
         } finally {
             setLoadingRelated(false);
         }
-    };
+    }, [workspaceId, getTokenRef]);
+
+    // Fetch related content when publication changes
+    useEffect(() => {
+        if (workspaceId) {
+            void fetchRelatedContent();
+        }
+    }, [workspaceId, fetchRelatedContent]);
 
     const handleSaveToggle = async () => {
         if (!publication?.workspace_id || isSaving) return;
@@ -167,7 +177,7 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
             );
 
             if (response.ok) {
-                setIsSaved(!isSaved);
+                setSavedOverride({ workspaceId, value: !isSaved });
             } else {
                 console.error('Failed to toggle save status');
             }
