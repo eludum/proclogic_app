@@ -88,10 +88,10 @@ interface RelatedContractItem {
 /** What the agent is roughly doing, so a 90-second wait is not a blank bar.
  *  Timings come from measuring the run against production. */
 function deepSearchStage(elapsedSeconds: number): string {
-    if (elapsedSeconds < 10) return "Zoektermen opstellen op basis van deze aanbesteding...";
-    if (elapsedSeconds < 35) return "De gunningendatabank doorzoeken...";
-    if (elapsedSeconds < 65) return "Gevonden gunningen lezen en vergelijken...";
-    if (elapsedSeconds < 95) return "Resultaten rangschikken en onderbouwen...";
+    if (elapsedSeconds < 8) return "Zoektermen opstellen op basis van deze aanbesteding...";
+    if (elapsedSeconds < 25) return "De gunningendatabank doorzoeken...";
+    if (elapsedSeconds < 50) return "Gevonden gunningen lezen en vergelijken...";
+    if (elapsedSeconds < 80) return "Resultaten rangschikken en onderbouwen...";
     return "Nog even bezig — de resultaten worden bewaard, ook als je wegklikt.";
 }
 
@@ -888,14 +888,14 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                     <div className="h-1.5 w-full rounded-full bg-astral-100 dark:bg-astral-900/50 overflow-hidden">
                                                         <div
                                                             className="h-full rounded-full bg-astral-600 transition-all duration-1000 ease-linear"
-                                                            style={{ width: `${Math.min(95, (deepElapsed / 90) * 100)}%` }}
+                                                            style={{ width: `${Math.min(95, (deepElapsed / 60) * 100)}%` }}
                                                         />
                                                     </div>
                                                     <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
                                                         {deepSearchStage(deepElapsed)}
                                                     </p>
                                                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                        Dit duurt ongeveer anderhalve minuut. Je kunt gerust verder werken — het
+                                                        Dit duurt ongeveer een minuut. Je kunt gerust verder werken — het
                                                         resultaat wordt bewaard en staat er de volgende keer meteen.
                                                     </p>
                                                 </div>
@@ -907,8 +907,8 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                                         </p>
                                                         <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
                                                             Hij zoekt met eigen zoektermen in de gunningendatabank, leest wat hij
-                                                            vindt en schrijft per resultaat op waarom het lijkt. Duurt ongeveer
-                                                            anderhalve minuut; daarna staat het er meteen.
+                                                            vindt en schrijft per resultaat op waarom het lijkt. Duurt ongeveer een
+                                                            minuut; daarna staat het er meteen.
                                                         </p>
                                                     </div>
                                                     <button
