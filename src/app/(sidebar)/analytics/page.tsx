@@ -10,6 +10,8 @@ import {
     ChevronRight,
     Euro,
     ExternalLink,
+    Pencil,
+    Plus,
     Search,
     TrendingUp,
     X
@@ -17,6 +19,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from 'react';
 import { Pagination } from "../publications/_components/Pagination";
+import AwardEntryDialog from "../contracts/_components/AwardEntryDialog";
 
 // Types
 interface ContractItem {
@@ -196,9 +199,10 @@ interface ContractRowProps {
     contract: ContractItem;
     isExpanded: boolean;
     onToggle: () => void;
+    onComplete: () => void;
 }
 
-const ContractRow = ({ contract, isExpanded, onToggle }: ContractRowProps) => (
+const ContractRow = ({ contract, isExpanded, onToggle, onComplete }: ContractRowProps) => (
     <>
         <tr className="hover:bg-gray-50 dark:hover:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
             <td className="px-4 py-3">
@@ -230,15 +234,26 @@ const ContractRow = ({ contract, isExpanded, onToggle }: ContractRowProps) => (
                 {truncateText(contract.sector, 25)}
             </td>
             <td className="px-4 py-3">
-                <a
-                    href={`/contracts/${contract.publication_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-astral-50 text-astral-700 dark:bg-astral-900/30 dark:text-astral-300 rounded-md hover:bg-astral-100 dark:hover:bg-astral-900/50 transition-colors"
-                >
-                    <ExternalLink size={12} />
-                    Details
-                </a>
+                <div className="flex items-center gap-2">
+                    <a
+                        href={`/contracts/${contract.publication_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-astral-50 text-astral-700 dark:bg-astral-900/30 dark:text-astral-300 rounded-md hover:bg-astral-100 dark:hover:bg-astral-900/50 transition-colors"
+                    >
+                        <ExternalLink size={12} />
+                        Details
+                    </a>
+                    <button
+                        type="button"
+                        onClick={onComplete}
+                        title="Ontbrekende gegevens aanvullen of corrigeren"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <Pencil size={12} />
+                        Aanvullen
+                    </button>
+                </div>
             </td>
         </tr>
         {isExpanded && (
@@ -307,6 +322,9 @@ export default function AnalyticsDashboard() {
     // UI State
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [showFilters, setShowFilters] = useState(false);
+    // Completing an existing BOSA award, or adding one of the company's own.
+    const [editing, setEditing] = useState<ContractItem | null>(null);
+    const [addingNew, setAddingNew] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
 
     // Filter state
@@ -442,6 +460,14 @@ export default function AnalyticsDashboard() {
                     <h1 className="text-xl font-bold text-gray-900 mb-2 dark:text-white">Gunning analyse</h1>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Ontdek inzichten in toegekende gunningen en markttrends.</p>
                 </div>
+                <button
+                    type="button"
+                    onClick={() => setAddingNew(true)}
+                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
+                >
+                    <Plus size={16} />
+                    Gunning toevoegen
+                </button>
             </div>
 
             <div className="px-4 sm:px-6 pb-6 space-y-6">
@@ -573,6 +599,7 @@ export default function AnalyticsDashboard() {
                                                 contract={contract}
                                                 isExpanded={expandedRows.has(contract.publication_id)}
                                                 onToggle={() => toggleRowExpansion(contract.publication_id)}
+                                                onComplete={() => setEditing(contract)}
                                             />
                                         ))}
                                     </tbody>
@@ -593,6 +620,26 @@ export default function AnalyticsDashboard() {
                     />
                 )}
             </div>
+            <AwardEntryDialog
+                isOpen={editing !== null}
+                onClose={() => setEditing(null)}
+                publicationId={editing?.publication_id ?? null}
+                bosa={editing ? {
+                    title: editing.title,
+                    award_date: editing.award_date,
+                    winner: editing.winner,
+                    buyer: editing.buyer,
+                    value: editing.value,
+                } : undefined}
+                onSaved={fetchData}
+            />
+
+            <AwardEntryDialog
+                isOpen={addingNew}
+                onClose={() => setAddingNew(false)}
+                publicationId={null}
+                onSaved={fetchData}
+            />
         </section>
     );
 }

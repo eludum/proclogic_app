@@ -9,6 +9,7 @@ import {
     ExternalLinkIcon,
     FileTextIcon,
     MailIcon,
+    PencilIcon,
     PhoneIcon,
     TrendingDownIcon,
     TrendingUpIcon,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import AwardEntryDialog from "../../_components/AwardEntryDialog";
 
 // Types
 interface ContractOrganization {
@@ -288,6 +290,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [contractId, setContractId] = useState<string | null>(null);
+    const [completing, setCompleting] = useState(false);
 
     // Resolve the params promise
     useEffect(() => {
@@ -416,7 +419,33 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                         </h2>
                     </div>
                 </div>
+
+                <button
+                    type="button"
+                    onClick={() => setCompleting(true)}
+                    title="Ontbrekende gegevens aanvullen of corrigeren — alleen zichtbaar voor jouw bedrijf"
+                    className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
+                >
+                    <PencilIcon size={16} />
+                    Gegevens aanvullen
+                </button>
             </div>
+
+            {contractId && (
+                <AwardEntryDialog
+                    isOpen={completing}
+                    onClose={() => setCompleting(false)}
+                    publicationId={contractId}
+                    bosa={{
+                        title: contract.title,
+                        winner: contract.winning_publisher?.name,
+                        buyer: contract.contracting_authority?.name,
+                        value: contract.total_contract_amount,
+                        award_date: contract.issue_date,
+                    }}
+                    onSaved={() => window.location.reload()}
+                />
+            )}
 
             {/* Content */}
             <div className="p-6 space-y-6">
