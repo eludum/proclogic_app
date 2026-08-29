@@ -19,7 +19,9 @@ import {
     FileIcon,
     Layers,
     LinkIcon,
+    Loader2,
     MapPinIcon,
+    Sparkles as SparklesIcon,
     StarIcon,
     TagIcon,
     UsersIcon
@@ -83,9 +85,23 @@ interface RelatedContractItem {
     similarity_reason: string;
 }
 
+/** What the agent is roughly doing, so a 90-second wait is not a blank bar.
+ *  Timings come from measuring the run against production. */
+function deepSearchStage(elapsedSeconds: number): string {
+    if (elapsedSeconds < 10) return "Zoektermen opstellen op basis van deze aanbesteding...";
+    if (elapsedSeconds < 35) return "De gunningendatabank doorzoeken...";
+    if (elapsedSeconds < 65) return "Gevonden gunningen lezen en vergelijken...";
+    if (elapsedSeconds < 95) return "Resultaten rangschikken en onderbouwen...";
+    return "Nog even bezig — de resultaten worden bewaard, ook als je wegklikt.";
+}
+
 interface RelatedContentResponse {
     related_contracts: RelatedContractItem[];
     total_contracts: number;
+    /** "rules" = instant CPV/dienst/regio-vergelijking. "procy" = de agent heeft de gunningen echt doorzocht. */
+    source?: "rules" | "procy";
+    /** "ready" | "running" | "none" */
+    deep_status?: string;
 }
 
 interface PublicationDetailProps {
@@ -122,11 +138,16 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
     const { getToken } = useAuth();
     const getTokenRef = useLatestRef(getToken);
 
-    const fetchRelatedContent = useCallback(async () => {
+    // Opt-in deep search. The agent takes ~90s, so the page shows the instant
+    // rule-based list and lets the user ask for the real thing.
+    const [deepRunning, setDeepRunning] = useState(false);
+    const [deepElapsed, setDeepElapsed] = useState(0);
+
+    const fetchRelatedContent = useCallback(async (quiet = false) => {
         if (!workspaceId) return;
 
         try {
-            setLoadingRelated(true);
+            if (!quiet) setLoadingRelated(true);
             const token = await getTokenRef.current();
 
             const response = await fetch(
@@ -140,15 +161,62 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
             );
 
             if (response.ok) {
-                const data = await response.json();
+                const data: RelatedContentResponse = await response.json();
                 setRelatedContent(data);
+                return data;
             }
         } catch (error) {
             console.error("Error fetching related content:", error);
         } finally {
-            setLoadingRelated(false);
+            if (!quiet) setLoadingRelated(false);
         }
     }, [workspaceId, getTokenRef]);
+
+    const startDeepSearch = useCallback(async () => {
+        if (!workspaceId) return;
+        setDeepRunning(true);
+        setDeepElapsed(0);
+        try {
+            const token = await getTokenRef.current();
+            await fetch(
+                `${API_BASE_URL}/publications/publication/${workspaceId}/related/deep?contracts_limit=10`,
+                { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }
+            );
+        } catch (error) {
+            console.error("Kon de zoekopdracht niet starten:", error);
+            setDeepRunning(false);
+        }
+    }, [workspaceId, getTokenRef]);
+
+    // While a deep search runs, tick a counter for the progress bar and poll for
+    // the result. One interval drives both so they cannot drift apart.
+    useEffect(() => {
+        if (!deepRunning) return;
+        let cancelled = false;
+
+        const id = setInterval(async () => {
+            if (cancelled) return;
+            setDeepElapsed(prev => prev + 1);
+            // Poll every 5s rather than every tick; the run takes ~90s.
+            setDeepElapsed(prev => {
+                if (prev % 5 === 0) {
+                    void fetchRelatedContent(true).then(data => {
+                        if (cancelled || !data) return;
+                        if (data.deep_status === 'ready' || data.source === 'procy') {
+                            setDeepRunning(false);
+                        }
+                    });
+                }
+                return prev;
+            });
+        }, 1000);
+
+        // Give up watching after five minutes; the API caps the run well before
+        // this, and the result stays cached for whenever the page is reopened.
+        const stop = setTimeout(() => { setDeepRunning(false); }, 5 * 60 * 1000);
+
+        return () => { cancelled = true; clearInterval(id); clearTimeout(stop); };
+    }, [deepRunning, fetchRelatedContent]);
 
     // Fetch related content when publication changes
     useEffect(() => {
@@ -801,9 +869,60 @@ export default function PublicationDetail({ publication, timelineEvents }: Publi
                                     </h3>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                         {loadingRelated
-                                            ? "Procy doorzoekt de gunningendatabank naar opdrachten die op deze aanbesteding lijken..."
-                                            : "Procy doorzocht de gunningendatabank en selecteerde de opdrachten die het meest op deze aanbesteding lijken. Elk resultaat is een echte gunning \u2014 klik op Bekijk voor de details."}
+                                            ? "Vergelijkbare gunningen ophalen..."
+                                            : relatedContent?.source === "procy"
+                                                ? "Procy heeft de gunningendatabank doorzocht en per resultaat opgeschreven waarom het op deze aanbesteding lijkt. Elk resultaat is een echte gunning \u2014 klik op Bekijk voor de details."
+                                                : "Deze lijst is samengesteld op kenmerken: CPV-code, aanbestedende dienst en regio. Snel, maar het zegt niets over de inhoud van de opdracht."}
                                     </p>
+
+                                    {!loadingRelated && relatedContent?.source !== "procy" && (
+                                        <div className="mt-3 rounded-md bg-astral-50 dark:bg-astral-900/20 border border-astral-100 dark:border-astral-900/40 p-3">
+                                            {deepRunning || relatedContent?.deep_status === "running" ? (
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <Loader2 size={15} className="animate-spin text-astral-600 dark:text-astral-400" />
+                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            Procy doorzoekt de gunningen
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full rounded-full bg-astral-100 dark:bg-astral-900/50 overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full bg-astral-600 transition-all duration-1000 ease-linear"
+                                                            style={{ width: `${Math.min(95, (deepElapsed / 90) * 100)}%` }}
+                                                        />
+                                                    </div>
+                                                    <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+                                                        {deepSearchStage(deepElapsed)}
+                                                    </p>
+                                                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                        Dit duurt ongeveer anderhalve minuut. Je kunt gerust verder werken — het
+                                                        resultaat wordt bewaard en staat er de volgende keer meteen.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-start justify-between gap-3 flex-wrap">
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                            Procy de gunningen echt laten doorzoeken
+                                                        </p>
+                                                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+                                                            Hij zoekt met eigen zoektermen in de gunningendatabank, leest wat hij
+                                                            vindt en schrijft per resultaat op waarom het lijkt. Duurt ongeveer
+                                                            anderhalve minuut; daarna staat het er meteen.
+                                                        </p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => void startDeepSearch()}
+                                                        className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-astral-600 text-white hover:bg-astral-700 transition-colors"
+                                                    >
+                                                        <SparklesIcon size={15} />
+                                                        Procy laten zoeken
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Related Contracts Content */}
