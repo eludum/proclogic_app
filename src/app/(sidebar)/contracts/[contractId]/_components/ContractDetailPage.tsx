@@ -514,7 +514,7 @@ export default function ContractDetailPage({ params }: ContractDetailPageProps) 
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-astral-200 dark:border-astral-900/50 bg-white dark:bg-slate-900 text-astral-700 dark:text-astral-300 hover:bg-astral-50 dark:hover:bg-astral-900/30 transition-colors"
                     >
                         <MessageSquareIcon size={16} />
-                        Vraag het Procy
+                        Vraag het aan Procy
                     </button>
                     <button
                         type="button"
