@@ -12,7 +12,6 @@ const routeTranslations: Record<string, string> = {
   publications: "Aanbestedingen",
   "my-publications": "Mijn aanbestedingen",
   board: "Overzichtsbord",
-  workspaces: "Werkruimtes",
   analytics: "Analyses",
   procy: "Procy",
   settings: "Instellingen",

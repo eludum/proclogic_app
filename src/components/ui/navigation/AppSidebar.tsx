@@ -107,25 +107,6 @@ const secondaryNavigation: NavItem[] = [
     notifications: false,
     hasChildren: false,
   },
-  {
-    name: "Werkruimtes",
-    href: "#",
-    icon: Users,
-    disabled: true,
-    hasChildren: true,
-    children: [
-      {
-        name: "Projecten",
-        href: "#",
-        disabled: true,
-      },
-      {
-        name: "Documenten",
-        href: "#",
-        disabled: true,
-      },
-    ],
-  },
 ];
 
 const adminNavigation: NavItem[] = [
