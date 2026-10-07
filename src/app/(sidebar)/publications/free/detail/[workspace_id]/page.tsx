@@ -1,6 +1,8 @@
 // app/publications/free/detail/[workspace_id]/page.tsx
 import { siteConfig } from "@/app/siteConfig";
 import { ErrorState } from "@/components/ErrorState";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import FreePublicationDetail, { Publication } from "../../../_components/FreePublicationDetail";
 
 const API_BASE_URL = siteConfig.api_base_url;
@@ -9,6 +11,13 @@ interface PageProps {
     params: Promise<{
         workspace_id: string;
     }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+    const { workspace_id: workspaceId } = await params;
+    return {
+        alternates: { canonical: `/publications/free/detail/${workspaceId}` },
+    };
 }
 
 // Define the timeline event types to match what the component expects
@@ -29,13 +38,17 @@ export default async function FreePublicationDetailPage({ params }: PageProps) {
     // Fetch publication details without auth token
     let publication: Publication | null = null;
     let fetchError: string | null = null;
+    let missing = false;
 
     try {
         const response = await fetch(`${API_BASE_URL}/publications/free/publication/${workspaceId}/`);
-        if (!response.ok) {
+        missing = response.status === 404;
+        if (!response.ok && !missing) {
             throw new Error(`API error: ${response.status}`);
         }
-        publication = await response.json();
+        if (!missing) {
+            publication = await response.json();
+        }
     } catch (error) {
         if (error instanceof Error) {
             fetchError = error.message;
@@ -43,6 +56,13 @@ export default async function FreePublicationDetailPage({ params }: PageProps) {
             fetchError = String(error);
         }
         console.error("Error fetching free publication:", error);
+    }
+
+    // A tender that no longer exists should be a real 404, so Google drops it
+    // instead of reporting a server error. notFound() throws, so it has to be
+    // called outside the try above.
+    if (missing) {
+        notFound();
     }
 
     if (fetchError) {
@@ -55,7 +75,7 @@ export default async function FreePublicationDetailPage({ params }: PageProps) {
                     </div>
                 </div>
                 <div className="px-4 sm:px-6 pb-6">
-                    <ErrorState onRetry={() => window.location.reload()} />
+                    <ErrorState />
                 </div>
             </section>
         );

@@ -1,5 +1,6 @@
 import { siteConfig } from "@/app/siteConfig";
 import { auth, currentUser } from '@clerk/nextjs/server';
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import ClosableBanner from "../publications/_components/Banner";
 import FreePublicationList from "../publications/_components/FreePublicationList";
@@ -7,6 +8,12 @@ import PublicationList from "../publications/_components/PublicationList";
 import { PublicationSkeleton } from "../publications/_components/PublicationSkeleton";
 
 const API_BASE_URL = siteConfig.api_base_url;
+
+// Filters and pagination live in the query string (?q=, ?page=, ?sector=, ?region=),
+// so point every variant at the bare /search page.
+export const metadata: Metadata = {
+    alternates: { canonical: "/search" },
+};
 
 // Fast-loading skeleton that shows immediately
 function SearchPageSkeleton() {

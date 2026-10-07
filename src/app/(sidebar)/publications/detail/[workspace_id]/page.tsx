@@ -65,7 +65,7 @@ export default async function PublicationDetailPage({ params }: PageProps) {
                     </div>
                 </div>
                 <div className="px-4 sm:px-6 pb-6">
-                    <ErrorState onRetry={() => window.location.reload()} />
+                    <ErrorState />
                 </div>
             </section>
         );
