@@ -7,7 +7,7 @@ FROM node:24-alpine AS pnpm-base
 # Docker Desktop's VM has no IPv6 route; without this Node's happy-eyeballs
 # gives up on the registry before the IPv4 attempt gets a fair chance.
 ENV NODE_OPTIONS="--dns-result-order=ipv4first --network-family-autoselection-attempt-timeout=2000"
-RUN corepack enable pnpm && corepack prepare pnpm@12.9.1 --activate
+RUN corepack enable pnpm && corepack prepare pnpm@12.11.2 --activate
 
 # Install dependencies only when needed
 FROM pnpm-base AS deps
